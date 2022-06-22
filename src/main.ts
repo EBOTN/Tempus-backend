@@ -4,8 +4,9 @@ import {PrismaService } from './prisma.service'
 
 async function start() {
   const PORT = process.env.PORT || 5000;
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {cors:true});
   const prismaService = app.get(PrismaService)
+  app.enableCors({ origin: /.+/ });
   await prismaService.enableShutdownHooks(app)
   await app.listen(PORT);
 }
