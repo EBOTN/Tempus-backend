@@ -2,16 +2,21 @@ import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@n
 import { JwtService } from '@nestjs/jwt';
 import { Prisma, User } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
-import * as bcrypt from 'bcryptjs'
+import * as bcrypt from 'bcryptjs';
+import { userDTO } from 'src/models/user-dto';
 
 @Injectable()
 export class AuthService {
 
     constructor(private userService: UserService,
         private jwtService: JwtService){}
-    async login(data: Prisma.UserCreateInput){
-        const user = await this.validateUser(data)
-        return this.generateToken(user)
+
+    async login(email, password){
+        const user = await this.validateUser(email, password)
+        const userdto = new userDTO(user)
+        const tokens = await this.generateTokens({...userdto})
+        await this.saveToken(userdto.id, (await tokens).refreshToken)
+        return {...tokens, user: userdto}
     }
 
     async registration(data: Prisma.UserCreateInput){
@@ -19,26 +24,36 @@ export class AuthService {
         if(candidate){
             throw new HttpException('Пользователь с таким email уже существует', HttpStatus.BAD_REQUEST)
         }
-        const hashPassword = await bcrypt.hashPassword(data.name, 5);
-        const user = await this.userService.createUser({...data, name: hashPassword})
-        return this.generateToken(user)
+        const hashPassword = await bcrypt.hash(data.password, 5);
+        const user = await this.userService.createUser({...data, password: hashPassword})
+        const userdto = new userDTO(user)
+        const tokens = this.generateTokens({...userdto})
+        await this.saveToken(userdto.id, (await tokens).refreshToken)
+        return {...tokens, user: userdto}
     } 
 
-    private async generateToken(user: User){
-        const payload = {email: user.email, id: user.id}
+    private async generateTokens(payload){
+        const accessToken = this.jwtService.sign(payload, {expiresIn:'30m'})
+        const refreshToken = this.jwtService.sign(payload, {expiresIn:'7d'})
         return{
-            token: this.jwtService.sign(payload),
-
+            accessToken: accessToken,
+            refreshToken: refreshToken
         }
     }
 
-    private async validateUser(data: Prisma.UserCreateInput){
-        const user = await this.userService.getUserByEmail(data.email)
-        const passwordEquals = await bcrypt.compare(data.email, user.email)
+    async saveToken(id: number, refreshtoken: string) {
+        const user = this.userService.getUserById(id)
+        if(user){
+            return this.userService.updateUser(id, {...user, refreshtoken: refreshtoken})
+        }
+      }
+
+    private async validateUser(email, password){
+        const user = await this.userService.getUserByEmail(email)
+        const passwordEquals = await bcrypt.compare(password, user.password)
         if(user && passwordEquals){
             return user;
         }
         throw new UnauthorizedException({message: 'Некорректный email или пароль'})
     }
-
 }

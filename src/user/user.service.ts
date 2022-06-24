@@ -19,4 +19,15 @@ export class UserService {
         const user = await this.prisma.user.findFirst({where: {email}})
         return user;
     }
+    async getUserById(id: number){
+      const user = await this.prisma.user.findFirst({where: {id}})
+      return user
+    }
+    async updateUser(id: number, newUser){
+          const student = await this.prisma.user.findFirst({where:{id}})
+          return await this.prisma.user.update({where: {id},
+            data:{
+              ...newUser
+          }});
+  }
 }
