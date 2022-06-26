@@ -10,8 +10,14 @@ export class TokenService {
   ) {}
 
   async generateTokens(payload) {
-    const accessToken = this.jwtService.sign(payload, { expiresIn: "30m" }); // AT живет 30 минут
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" }); // RT живет 7 дней
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: "15m",
+      secret: process.env.JWT_SECRET_KEY,
+    }); // AT живет 15 минут
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: "7d",
+      secret: process.env.JWT_REFRESH_SECRET,
+    }); // RT живет 7 дней
     return {
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -21,10 +27,13 @@ export class TokenService {
   async saveToken(id: number, refreshtoken: string) {
     const user = await this.userService.getFirstUserByFilter({ id: id }); // ищет пользователя по id
     if (user) {
-      return this.userService.updateUser({id: id}, {
-        ...user,
-        refreshtoken: refreshtoken,
-      }); // записывает пользователю RT
+      return this.userService.updateUser(
+        { id: id },
+        {
+          ...user,
+          refreshtoken: refreshtoken,
+        }
+      ); // записывает пользователю RT
     }
   }
 
@@ -32,8 +41,35 @@ export class TokenService {
     const user = await this.userService.getFirstUserByFilter({
       refreshtoken: refreshToken,
     });
-    const token = (await this.userService.updateUser({refreshtoken: refreshToken}, user))
-      .refreshtoken;
+    const token = (
+      await this.userService.updateUser({ refreshtoken: refreshToken }, user)
+    ).refreshtoken;
     return token;
+  }
+  async validateAccessToken(token) {
+    try {
+      const userData = this.jwtService.verify(token, {
+        secret: process.env.JWT_ACCESS_SECRET,
+      });
+      return userData;
+    } catch (e) {
+      return null;
+    }
+  }
+  async validateRefreshToken(token) {
+    try {
+      const userData = this.jwtService.verify(token, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+      return userData;
+    } catch (e) {
+      return null;
+    }
+  }
+  async findToken(refreshToken) {
+    const user = await this.userService.getFirstUserByFilter({
+      refreshtoken: refreshToken,
+    });
+    return user.refreshtoken;
   }
 }
