@@ -12,7 +12,7 @@ export class TokenService {
   async generateTokens(payload) {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: "15m",
-      secret: process.env.JWT_SECRET_KEY,
+      secret: process.env.JWT_ACCESS_SECRET,
     }); // AT живет 15 минут
     const refreshToken = this.jwtService.sign(payload, {
       expiresIn: "7d",

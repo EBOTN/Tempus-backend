@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import {  User } from "@prisma/client";
 import { CreateUserDto } from "src/models/create-user-dto";
+import { userDTO } from "src/models/user-dto";
 import { PrismaService } from "src/prisma.service";
 
 @Injectable()
@@ -33,5 +34,10 @@ export class UserService {
         ...newUser,
       },
     });
+  }
+  async getFirstUserByFilterWithOutPassword(filter){
+    const userData = await this.prisma.user.findFirst({ where: filter });
+    const user = new userDTO(userData)
+    return user;
   }
 }
