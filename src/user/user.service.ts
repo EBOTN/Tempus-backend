@@ -1,33 +1,35 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
-import { PrismaService } from 'src/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { Prisma, User } from "@prisma/client";
+import { CreateUserDto } from "src/models/create-user-dto";
+import { PrismaService } from "src/prisma.service";
 
 @Injectable()
 export class UserService {
-    constructor(private prisma: PrismaService){}
+  constructor(private prisma: PrismaService) {}
 
-    async createUser(data: Prisma.UserCreateInput): Promise<User> {
-        return await this.prisma.user.create({
-          data,
-        });
-      }
-      
-    async getAllUser(){
-        return await this.prisma.user.findMany();
-    }
-    async getUserByEmail(email: string){
-        const user = await this.prisma.user.findFirst({where: {email}})
-        return user;
-    }
-    async getUserById(id: number){
-      const user = await this.prisma.user.findFirst({where: {id}})
-      return user
-    }
-    async updateUser(id: number, newUser){
-          const student = await this.prisma.user.findFirst({where:{id}})
-          return await this.prisma.user.update({where: {id},
-            data:{
-              ...newUser
-          }});
+  async createUser(data: CreateUserDto): Promise<User> {
+    return await this.prisma.user.create({
+      data,
+    });
+  }
+  async getUsersByFilter(filter){
+    const users = await this.prisma.user.findMany({ where: filter})
+    return users;
+  }
+  async getAllUser() {
+    return await this.prisma.user.findMany();
+  }
+  async getFirstUserByFilter(filter) {
+    const user = await this.prisma.user.findFirst({ where: filter });
+    return user;
+  }
+  async updateUser(filter, newUser) {
+    const user = await this.getFirstUserByFilter(filter)
+    return await this.prisma.user.update({
+      where: {id: user.id},
+      data: {
+        ...newUser,
+      },
+    });
   }
 }

@@ -1,14 +1,13 @@
-export class userDTO{
+export class userDTO {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
 
-    id;
-    email;
-    name;
-    secondname;
-    
-    constructor(model){
-        this.id = model.id
-        this.email = model.email
-        this.name = model.name
-        this.secondname = model.secondName
-    }
+  constructor(model) {
+    this.id = model.id;
+    this.email = model.email;
+    this.firstName = model.firstName;
+    this.lastName = model.lastName;
+  }
 }
