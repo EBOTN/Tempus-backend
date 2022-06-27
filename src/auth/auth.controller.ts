@@ -2,13 +2,16 @@ import { Body, Controller, Get, Post, Req, Res } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from "src/models/create-user-dto";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { userDTO } from "src/models/user-dto";
 
+@ApiTags("auth")
 @Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
-
-  @Post("/login")
+  @ApiOperation({ summary: "Login" })
+  @ApiResponse({ status: 200, type: userDTO })
+  @Post("/signIn")
   async login(@Req() req: Request, @Res() res: Response) {
     const userData = await this.authService.login(req.body); // попытка авторизоваться
     res.cookie("refreshToken", userData.refreshToken, {
@@ -21,7 +24,9 @@ export class AuthController {
     });
     return res.json(userData.user);
   }
-  @Post("/registration")
+  @ApiOperation({ summary: "Create new user" })
+  @ApiResponse({ status: 200, type: userDTO })
+  @Post("/signUp")
   async registration(@Body() data: CreateUserDto, @Res() res: Response) {
     const userData = await this.authService.registration(data); // попытка зарегистрироваться
     res.cookie("refreshToken", userData.refreshToken, {
@@ -34,14 +39,20 @@ export class AuthController {
     });
     return res.json(userData.user);
   }
-  @Post("/logout")
+
+  @ApiOperation({ summary: "Logout" })
+  @ApiResponse({ status: 200 })
+  @Post("/signOut")
   async logout(@Req() req: Request, @Res() res: Response) {
     const { refreshToken } = req.cookies;
-    const token = await this.authService.logout(refreshToken);
+    await this.authService.logout(refreshToken);
     res.clearCookie("refreshToken");
     res.clearCookie("accessToken");
-    return res.json(token);
+    return res.json();
   }
+
+  @ApiOperation({ summary: "Refresh tokens" })
+  @ApiResponse({ status: 200, type: userDTO })
   @Get("/refresh")
   async refresh(@Req() req: Request, @Res() res: Response) {
     const { refreshToken } = req.cookies;

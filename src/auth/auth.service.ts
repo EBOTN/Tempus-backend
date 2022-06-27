@@ -29,7 +29,7 @@ export class AuthService {
     });
     if (candidate) {
       throw new HttpException(
-        "Пользователь с таким email уже существует",
+        "This email already exists",
         HttpStatus.BAD_REQUEST
       );
     }
@@ -44,12 +44,15 @@ export class AuthService {
 
   private async validateUser(email, password) {
     if (!email && !password) {
-      throw new HttpException("email или пароль пусты", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "email or password empty",
+        HttpStatus.BAD_REQUEST
+      );
     }
     const user = await this.userService.getFirstUserByFilter({ email: email });
     if (!user) {
       throw new UnauthorizedException({
-        message: "Пользователь с таким email адресом не найден",
+        message: "User with this email not exists",
       });
     }
     const passwordEquals = await bcrypt.compare(password, user.password); // сравнивает пароли
@@ -57,13 +60,13 @@ export class AuthService {
       return user;
     }
     throw new UnauthorizedException({
-      message: "Некорректный email или пароль",
+      message: "Uncorrect password",
     });
   }
 
   async logout(refreshToken) {
     if (!refreshToken) {
-      throw new UnauthorizedException("Ошибка, вы не авторизованы");
+      throw new UnauthorizedException("You are not authorize");
     }
     const token = await this.tokenService.removeToken(refreshToken);
     return token;
@@ -77,7 +80,9 @@ export class AuthService {
     if (!userData || !tokenFromDb) {
       throw new UnauthorizedException();
     }
-    const user = await this.userService.getFirstUserByFilter({ id: userData.id });
+    const user = await this.userService.getFirstUserByFilter({
+      id: userData.id,
+    });
     const userdata = await this.generateAndSaveToken(user);
     return { ...userdata.tokens, user: userdata.userdto };
   }

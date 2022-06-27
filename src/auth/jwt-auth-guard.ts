@@ -9,9 +9,7 @@ import { TokenService } from "src/token/token.service";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(
-    private tokenService: TokenService
-  ) {}
+  constructor(private tokenService: TokenService) {}
   canActivate(
     context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {

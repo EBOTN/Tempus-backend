@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserService } from "src/user/user.service";
 
@@ -11,11 +11,11 @@ export class TokenService {
 
   async generateTokens(payload) {
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: "15m",
+      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
       secret: process.env.JWT_ACCESS_SECRET,
     }); // AT живет 15 минут
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: "7d",
+      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
       secret: process.env.JWT_REFRESH_SECRET,
     }); // RT живет 7 дней
     return {
@@ -47,6 +47,8 @@ export class TokenService {
     return token;
   }
   async validateAccessToken(token) {
+    if(!token)
+    throw new UnauthorizedException()
     try {
       const userData = this.jwtService.verify(token, {
         secret: process.env.JWT_ACCESS_SECRET,
@@ -57,6 +59,8 @@ export class TokenService {
     }
   }
   async validateRefreshToken(token) {
+    if(!token)
+    throw new UnauthorizedException()
     try {
       const userData = this.jwtService.verify(token, {
         secret: process.env.JWT_REFRESH_SECRET,
@@ -70,6 +74,9 @@ export class TokenService {
     const user = await this.userService.getFirstUserByFilter({
       refreshtoken: refreshToken,
     });
-    return user.refreshtoken;
+    if(user){
+      return user.refreshtoken;
+    }
+    return null;
   }
 }
