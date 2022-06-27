@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, NotImplementedException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserService } from "src/user/user.service";
 
@@ -46,28 +46,28 @@ export class TokenService {
     ).refreshtoken;
     return token;
   }
-  async validateAccessToken(token) {
+  validateAccessToken(token) {
     if(!token)
-    throw new UnauthorizedException()
+    throw new UnauthorizedException({message: "User unauthorized"})
     try {
       const userData = this.jwtService.verify(token, {
         secret: process.env.JWT_ACCESS_SECRET,
       });
       return userData;
     } catch (e) {
-      return null;
+      return null
     }
   }
-  async validateRefreshToken(token) {
+  validateRefreshToken(token) {
     if(!token)
-    throw new UnauthorizedException()
+    throw new UnauthorizedException({message: "User unauthorized"})
     try {
       const userData = this.jwtService.verify(token, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
       return userData;
     } catch (e) {
-      return null;
+      return null
     }
   }
   async findToken(refreshToken) {

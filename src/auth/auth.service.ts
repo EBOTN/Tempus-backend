@@ -60,7 +60,7 @@ export class AuthService {
       return user;
     }
     throw new UnauthorizedException({
-      message: "Uncorrect password",
+      message: "Incorrect password",
     });
   }
 

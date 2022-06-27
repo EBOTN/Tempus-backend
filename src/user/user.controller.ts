@@ -22,10 +22,11 @@ export class UserController {
   async getAll() {
     return await this.userService.getAllUser();
   }
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get current user" })
   @ApiResponse({ status: 200, type: userDTO })
-  @Get("currentUser")
-  async getUserByAT(@Req() req: Request) {
+  @Get("/currentUser")
+  async getCurrentUser(@Req() req: Request) {
     const { accessToken } = req.cookies;
     const userDto = await this.tokenService.validateAccessToken(accessToken);
     const user = await this.userService.getFirstUserByFilterWithOutPassword({
