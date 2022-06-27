@@ -9,11 +9,12 @@ import { userDTO } from "src/models/user-dto";
 @Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
+
   @ApiOperation({ summary: "Login" })
   @ApiResponse({ status: 200, type: userDTO })
   @Post("/signIn")
-  async login(@Req() req: Request, @Res() res: Response) {
-    const userData = await this.authService.login(req.body); // попытка авторизоваться
+  async signIn(@Req() req: Request, @Res() res: Response) {
+    const userData = await this.authService.signIn(req.body); // попытка авторизоваться
     res.cookie("refreshToken", userData.refreshToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -24,11 +25,12 @@ export class AuthController {
     });
     return res.json(userData.user);
   }
+
   @ApiOperation({ summary: "Create new user" })
   @ApiResponse({ status: 200, type: userDTO })
   @Post("/signUp")
-  async registration(@Body() data: CreateUserDto, @Res() res: Response) {
-    const userData = await this.authService.registration(data); // попытка зарегистрироваться
+  async signUp(@Body() data: CreateUserDto, @Res() res: Response) {
+    const userData = await this.authService.signUp(data); // попытка зарегистрироваться
     res.cookie("refreshToken", userData.refreshToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -43,9 +45,9 @@ export class AuthController {
   @ApiOperation({ summary: "Logout" })
   @ApiResponse({ status: 200 })
   @Post("/signOut")
-  async logout(@Req() req: Request, @Res() res: Response) {
+  async signOut(@Req() req: Request, @Res() res: Response) {
     const { refreshToken } = req.cookies;
-    await this.authService.logout(refreshToken);
+    await this.authService.signOut(refreshToken);
     res.clearCookie("refreshToken");
     res.clearCookie("accessToken");
     return res.json();

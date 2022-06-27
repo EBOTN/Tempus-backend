@@ -9,18 +9,21 @@ async function start() {
   const PORT = process.env.PORT || 5000;
   const app = await NestFactory.create(AppModule);
   const prismaService = app.get(PrismaService);
+
   app.enableCors({ origin: "http://localhost:3000", credentials: true });
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix("api");
+
   const config = new DocumentBuilder()
     .setTitle("Tempus SWAGGER")
     .setDescription("REST API")
-    .setVersion('1.0.0')
-    .addTag('Tempus')
+    .setVersion("1.0.0")
+    .addTag("Tempus")
     .build();
-    const document = SwaggerModule.createDocument(app, config)
-    SwaggerModule.setup('/api/docs', app, document)
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("/api/docs", app, document);
+
   await prismaService.enableShutdownHooks(app);
   await app.listen(PORT);
 }

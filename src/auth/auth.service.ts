@@ -17,13 +17,13 @@ export class AuthService {
     private tokenService: TokenService
   ) {}
 
-  async login({ email, password }) {
+  async signIn({ email, password }) {
     const user = await this.validateUser(email, password); // проверка правильности логина и пароля
     const userdata = await this.generateAndSaveToken(user);
     return { ...userdata.tokens, user: userdata.userdto };
   }
 
-  async registration(data: CreateUserDto) {
+  async signUp(data: CreateUserDto) {
     const candidate = await this.userService.getFirstUserByFilter({
       email: data.email,
     });
@@ -64,12 +64,11 @@ export class AuthService {
     });
   }
 
-  async logout(refreshToken) {
+  async signOut(refreshToken) {
     if (!refreshToken) {
       throw new UnauthorizedException("You are not authorize");
     }
-    const token = await this.tokenService.removeToken(refreshToken);
-    return token;
+    await this.tokenService.removeToken(refreshToken);
   }
   async refresh(refreshToken) {
     if (!refreshToken) {
@@ -78,7 +77,7 @@ export class AuthService {
     const userData = await this.tokenService.validateRefreshToken(refreshToken);
     const tokenFromDb = await this.tokenService.findToken(refreshToken);
     if (!userData || !tokenFromDb) {
-      throw new UnauthorizedException();
+      throw new HttpException("User undefined", HttpStatus.UNAUTHORIZED);
     }
     const user = await this.userService.getFirstUserByFilter({
       id: userData.id,

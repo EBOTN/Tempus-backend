@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, NotImplementedException, UnauthorizedException } from "@nestjs/common";
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotImplementedException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UserService } from "src/user/user.service";
 
@@ -9,7 +15,7 @@ export class TokenService {
     private jwtService: JwtService
   ) {}
 
-  async generateTokens(payload) {
+  generateTokens(payload) {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
       secret: process.env.JWT_ACCESS_SECRET,
@@ -41,40 +47,41 @@ export class TokenService {
     const user = await this.userService.getFirstUserByFilter({
       refreshtoken: refreshToken,
     });
-    const token = (
-      await this.userService.updateUser({ refreshtoken: refreshToken }, user)
-    ).refreshtoken;
-    return token;
+    user.refreshtoken = null;
+    await this.userService.updateUser({ refreshtoken: refreshToken }, user);
   }
+
   validateAccessToken(token) {
-    if(!token)
-    throw new UnauthorizedException({message: "User unauthorized"})
+    if (!token)
+      throw new UnauthorizedException({ message: "User unauthorized" });
     try {
       const userData = this.jwtService.verify(token, {
         secret: process.env.JWT_ACCESS_SECRET,
       });
       return userData;
     } catch (e) {
-      return null
+      return null;
     }
   }
+
   validateRefreshToken(token) {
-    if(!token)
-    throw new UnauthorizedException({message: "User unauthorized"})
+    if (!token)
+      throw new UnauthorizedException({ message: "User unauthorized" });
     try {
       const userData = this.jwtService.verify(token, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
       return userData;
     } catch (e) {
-      return null
+      return null;
     }
   }
+
   async findToken(refreshToken) {
     const user = await this.userService.getFirstUserByFilter({
       refreshtoken: refreshToken,
     });
-    if(user){
+    if (user) {
       return user.refreshtoken;
     }
     return null;
