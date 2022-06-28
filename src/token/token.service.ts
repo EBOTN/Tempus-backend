@@ -1,11 +1,6 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotImplementedException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { userDTO } from "src/models/user-dto";
 import { UserService } from "src/user/user.service";
 
 @Injectable()
@@ -30,32 +25,30 @@ export class TokenService {
     };
   }
 
-  async saveToken(id: number, refreshtoken: string) {
+  async saveToken(id: number, refreshtoken: string): Promise<userDTO> {
     const user = await this.userService.getFirstUserByFilter({ id: id }); // ищет пользователя по id
+    user.refreshtoken = refreshtoken;
+
     if (user) {
-      return this.userService.updateUser(
-        { id: id },
-        {
-          ...user,
-          refreshtoken: refreshtoken,
-        }
-      ); // записывает пользователю RT
+      return this.userService.updateUser(id, user); // записывает пользователю RT
     }
   }
 
-  async removeToken(refreshToken) {
-    const user = await this.userService.getFirstUserByFilter({
+  async removeToken(refreshToken: string): Promise<userDTO> {
+    var { id, refreshtoken } = await this.userService.getFirstUserByFilter({
       refreshtoken: refreshToken,
     });
-    user.refreshtoken = null;
-    await this.userService.updateUser({ refreshtoken: refreshToken }, user);
+    refreshtoken = null;
+
+    return await this.userService.updateUser(id, { refreshtoken });
   }
 
-  validateAccessToken(token) {
+  validateAccessToken(token: string): Promise<userDTO> {
     if (!token)
       throw new UnauthorizedException({ message: "User unauthorized" });
+
     try {
-      const userData = this.jwtService.verify(token, {
+      const { iat, exp, ...userData } = this.jwtService.verify(token, {
         secret: process.env.JWT_ACCESS_SECRET,
       });
       return userData;
@@ -64,11 +57,12 @@ export class TokenService {
     }
   }
 
-  validateRefreshToken(token) {
+  validateRefreshToken(token: string): Promise<userDTO> {
     if (!token)
       throw new UnauthorizedException({ message: "User unauthorized" });
+
     try {
-      const userData = this.jwtService.verify(token, {
+      const { iat, exp, ...userData } = this.jwtService.verify(token, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
       return userData;
@@ -77,12 +71,13 @@ export class TokenService {
     }
   }
 
-  async findToken(refreshToken) {
-    const user = await this.userService.getFirstUserByFilter({
-      refreshtoken: refreshToken,
-    });
+  async findToken(refreshToken: string): Promise<string> {
+    const { refreshtoken, ...user } =
+      await this.userService.getFirstUserByFilter({
+        refreshtoken: refreshToken,
+      });
     if (user) {
-      return user.refreshtoken;
+      return refreshtoken;
     }
     return null;
   }
