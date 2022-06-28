@@ -27,7 +27,7 @@ export class CreateUserDto {
   @ApiProperty({ example: "123153", description: "User password" })
   @IsString()
   @IsNotEmpty()
-  @Matches(/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])/, {message: "Invalid password"})
+  @Matches(/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])/, { message: "Invalid password" })
   @Length(3, 15)
   readonly password: string;
 }
