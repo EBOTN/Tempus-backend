@@ -26,20 +26,6 @@ export class AuthService {
     return res.json(user);
   }
 
-  private setCookies(res: Response, tokens) {
-    res.cookie("refreshToken", tokens.refreshToken, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-    });
-
-    res.cookie("accessToken", tokens.accessToken, {
-      maxAge: 15 * 60 * 1000,
-      httpOnly: true,
-    });
-
-    return res;
-  }
-
   async signUp(res, data: CreateUserDto): Promise<string> {
     const candidate = await this.userService.getFirstUserByFilter({
       email: data.email,
@@ -133,9 +119,22 @@ export class AuthService {
   }
 
   private async generateAndSaveToken(user: userDTO) {
-    const tokens = await this.tokenService.generateTokens(user); // генерируем два токена пользователю
+    const tokens = this.tokenService.generateTokens(user); // генерируем два токена пользователю
     await this.tokenService.saveToken(user.id, tokens.refreshToken); // записываем токен в бд
 
     return { tokens: tokens, user };
+  }
+  private setCookies(res: Response, tokens) {
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
+
+    res.cookie("accessToken", tokens.accessToken, {
+      maxAge: 15 * 60 * 1000,
+      httpOnly: true,
+    });
+
+    return res;
   }
 }

@@ -23,7 +23,7 @@ export class JwtAuthGuard implements CanActivate {
       if (!accessToken || !userData) {
         throw new UnauthorizedException({ message: "User not auth" });
       }
-      req.user = userData;
+
       return true;
     } catch (e) {
       throw new UnauthorizedException({ message: "User not auth" });

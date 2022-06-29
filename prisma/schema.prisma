@@ -8,10 +8,22 @@ datasource db {
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  email        String  @unique
-  firstName    String
-  lastName     String
-  password     String
-  refreshtoken String?
+  id                        Int     @id @default(autoincrement())
+  email                     String  @unique
+  password                  String
+  refreshtoken              String?
+  firstName                 String
+  lastName                  String
+  Task_Task_creatorIdToUser Task[]  @relation("Task_creatorIdToUser")
+  Task_Task_workerIdToUser  Task[]  @relation("Task_workerIdToUser")
+}
+
+model Task {
+  id                        Int     @id @default(autoincrement())
+  title                     String
+  description               String?
+  creatorId                 Int
+  workerId                  Int
+  User_Task_creatorIdToUser User    @relation("Task_creatorIdToUser", fields: [creatorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "creator_fkey")
+  User_Task_workerIdToUser  User    @relation("Task_workerIdToUser", fields: [workerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "worker_fkey")
 }
