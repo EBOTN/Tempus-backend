@@ -31,7 +31,8 @@ export class TaskService {
   }
 
   async createTask(data: CreateTaskDto) {
-    return await this.prisma.task.create({
+    try{
+      return await this.prisma.task.create({
       data: {
         title: data.title,
         description: data.description,
@@ -47,6 +48,10 @@ export class TaskService {
         },
       },
     });
+    }catch(e){
+      throw new BadRequestException()
+    }
+    
   }
 
   async removeTask(id: number) {
