@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
 import { PrismaService } from "./prisma.service";
+import * as basicAuth from 'express-basic-auth';
 
 async function start() {
   const PORT = process.env.PORT || 5000;
@@ -18,7 +19,13 @@ async function start() {
     }),
   );
   app.setGlobalPrefix("api");
-
+  app.use(['/api/docs', '/docs-json'], basicAuth({
+    challenge: true,
+    users: {
+      [process.env.SWAGGER_USER]: process.env.SWAGGER_PASSWORD,
+    },
+  }));
+  
   const config = new DocumentBuilder()
     .setTitle("Tempus SWAGGER")
     .setDescription("REST API")

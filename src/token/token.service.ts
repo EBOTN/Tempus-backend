@@ -1,11 +1,12 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
-  NotImplementedException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { userDTO } from "src/user/dto/user-dto";
 import { UserService } from "src/user/user.service";
 
 @Injectable()
@@ -15,7 +16,7 @@ export class TokenService {
     private jwtService: JwtService
   ) {}
 
-  generateTokens(payload) {
+  generateTokens(payload: userDTO) {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
       secret: process.env.JWT_ACCESS_SECRET,
@@ -30,32 +31,36 @@ export class TokenService {
     };
   }
 
-  async saveToken(id: number, refreshtoken: string) {
-    const user = await this.userService.getFirstUserByFilter({ id: id }); // ищет пользователя по id
-    if (user) {
-      return this.userService.updateUser(
-        { id: id },
-        {
-          ...user,
-          refreshtoken: refreshtoken,
-        }
-      ); // записывает пользователю RT
+  async saveToken(id: number, refreshtoken: string): Promise<userDTO> {
+    if (!id || !refreshtoken) {
+      throw new BadRequestException();
     }
+
+    return this.userService.updateUser(id, { refreshtoken }); // записывает пользователю RT
   }
 
-  async removeToken(refreshToken) {
-    const user = await this.userService.getFirstUserByFilter({
+  async removeToken(refreshToken: string): Promise<userDTO> {
+    if (!refreshToken) {
+      throw new BadRequestException();
+    }
+    
+    const { id } = await this.userService.getFirstUserByFilter({
       refreshtoken: refreshToken,
     });
-    user.refreshtoken = null;
-    await this.userService.updateUser({ refreshtoken: refreshToken }, user);
+
+    if (!id) {
+      throw new BadRequestException();
+    }
+
+    return await this.userService.updateUser(id, { refreshtoken: null });
   }
 
-  validateAccessToken(token) {
+  validateAccessToken(token: string): Promise<userDTO> {
     if (!token)
       throw new UnauthorizedException({ message: "User unauthorized" });
+
     try {
-      const userData = this.jwtService.verify(token, {
+      const { iat, exp, ...userData } = this.jwtService.verify(token, {
         secret: process.env.JWT_ACCESS_SECRET,
       });
       return userData;
@@ -64,11 +69,12 @@ export class TokenService {
     }
   }
 
-  validateRefreshToken(token) {
+  validateRefreshToken(token: string): Promise<userDTO> {
     if (!token)
       throw new UnauthorizedException({ message: "User unauthorized" });
+
     try {
-      const userData = this.jwtService.verify(token, {
+      const { iat, exp, ...userData } = this.jwtService.verify(token, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
       return userData;
@@ -77,12 +83,13 @@ export class TokenService {
     }
   }
 
-  async findToken(refreshToken) {
-    const user = await this.userService.getFirstUserByFilter({
-      refreshtoken: refreshToken,
-    });
+  async findToken(refreshToken: string): Promise<string> {
+    const { refreshtoken, ...user } =
+      await this.userService.getFirstUserByFilter({
+        refreshtoken: refreshToken,
+      });
     if (user) {
-      return user.refreshtoken;
+      return refreshtoken;
     }
     return null;
   }
