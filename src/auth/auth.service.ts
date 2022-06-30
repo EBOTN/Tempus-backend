@@ -18,12 +18,11 @@ export class AuthService {
     private tokenService: TokenService
   ) {}
 
-  async signIn(req: Request, res: Response): Promise<Response> {
-    const { email, password } = req.body;
+  async signIn({ email, password }, res: Response): Promise<Response> {
     const actualUser = await this.validateUser(email, password); // проверка правильности логина и пароля
     const { tokens, user } = await this.generateAndSaveToken(actualUser);
     res = this.setCookies(res, tokens);
-    
+
     return res.json(user);
   }
 
@@ -39,12 +38,12 @@ export class AuthService {
       );
     }
     const hashPassword = await bcrypt.hash(data.password, 5); // хэширует пароль
-    const actualUser = await this.userService.createUser({
+    const createdUser = await this.userService.createUser({
       ...data,
       password: hashPassword,
     }); // получает созданного пользователя
 
-    const { tokens, user } = await this.generateAndSaveToken(actualUser);
+    const { tokens, user } = await this.generateAndSaveToken(createdUser);
     res = this.setCookies(res, tokens);
 
     return res.json(user);
@@ -61,15 +60,16 @@ export class AuthService {
       );
     }
 
-    const userData =
-      await this.userService.getFirstUserByFilter({ email: email });
+    const userData = await this.userService.getFirstUserByFilter({
+      email: email,
+    });
 
     if (!userData) {
       throw new UnauthorizedException({
         message: "User with this email not exists",
       });
     }
-    const {password, refreshtoken, ... user} = userData
+    const { password, refreshtoken, ...user } = userData;
     const passwordEquals = await bcrypt.compare(inputPassword, password); // сравнивает пароли
 
     if (passwordEquals) {
