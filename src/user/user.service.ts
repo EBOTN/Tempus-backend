@@ -16,12 +16,14 @@ export class UserService {
     });
   }
 
-  async getUsersByFilter(filter): Promise<User[]> {
+  async getUsersByFilter(filter): Promise<userDTO[]> {
     return await this.prisma.user.findMany({ where: filter });
   }
 
-  getAllUser(): Promise<User[]> {
-    return this.prisma.user.findMany();
+  getAllUser(): Promise<userDTO[]> {
+    return this.prisma.user.findMany({
+      select: new ConfigUserWithoutPassword()
+    });
   }
 
   // TODO: Add validation if user not exist | ? Конфликт с регистрацией
