@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateTaskDto {
   @ApiProperty({ example: "Title", description: "Task title" })
@@ -7,7 +7,13 @@ export class CreateTaskDto {
   @IsNotEmpty()
   readonly title: string;
 
-  @ApiProperty({ example: "Description", description: "Task description" })
+  @ApiProperty({
+    example: "Description",
+    description: "Task description (Optional)",
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   readonly description: string;
 
   @ApiProperty({ example: "2", description: "Creator id" })

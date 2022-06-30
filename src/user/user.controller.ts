@@ -2,7 +2,7 @@ import { Controller, Get, Req, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
 import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
-import { userDTO } from "src/models/user-dto";
+import { userDTO } from "src/user/dto/user-dto";
 import { TokenService } from "src/token/token.service";
 import { UserService } from "./user.service";
 

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { userDTO } from "src/models/user-dto";
+import { userDTO } from "src/user/dto/user-dto";
 
 export class TaskDto {
   @ApiProperty({ example: "1", description: "Unique identificator" })

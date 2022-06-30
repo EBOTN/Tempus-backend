@@ -6,8 +6,8 @@ import {
 } from "@nestjs/common";
 import { UserService } from "src/user/user.service";
 import * as bcrypt from "bcryptjs";
-import { userDTO } from "src/models/user-dto";
-import { CreateUserDto } from "src/models/create-user-dto";
+import { userDTO } from "src/user/dto/user-dto";
+import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { TokenService } from "src/token/token.service";
 import { Request, Response } from "express";
 

@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { User } from "@prisma/client";
-import { CreateUserDto } from "src/models/create-user-dto";
-import { userDTO } from "src/models/user-dto";
+import { CreateUserDto } from "src/user/dto/create-user-dto";
+import { userDTO } from "src/user/dto/user-dto";
 import { PrismaService } from "src/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
 
@@ -26,12 +26,9 @@ export class UserService {
 
   // TODO: Add validation if user not exist | ? Конфликт с регистрацией
   async getFirstUserByFilter(filter): Promise<User> {
-    const user = await this.prisma.user.findFirst({
+    return await this.prisma.user.findFirst({
       where: filter,
     });
-    // if (!user)
-    //   throw new HttpException("User not exists", HttpStatus.BAD_REQUEST);
-    return user;
   }
 
   // TODO: Add validation if user not exist | +

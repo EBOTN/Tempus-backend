@@ -13,7 +13,7 @@ model User {
   password                  String
   refreshtoken              String?
   firstName                 String
-  lastName                  String
+  lastName                  String 
   Task_Task_creatorIdToUser Task[]  @relation("Task_creatorIdToUser")
   Task_Task_workerIdToUser  Task[]  @relation("Task_workerIdToUser")
 }

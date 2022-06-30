@@ -61,16 +61,13 @@ export class TaskService {
   }
 
   async update(id: number, data: UpdateTaskDto) {
+    if (!id || !data) throw new BadRequestException();
     try {
-      if (!id || !data) throw new BadRequestException();
-      console.log(id);
-      console.log(data);
       return await this.prisma.task.update({
         where: { id },
         data: data,
       });
     } catch (e) {
-      console.log(e);
       throw new BadRequestException();
     }
   }

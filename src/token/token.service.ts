@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { userDTO } from "src/models/user-dto";
+import { userDTO } from "src/user/dto/user-dto";
 import { UserService } from "src/user/user.service";
 
 @Injectable()

@@ -1,6 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
-  Allow,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -8,19 +7,24 @@ import {
 } from "class-validator";
 
 export class UpdateTaskDto {
-  @ApiProperty({ example: "Title", description: "Task title" })
+  @ApiProperty({ example: "Title", description: "Task title (Optional)" })
   @IsOptional()
   @IsString()
   @IsNotEmpty()
   readonly title?: string;
 
-  @ApiProperty({ example: "Description", description: "Task description" })
+  @ApiProperty({
+    example: "Description",
+    description: "Task description (Optional)",
+  })
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   readonly description?: string;
 
-  @ApiProperty({ example: "1", description: "Worker id" })
+  @ApiProperty({ example: "1", description: "Worker id (Optional)" })
   @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   readonly workerId?: number;
 }
