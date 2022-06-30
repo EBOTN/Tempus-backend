@@ -84,12 +84,12 @@ export class TokenService {
   }
 
   async findToken(refreshToken: string): Promise<string> {
-    const { refreshtoken, ...user } =
+    const user =
       await this.userService.getFirstUserByFilter({
         refreshtoken: refreshToken,
       });
     if (user) {
-      return refreshtoken;
+      return user.refreshtoken;
     }
     return null;
   }

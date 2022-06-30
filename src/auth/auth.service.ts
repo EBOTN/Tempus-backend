@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -65,7 +66,7 @@ export class AuthService {
     });
 
     if (!userData) {
-      throw new UnauthorizedException({
+      throw new ForbiddenException({
         message: "User with this email not exists",
       });
     }
@@ -76,7 +77,7 @@ export class AuthService {
       return user;
     }
 
-    throw new UnauthorizedException({
+    throw new ForbiddenException({
       message: "Incorrect password",
     });
   }

@@ -26,7 +26,7 @@ export class TaskController {
   @ApiOperation({ summary: "Get all tasks by user" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Get()
-  getAll(@Query("userid") id: number) {
+  getAll(@Query("userId") id: number) {
     return this.taskService.getAllTasksByUserId(+id);
   }
 
