@@ -19,7 +19,7 @@ export class UserController {
   @ApiResponse({ status: 200, type: [userDTO] })
   @Get()
   async getAll() {
-    return await this.userService.getAllUser();
+    return await this.userService.getAll();
   }
 
   // TODO: Add validation

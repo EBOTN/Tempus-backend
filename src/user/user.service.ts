@@ -1,5 +1,11 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { User } from "@prisma/client";
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { Prisma, User } from "@prisma/client";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { userDTO } from "src/user/dto/user-dto";
 import { PrismaService } from "src/prisma.service";
@@ -9,47 +15,77 @@ import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async createUser(data: CreateUserDto): Promise<userDTO> {
-    return await this.prisma.user.create({
-      data,
+  async create(data: CreateUserDto): Promise<userDTO> {
+    try {
+      return await this.prisma.user.create({
+        data,
+        select: new ConfigUserWithoutPassword(),
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2002")
+          throw new BadRequestException("User with this email already exists");
+      }
+    }
+  }
+
+  async delete(id: number) {
+    try {
+      return await this.prisma.user.delete({
+        where: { id: id },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2002")
+          throw new BadRequestException("User not exists");
+      }
+    }
+  }
+
+  async getByFilter(filter): Promise<userDTO[]> {
+    return await this.prisma.user.findMany({ where: filter });
+  }
+
+  async getAll(): Promise<userDTO[]> {
+    return await this.prisma.user.findMany({
       select: new ConfigUserWithoutPassword(),
     });
   }
 
-  async getUsersByFilter(filter): Promise<userDTO[]> {
-    return await this.prisma.user.findMany({ where: filter });
-  }
-
-  getAllUser(): Promise<userDTO[]> {
-    return this.prisma.user.findMany({
-      select: new ConfigUserWithoutPassword()
-    });
-  }
-
   // TODO: Add validation if user not exist | ? Конфликт с регистрацией
-  async getFirstUserByFilter(filter): Promise<User> {
+  async getFirstByFilter(filter): Promise<User> {
+    if (!filter) throw new BadRequestException("Filter not specified");
     return await this.prisma.user.findFirst({
       where: filter,
     });
   }
 
-  // TODO: Add validation if user not exist | +
-  async updateUser(id: number, newData): Promise<userDTO> {
-    if (!id) {
-      throw new HttpException("User not exists", HttpStatus.BAD_REQUEST);
-    }
-    if (!newData) {
-      throw new HttpException("Missing changes", HttpStatus.BAD_REQUEST);
-    }
-
-    return await this.prisma.user.update({
-      where: { id },
-      data: { ...newData },
-      select: new ConfigUserWithoutPassword(),
+  async gitFirstByRefreshToken(refreshToken: string) {
+    if (!refreshToken) throw new UnauthorizedException("You not auth");
+    return await this.prisma.user.findFirst({
+      where: {
+        refreshtoken: refreshToken,
+      },
     });
   }
 
-  async getFirstUserByFilterWithOutPassword(filters) {
+  // TODO: Add validation if user not exist | +
+  async update(id: number, newData): Promise<userDTO> {
+    try {
+      return await this.prisma.user.update({
+        where: { id },
+        data: { ...newData },
+        select: new ConfigUserWithoutPassword(),
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025") throw new BadRequestException("User not found");
+        if (e.code === "P2002")
+          throw new BadRequestException("You try change unique field");
+      }
+    }
+  }
+  async getFirstByFilterWithOutPassword(filters) {
     const userData = await this.prisma.user.findFirst({
       where: filters,
       select: new ConfigUserWithoutPassword(),

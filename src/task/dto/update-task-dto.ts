@@ -18,7 +18,6 @@ export class UpdateTaskDto {
     description: "Task description (Optional)",
   })
   @IsOptional()
-  @IsNotEmpty()
   @IsString()
   readonly description?: string;
 

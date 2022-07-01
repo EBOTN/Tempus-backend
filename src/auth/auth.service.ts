@@ -1,5 +1,5 @@
 import {
-  ForbiddenException,
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -28,18 +28,8 @@ export class AuthService {
   }
 
   async signUp(res, data: CreateUserDto): Promise<string> {
-    const candidate = await this.userService.getFirstUserByFilter({
-      email: data.email,
-    });
-
-    if (candidate) {
-      throw new HttpException(
-        "This email already exists",
-        HttpStatus.BAD_REQUEST
-      );
-    }
     const hashPassword = await bcrypt.hash(data.password, 5); // хэширует пароль
-    const createdUser = await this.userService.createUser({
+    const createdUser = await this.userService.create({
       ...data,
       password: hashPassword,
     }); // получает созданного пользователя
@@ -61,12 +51,12 @@ export class AuthService {
       );
     }
 
-    const userData = await this.userService.getFirstUserByFilter({
+    const userData = await this.userService.getFirstByFilter({
       email: email,
     });
 
     if (!userData) {
-      throw new ForbiddenException({
+      throw new BadRequestException({
         message: "User with this email not exists",
       });
     }
@@ -77,21 +67,16 @@ export class AuthService {
       return user;
     }
 
-    throw new ForbiddenException({
+    throw new BadRequestException({
       message: "Incorrect password",
     });
   }
 
   async signOut(req: Request, res: Response): Promise<Response> {
     const { refreshToken } = req.cookies;
-
-    if (!refreshToken) {
-      throw new UnauthorizedException("You are not authorize");
-    }
-
+    const user = await this.tokenService.removeToken(refreshToken);
     res.clearCookie("refreshToken");
     res.clearCookie("accessToken");
-    const user = await this.tokenService.removeToken(refreshToken);
 
     return res.json(user);
   }
@@ -107,11 +92,11 @@ export class AuthService {
     const tokenFromDb = await this.tokenService.findToken(refreshToken);
 
     if (!userData || !tokenFromDb) {
-      throw new HttpException("User undefined", HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException("User undefined");
     }
 
     const actualUser =
-      await this.userService.getFirstUserByFilterWithOutPassword({
+      await this.userService.getFirstByFilterWithOutPassword({
         id: userData.id,
       });
     const { tokens, user } = await this.generateAndSaveToken(actualUser);

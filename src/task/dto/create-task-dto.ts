@@ -13,7 +13,6 @@ export class CreateTaskDto {
   })
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   readonly description: string;
 
   @ApiProperty({ example: "2", description: "Creator id" })
