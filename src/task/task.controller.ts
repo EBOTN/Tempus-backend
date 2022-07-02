@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
+import { AssignedTaskDto } from "./dto/assigned-task-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { ReadTaskQuery as GetTasksQuery } from "./dto/read-task-query";
 import { TaskDto } from "./dto/task-dto";
@@ -26,10 +27,10 @@ export class TaskController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get all tasks by user" })
-  @ApiResponse({ status: 200, type: TaskDto })
+  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
   @Get()
   getAll(@Query() query: GetTasksQuery) {
-    return this.taskService.getAllByUserId(query);
+    return this.taskService.getAllByUserId(query.userId);
   }
 
   @UseGuards(JwtAuthGuard)
