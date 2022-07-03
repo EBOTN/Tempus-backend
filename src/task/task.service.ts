@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
-import { ConfigUserWithoutPassword } from "src/user/user.selecter.wpassword";
 import { CreateTaskDto } from "./dto/create-task-dto";
+import { TaskDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { UpdateTaskParam } from "./dto/update-task-param";
 
@@ -33,16 +33,13 @@ export class TaskService {
     }
   }
 
-  async create(data: CreateTaskDto) {
+  async create(data: CreateTaskDto): Promise<TaskDto> {
     try {
       return await this.prisma.task.create({
         data: {
           title: data.title,
           description: data.description,
           creatorId: data.creatorId,
-          workers: {
-            create: data.workers.map((id) => ({ workerId: id })),
-          },
         },
       });
     } catch (e) {
@@ -53,12 +50,11 @@ export class TaskService {
           throw new BadRequestException("Incorrect worker");
         if (e.code === "P2002")
           throw new BadRequestException("User already assigned to this task");
-        console.log(e);
       }
     }
   }
 
-  async remove(param: UpdateTaskParam) {
+  async remove(param: UpdateTaskParam): Promise<TaskDto> {
     try {
       return await this.prisma.task.delete({
         where: param,
@@ -71,7 +67,7 @@ export class TaskService {
     }
   }
 
-  async update(param: UpdateTaskParam, data: UpdateTaskDto) {
+  async update(param: UpdateTaskParam, data: UpdateTaskDto): Promise<TaskDto> {
     try {
       if (data.removedWorkers) {
         await this.removeUsersFromTaskById(param.id, data.removedWorkers);

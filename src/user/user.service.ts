@@ -10,6 +10,7 @@ import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { userDTO } from "src/user/dto/user-dto";
 import { PrismaService } from "src/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
+import { skip } from "rxjs";
 
 @Injectable()
 export class UserService {
@@ -29,10 +30,11 @@ export class UserService {
     }
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<userDTO> {
     try {
       return await this.prisma.user.delete({
         where: { id: id },
+        select: new ConfigUserWithoutPassword(),
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -42,12 +44,19 @@ export class UserService {
     }
   }
 
-  async getByFilter(filter): Promise<userDTO[]> {
-    return await this.prisma.user.findMany({ where: filter });
-  }
-
-  async getAll(): Promise<userDTO[]> {
+  async getByFilter(query): Promise<userDTO[]> {
+    const { skip, take, taskId, ...filter } = query;
     return await this.prisma.user.findMany({
+      where: {
+        ...filter,
+        assignedTasks: {
+          some: {
+            taskId: taskId,
+          },
+        },
+      },
+      skip: skip,
+      take: take,
       select: new ConfigUserWithoutPassword(),
     });
   }
@@ -85,7 +94,7 @@ export class UserService {
       }
     }
   }
-  async getFirstByFilterWithOutPassword(filters) {
+  async getFirstByFilterWithOutPassword(filters): Promise<userDTO> {
     const userData = await this.prisma.user.findFirst({
       where: filters,
       select: new ConfigUserWithoutPassword(),
@@ -96,14 +105,5 @@ export class UserService {
     }
 
     return userData;
-  }
-
-  async getFirstUserByFilterExcludeSelecters({ filters, selecters }) {
-    const user = await this.prisma.user.findFirst({
-      where: filters,
-      select: selecters,
-    });
-
-    return user;
   }
 }
