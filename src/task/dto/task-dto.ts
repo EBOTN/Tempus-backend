@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { userDTO } from "src/user/dto/user-dto";
 
 export class TaskDto {
   @ApiProperty({ example: "1", description: "Unique identificator" })
@@ -11,9 +10,6 @@ export class TaskDto {
   @ApiProperty({ example: "Description", description: "Task description" })
   readonly description: string;
 
-  @ApiProperty({ description: "Creator of task" })
-  readonly creator: userDTO;
-
-  @ApiProperty({ description: "Task worker" })
-  readonly worker: userDTO;
+  @ApiProperty({ example: "1", description: "Creator id" })
+  readonly creatorId: number;
 }

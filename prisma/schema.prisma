@@ -8,22 +8,32 @@ datasource db {
 }
 
 model User {
-  id                        Int     @id @default(autoincrement())
-  email                     String  @unique
-  password                  String
-  refreshtoken              String?
-  firstName                 String
-  lastName                  String 
-  Task_Task_creatorIdToUser Task[]  @relation("Task_creatorIdToUser")
-  Task_Task_workerIdToUser  Task[]  @relation("Task_workerIdToUser")
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  password      String
+  refreshtoken  String?
+  firstName     String
+  lastName      String
+  assignedTasks AssignedTask[]
+  createdTasks  Task[]         @relation("createdTasks")
 }
 
 model Task {
-  id                        Int     @id @default(autoincrement())
-  title                     String
-  description               String?
-  creatorId                 Int
-  workerId                  Int
-  User_Task_creatorIdToUser User    @relation("Task_creatorIdToUser", fields: [creatorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "creator_fkey")
-  User_Task_workerIdToUser  User    @relation("Task_workerIdToUser", fields: [workerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "worker_fkey")
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String?
+  creatorId   Int
+  creator     User           @relation("createdTasks", fields: [creatorId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "creator_fkey")
+  workers     AssignedTask[]
+}
+
+model AssignedTask {
+  id         Int       @id @default(autoincrement())
+  taskId     Int
+  workerId   Int?
+  startTime DateTime? @db.Date
+  endTime   DateTime? @db.Date
+  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "task_fkey")
+  user       User?     @relation(fields: [workerId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "user_fkey")
+  @@unique([taskId, workerId], name: "taskid")
 }

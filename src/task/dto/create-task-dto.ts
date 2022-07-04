@@ -1,5 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  ArrayNotEmpty,
+  ArrayUnique,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateTaskDto {
   @ApiProperty({ example: "Title", description: "Task title" })
@@ -10,10 +18,10 @@ export class CreateTaskDto {
   @ApiProperty({
     example: "Description",
     description: "Task description (Optional)",
+    required: false
   })
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   readonly description: string;
 
   @ApiProperty({ example: "2", description: "Creator id" })
@@ -21,8 +29,14 @@ export class CreateTaskDto {
   @IsNumber()
   readonly creatorId: number;
 
-  @ApiProperty({ example: "1", description: "Worker id" })
-  @IsNotEmpty()
-  @IsNumber()
-  readonly workerId: number;
+  @ApiProperty({
+    type: [Number],
+    description: "Array workers are assigned to created task",
+  })
+  @IsOptional()
+  @ArrayNotEmpty()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @ArrayUnique()
+  readonly addedWorkers?: number[];
 }

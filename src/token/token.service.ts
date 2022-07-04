@@ -1,7 +1,5 @@
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -32,27 +30,14 @@ export class TokenService {
   }
 
   async saveToken(id: number, refreshtoken: string): Promise<userDTO> {
-    if (!id || !refreshtoken) {
-      throw new BadRequestException();
-    }
-
-    return this.userService.updateUser(id, { refreshtoken }); // записывает пользователю RT
+    return this.userService.update(id, { refreshtoken }); // записывает пользователю RT
   }
 
   async removeToken(refreshToken: string): Promise<userDTO> {
-    if (!refreshToken) {
-      throw new BadRequestException();
-    }
-    
-    const { id } = await this.userService.getFirstUserByFilter({
-      refreshtoken: refreshToken,
-    });
+    const user = await this.validateRefreshToken(refreshToken);
+    if (!user) throw new BadRequestException();
 
-    if (!id) {
-      throw new BadRequestException();
-    }
-
-    return await this.userService.updateUser(id, { refreshtoken: null });
+    return await this.userService.update(user.id, { refreshtoken: null });
   }
 
   validateAccessToken(token: string): Promise<userDTO> {
@@ -84,12 +69,11 @@ export class TokenService {
   }
 
   async findToken(refreshToken: string): Promise<string> {
-    const { refreshtoken, ...user } =
-      await this.userService.getFirstUserByFilter({
-        refreshtoken: refreshToken,
-      });
+    const user = await this.userService.gitFirstByRefreshToken(
+      refreshToken
+    );
     if (user) {
-      return refreshtoken;
+      return user.refreshtoken;
     }
     return null;
   }

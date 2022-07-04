@@ -1,79 +1,143 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
-import { ConfigUserWithoutPassword } from "src/user/user.selecter.wpassword";
 import { CreateTaskDto } from "./dto/create-task-dto";
+import { ReadTaskQuery } from "./dto/read-task-query";
+import { TaskDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
+import { UpdateTaskParam } from "./dto/update-task-param";
 
 @Injectable()
 export class TaskService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllTasksByUserId(id: number) {
-    if (!id) {
-      throw new BadRequestException();
+  async getAssignedTasksByUserId(query: ReadTaskQuery) {
+    const { userId } = query;
+    try {
+      return this.prisma.assignedTask.findMany({
+        where: {
+          workerId: userId,
+        },
+        select: {
+          task: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              creatorId: true,
+            },
+          },
+          workerId: true,
+          startTime: true,
+          endTime: true,
+        },
+      });
+    } catch (e) {
+      throw new BadRequestException(e);
     }
-    return this.prisma.task.findMany({
-      where: {
-        workerId: id,
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        User_Task_creatorIdToUser: {
-          select: new ConfigUserWithoutPassword(),
-        },
-        User_Task_workerIdToUser: {
-          select: new ConfigUserWithoutPassword(),
-        },
-      },
-    });
   }
 
-  async createTask(data: CreateTaskDto) {
-    try{
+  async getCreatedTasksByUserId(query: ReadTaskQuery) {
+    const { title, userId } = query;
+    try {
+      return this.prisma.task.findMany({
+        where: {
+          title: title,
+          creatorId: userId,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          creatorId: true,
+        },
+      });
+    } catch (e) {
+      throw new BadRequestException(e)
+    }
+  }
+
+  async create(data: CreateTaskDto): Promise<TaskDto> {
+    try {
       return await this.prisma.task.create({
-      data: {
-        title: data.title,
-        description: data.description,
-        User_Task_creatorIdToUser: {
-          connect: {
-            id: data.creatorId,
-          },
+        data: {
+          title: data.title,
+          description: data.description,
+          creatorId: data.creatorId,
         },
-        User_Task_workerIdToUser: {
-          connect: {
-            id: data.workerId,
-          },
-        },
-      },
-    });
-    }catch(e){
-      throw new BadRequestException()
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025")
+          throw new BadRequestException("Incorrect creator or worker");
+        if (e.code === "P2003")
+          throw new BadRequestException("Incorrect worker");
+        if (e.code === "P2002")
+          throw new BadRequestException("User already assigned to this task");
+      }
     }
-    
   }
 
-  async removeTask(id: number) {
-    if (!id) throw new BadRequestException();
+  async remove(param: UpdateTaskParam): Promise<TaskDto> {
     try {
       return await this.prisma.task.delete({
-        where: { id },
+        where: param,
       });
     } catch (e) {
-      throw new BadRequestException();
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025")
+          throw new BadRequestException("Task not exists");
+      }
     }
   }
 
-  async update(id: number, data: UpdateTaskDto) {
-    if (!id || !data) throw new BadRequestException();
+  async update(param: UpdateTaskParam, data: UpdateTaskDto): Promise<TaskDto> {
     try {
+      if (data.removedWorkers) {
+        await this.removeUsersFromTaskById(param.id, data.removedWorkers);
+      }
+      if (data.addedWorkers) {
+        await this.assignUsersToTaskById(param.id, data.addedWorkers);
+      }
+      const { addedWorkers, removedWorkers, ...updateTask } = data;
       return await this.prisma.task.update({
-        where: { id },
-        data: data,
+        where: param,
+        data: updateTask,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          creatorId: true,
+        },
       });
     } catch (e) {
-      throw new BadRequestException();
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025") throw new BadRequestException("Incorrect task");
+        if (e.code === "P2003")
+          throw new BadRequestException("Incorrect worker");
+        if (e.code === "P2002")
+          throw new BadRequestException("User already assigned to this task");
+      }
     }
+  }
+
+  async removeUsersFromTaskById(taskId: number, users: number[]) {
+    await this.prisma.assignedTask.deleteMany({
+      where: { workerId: { in: users }, taskId: taskId },
+    });
+  }
+
+  async assignUsersToTaskById(taskId: number, users: number[]) {
+    await this.prisma.assignedTask.createMany({
+      data: users.map((id) => ({ workerId: id, taskId: taskId })),
+    });
+  }
+
+  async deleteById(id: number) {
+    return await this.prisma.task.delete({
+      where: {
+        id: id,
+      },
+    });
   }
 }
