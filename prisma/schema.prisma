@@ -23,17 +23,25 @@ model Task {
   title       String
   description String?
   creatorId   Int
-  creator     User           @relation("createdTasks", fields: [creatorId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "creator_fkey")
+  creator     User           @relation("createdTasks", fields: [creatorId], references: [id], onDelete: Cascade, map: "creator_fkey")
   workers     AssignedTask[]
 }
 
 model AssignedTask {
-  id         Int       @id @default(autoincrement())
-  taskId     Int
-  workerId   Int?
-  startTime DateTime? @db.Date
-  endTime   DateTime? @db.Date
-  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "task_fkey")
-  user       User?     @relation(fields: [workerId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "user_fkey")
+  id             Int       @id @default(autoincrement())
+  taskId         Int
+  workerId       Int?
+  startTime      DateTime? @db.Timestamp(6)
+  endTime        DateTime? @db.Timestamp(6)
+  isComplete     Boolean?  @default(false)
+  isStarted      Boolean?  @default(false)
+  isPaused       Boolean?  @default(false)
+  startPauseTime DateTime? @db.Timestamp(6)
+  endPauseTime   DateTime? @db.Timestamp(6)
+  pauseTime      Int?
+  workTime       Int?
+  task           Task      @relation(fields: [taskId], references: [id], onDelete: Cascade, map: "task_fkey")
+  user           User?     @relation(fields: [workerId], references: [id], onDelete: Cascade, map: "user_fkey")
+
   @@unique([taskId, workerId], name: "taskid")
 }

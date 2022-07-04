@@ -10,7 +10,6 @@ import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { userDTO } from "src/user/dto/user-dto";
 import { PrismaService } from "src/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
-import { skip } from "rxjs";
 import { FilterUserQuery } from "./dto/filter-user-query";
 
 @Injectable()
@@ -53,7 +52,12 @@ export class UserService {
 
   async getAllUsers(filter, skip, take) {
     return await this.prisma.user.findMany({
-      where: filter,
+      where: {
+        OR: {
+          firstName: { startsWith: filter.firstName },
+          lastName: { startsWith: filter.lastName },
+        },
+      },
       skip: skip,
       take: take,
       select: new ConfigUserWithoutPassword(),

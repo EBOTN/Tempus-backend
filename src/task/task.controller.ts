@@ -28,7 +28,7 @@ export class TaskController {
   @ApiOperation({ summary: "Get all assigned tasks by user" })
   @ApiResponse({ status: 200, type: [AssignedTaskDto] })
   @Get("getAssignedTasks")
-  getAll(@Query() query: GetTasksQuery) {
+  getAssignedTasks(@Query() query: GetTasksQuery) {
     return this.taskService.getAssignedTasksByUserId(query);
   }
 
@@ -36,8 +36,16 @@ export class TaskController {
   @Get("getUserTasks")
   @ApiOperation({ summary: "Get all created tasks by user" })
   @ApiResponse({ status: 200, type: [TaskDto] })
-  getByCreatorId(@Query() query: GetTasksQuery){
-    return this.taskService.getCreatedTasksByUserId(query)
+  getByCreatorId(@Query() query: GetTasksQuery) {
+    return this.taskService.getCreatedTasksByUserId(query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  @ApiOperation({ summary: "Get all tasks" })
+  @ApiResponse({ status: 200, type: [TaskDto] })
+  getAll() {
+    return this.taskService.getAll();
   }
 
   @UseGuards(JwtAuthGuard)
@@ -62,5 +70,37 @@ export class TaskController {
   @Put("/:id")
   update(@Param() param: UpdateTaskParam, @Body() body: UpdateTaskDto) {
     return this.taskService.update(param, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/:id/start")
+  @ApiOperation({ summary: "Start task" })
+  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  startTask(@Param() param: UpdateTaskParam) {
+    return this.taskService.startTask(param.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/:id/complete")
+  @ApiOperation({ summary: "Finish task" })
+  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  finishTask(@Param() param: UpdateTaskParam) {
+    return this.taskService.finishTask(param.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/:id/startpause")
+  @ApiOperation({ summary: "Pause task" })
+  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  startPause(@Param() param: UpdateTaskParam) {
+    return this.taskService.startPause(param.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/:id/endpause")
+  @ApiOperation({ summary: "Unpause task" })
+  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  endPause(@Param() param: UpdateTaskParam) {
+    return this.taskService.endPause(param.id);
   }
 }
