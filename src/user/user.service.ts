@@ -11,6 +11,7 @@ import { userDTO } from "src/user/dto/user-dto";
 import { PrismaService } from "src/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
 import { skip } from "rxjs";
+import { FilterUserQuery } from "./dto/filter-user-query";
 
 @Injectable()
 export class UserService {
@@ -44,15 +45,27 @@ export class UserService {
     }
   }
 
-  async getByFilter(query): Promise<userDTO[]> {
+  async getByFilter(query: FilterUserQuery): Promise<userDTO[]> {
     const { skip, take, taskId, ...filter } = query;
+    if (taskId) return this.getUsersFromTask(filter, taskId, skip, take);
+    return this.getAllUsers(filter, skip, take);
+  }
+
+  async getAllUsers(filter, skip, take) {
+    return await this.prisma.user.findMany({
+      where: filter,
+      skip: skip,
+      take: take,
+      select: new ConfigUserWithoutPassword(),
+    });
+  }
+
+  async getUsersFromTask(filter, taskId, skip, take) {
     return await this.prisma.user.findMany({
       where: {
         ...filter,
         assignedTasks: {
-          some: {
-            taskId: taskId,
-          },
+          some: { taskId: taskId },
         },
       },
       skip: skip,

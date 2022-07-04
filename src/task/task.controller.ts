@@ -25,11 +25,19 @@ export class TaskController {
   constructor(private taskService: TaskService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: "Get all tasks by user" })
+  @ApiOperation({ summary: "Get all assigned tasks by user" })
   @ApiResponse({ status: 200, type: [AssignedTaskDto] })
-  @Get()
+  @Get("getAssignedTasks")
   getAll(@Query() query: GetTasksQuery) {
-    return this.taskService.getAllByUserId(query.userId);
+    return this.taskService.getAssignedTasksByUserId(query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("getUserTasks")
+  @ApiOperation({ summary: "Get all created tasks by user" })
+  @ApiResponse({ status: 200, type: [TaskDto] })
+  getByCreatorId(@Query() query: GetTasksQuery){
+    return this.taskService.getCreatedTasksByUserId(query)
   }
 
   @UseGuards(JwtAuthGuard)

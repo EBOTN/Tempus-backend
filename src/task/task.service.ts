@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { CreateTaskDto } from "./dto/create-task-dto";
+import { ReadTaskQuery } from "./dto/read-task-query";
 import { TaskDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { UpdateTaskParam } from "./dto/update-task-param";
@@ -10,7 +11,8 @@ import { UpdateTaskParam } from "./dto/update-task-param";
 export class TaskService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllByUserId(userId: number) {
+  async getAssignedTasksByUserId(query: ReadTaskQuery) {
+    const { userId } = query;
     try {
       return this.prisma.assignedTask.findMany({
         where: {
@@ -22,14 +24,36 @@ export class TaskService {
               id: true,
               title: true,
               description: true,
+              creatorId: true,
             },
           },
+          workerId: true,
           startTime: true,
           endTime: true,
         },
       });
     } catch (e) {
       throw new BadRequestException(e);
+    }
+  }
+
+  async getCreatedTasksByUserId(query: ReadTaskQuery) {
+    const { title, userId } = query;
+    try {
+      return this.prisma.task.findMany({
+        where: {
+          title: title,
+          creatorId: userId,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          creatorId: true,
+        },
+      });
+    } catch (e) {
+      throw new BadRequestException(e)
     }
   }
 
@@ -95,19 +119,6 @@ export class TaskService {
           throw new BadRequestException("User already assigned to this task");
       }
     }
-  }
-
-  async getAllUsersByTaskId(taskId: number) {
-    return await this.prisma.assignedTask.findMany({
-      where: { taskId: taskId },
-      select: {
-        user: {
-          select: {
-            id: true,
-          },
-        },
-      },
-    });
   }
 
   async removeUsersFromTaskById(taskId: number, users: number[]) {
