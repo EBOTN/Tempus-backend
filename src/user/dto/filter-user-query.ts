@@ -59,15 +59,5 @@ export class FilterUserQuery {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  readonly firstName: string;
-
-  @ApiProperty({
-    example: "Vazovsky",
-    description: "User lastname",
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  readonly lastName: string;
+  readonly searchText: string;
 }

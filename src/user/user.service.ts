@@ -45,17 +45,20 @@ export class UserService {
   }
 
   async getByFilter(query: FilterUserQuery): Promise<userDTO[]> {
-    const { skip, take, taskId, ...filter } = query;
-    if (taskId) return this.getUsersFromTask(filter, taskId, skip, take);
-    return this.getAllUsers(filter, skip, take);
+    const { skip, take, taskId, searchText } = query;
+    if (taskId) return this.getUsersFromTask(searchText, taskId, skip, take);
+    return this.getAllUsers(searchText, skip, take);
   }
 
   async getAllUsers(filter, skip, take) {
     return await this.prisma.user.findMany({
       where: {
         OR: {
-          firstName: { startsWith: filter.firstName },
-          lastName: { startsWith: filter.lastName },
+          firstName: {
+            contains: filter || "",
+            mode: "insensitive",
+          },
+          lastName: { contains: filter || "", mode: "insensitive" },
         },
       },
       skip: skip,
@@ -67,7 +70,13 @@ export class UserService {
   async getUsersFromTask(filter, taskId, skip, take) {
     return await this.prisma.user.findMany({
       where: {
-        ...filter,
+        OR: {
+          firstName: {
+            contains: filter || "",
+            mode: "insensitive",
+          },
+          lastName: { contains: filter || "", mode: "insensitive" },
+        },
         assignedTasks: {
           some: { taskId: taskId },
         },
@@ -78,7 +87,6 @@ export class UserService {
     });
   }
 
-  // TODO: Add validation if user not exist | ? Конфликт с регистрацией
   async getFirstByFilter(filter): Promise<User> {
     if (!filter) throw new BadRequestException("Filter not specified");
     return await this.prisma.user.findFirst({
@@ -95,7 +103,6 @@ export class UserService {
     });
   }
 
-  // TODO: Add validation if user not exist | +
   async update(id: number, newData): Promise<userDTO> {
     try {
       return await this.prisma.user.update({

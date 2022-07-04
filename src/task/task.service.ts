@@ -178,9 +178,8 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const _ = { ...data.task };
-      delete data.task;
-      return { ..._, ...data };
+      const {task: taskData, ...taskInfo} = data;
+      return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -219,9 +218,8 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const _ = { ...data.task };
-      delete data.task;
-      return { ..._, ...data };
+      const {task: taskData, ...taskInfo} = data;
+      return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -256,9 +254,8 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const _ = { ...data.task };
-      delete data.task;
-      return { ..._, ...data };
+      const {task: taskData, ...taskInfo} = data;
+      return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -301,9 +298,8 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const _ = { ...data.task };
-      delete data.task;
-      return { ..._, ...data };
+      const {task: taskData, ...taskInfo} = data;
+      return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")

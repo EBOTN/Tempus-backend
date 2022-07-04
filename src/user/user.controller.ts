@@ -23,7 +23,6 @@ export class UserController {
     return await this.userService.getByFilter(query);
   }
 
-  // TODO: Add validation
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get current user" })
   @ApiResponse({ status: 200, type: userDTO })
