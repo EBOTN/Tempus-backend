@@ -13,6 +13,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
 import { AssignedTaskDto } from "./dto/assigned-task-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
+import { EditUsersToTaskDto } from "./dto/edit-users-to-task-dto";
 import { ReadTaskQuery as GetTasksQuery } from "./dto/read-task-query";
 import { TaskDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
@@ -70,6 +71,22 @@ export class TaskController {
   @Put("/:id")
   update(@Param() param: UpdateTaskParam, @Body() body: UpdateTaskDto) {
     return this.taskService.update(param, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Assign worker to task" })
+  @ApiResponse({ status: 200, type: TaskDto })
+  @Post("/:id/assignWorker")
+  assignUser(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
+    return this.taskService.assignUsersToTaskById(param.id, body.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Unassign user from task" })
+  @ApiResponse({ status: 200, type: TaskDto })
+  @Delete("/:id/unassignWorker")
+  removeUser(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
+    return this.taskService.removeUsersFromTaskById(param.id, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)

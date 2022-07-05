@@ -23,23 +23,23 @@ export class UpdateTaskDto {
   @IsString()
   readonly description?: string;
 
-  @ApiProperty({
-    type: [Number],
-    description: "Array workers are assigned to task",
-  })
-  @IsOptional()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @ArrayUnique()
-  readonly addedWorkers?: number[];
+  // @ApiProperty({
+  //   type: [Number],
+  //   description: "Array workers are assigned to task",
+  // })
+  // @IsOptional()
+  // @IsArray()
+  // @IsNumber({}, { each: true })
+  // @ArrayUnique()
+  // readonly addedWorkers?: number[];
 
-  @ApiProperty({
-    type: [Number],
-    description: "Array workers are removed from task",
-  })
-  @IsOptional()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @ArrayUnique()
-  readonly removedWorkers?: number[];
+  // @ApiProperty({
+  //   type: [Number],
+  //   description: "Array workers are removed from task",
+  // })
+  // @IsOptional()
+  // @IsArray()
+  // @IsNumber({}, { each: true })
+  // @ArrayUnique()
+  // readonly removedWorkers?: number[];
 }

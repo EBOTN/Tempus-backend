@@ -36,7 +36,6 @@ export class TaskService {
         return { ..._, ...item };
       });
     } catch (e) {
-      console.log(e);
       throw new BadRequestException(e);
     }
   }
@@ -56,6 +55,7 @@ export class TaskService {
           title: true,
           description: true,
           creatorId: true,
+          workers: true,
         },
       });
     } catch (e) {
@@ -103,21 +103,48 @@ export class TaskService {
 
   async update(param: UpdateTaskParam, data: UpdateTaskDto): Promise<TaskDto> {
     try {
-      if (data.removedWorkers) {
-        await this.removeUsersFromTaskById(param.id, data.removedWorkers);
-      }
-      if (data.addedWorkers) {
-        await this.assignUsersToTaskById(param.id, data.addedWorkers);
-      }
-      const { addedWorkers, removedWorkers, ...updateTask } = data;
       return await this.prisma.task.update({
         where: param,
-        data: updateTask,
+        data: data,
         select: {
           id: true,
           title: true,
           description: true,
           creatorId: true,
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025") throw new BadRequestException("Incorrect task");
+      }
+    }
+  }
+
+  async removeUsersFromTaskById(taskId: number, userId: number) {
+    try {
+      return await this.prisma.assignedTask.delete({
+        where: {
+          taskid: {
+            workerId: userId,
+            taskId: taskId,
+          },
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025") throw new BadRequestException("Incorrect task");
+        if (e.code === "P2003")
+          throw new BadRequestException("Incorrect worker");
+      }
+    }
+  }
+
+  async assignUsersToTaskById(taskId: number, userId: number) {
+    try {
+      return await this.prisma.assignedTask.create({
+        data: {
+          taskId: taskId,
+          workerId: userId,
         },
       });
     } catch (e) {
@@ -129,18 +156,6 @@ export class TaskService {
           throw new BadRequestException("User already assigned to this task");
       }
     }
-  }
-
-  async removeUsersFromTaskById(taskId: number, users: number[]) {
-    await this.prisma.assignedTask.deleteMany({
-      where: { workerId: { in: users }, taskId: taskId },
-    });
-  }
-
-  async assignUsersToTaskById(taskId: number, users: number[]) {
-    await this.prisma.assignedTask.createMany({
-      data: users.map((id) => ({ workerId: id, taskId: taskId })),
-    });
   }
 
   async deleteById(id: number) {
@@ -178,7 +193,7 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const {task: taskData, ...taskInfo} = data;
+      const { task: taskData, ...taskInfo } = data;
       return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -218,7 +233,7 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const {task: taskData, ...taskInfo} = data;
+      const { task: taskData, ...taskInfo } = data;
       return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -254,7 +269,7 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const {task: taskData, ...taskInfo} = data;
+      const { task: taskData, ...taskInfo } = data;
       return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -298,7 +313,7 @@ export class TaskService {
           ...new SelectAssignedTask(),
         },
       });
-      const {task: taskData, ...taskInfo} = data;
+      const { task: taskData, ...taskInfo } = data;
       return { ...taskData, ...taskInfo };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
