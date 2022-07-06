@@ -84,6 +84,9 @@ export class UserService {
       skip: skip,
       take: take,
       select: new ConfigUserWithoutPassword(),
+      orderBy: {
+        id: "asc",
+      },
     });
   }
 

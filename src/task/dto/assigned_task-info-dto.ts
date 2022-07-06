@@ -1,8 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class AssignedTaskDto {
+export class AssignedTaskInfoDto {
   @ApiProperty({ example: "1", description: "Assigned task id" })
   readonly id: number;
+
+  @ApiProperty({ example: "Title", description: "Task title" })
+  readonly title: string;
+
+  @ApiProperty({ example: "Description", description: "Task description" })
+  readonly description: string;
+
+  @ApiProperty({ example: "1", description: "Creator id" })
+  readonly creatorId: number;
 
   @ApiProperty({ example: "1", description: "Task id" })
   readonly taskId: number;
@@ -30,4 +39,7 @@ export class AssignedTaskDto {
 
   @ApiProperty({ example: "10000", description: "Worker pause time" })
   readonly pauseTime: number;
+
+  @ApiProperty({ description: "Worker start pause time" })
+  readonly startPauseTime: Date;
 }

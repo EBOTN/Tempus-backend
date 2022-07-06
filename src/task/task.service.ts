@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { Prisma, Task } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
+import { AssignedTaskInfoDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { ReadTaskQuery } from "./dto/read-task-query";
 import { SelectAssignedTask } from "./dto/select-assigned-task-dto";
@@ -12,8 +13,7 @@ import { UpdateTaskParam } from "./dto/update-task-param";
 export class TaskService {
   constructor(private prisma: PrismaService) {}
 
-  async getAssignedTasksByUserId(query: ReadTaskQuery) {
-    const { userId } = query;
+  async getAssignedTasksByUserId(userId: number) {
     try {
       const data = await this.prisma.assignedTask.findMany({
         where: {
@@ -29,7 +29,11 @@ export class TaskService {
           },
           ...new SelectAssignedTask(),
         },
+        orderBy: {
+          id: "asc",
+        },
       });
+
       return data.map((item) => {
         const _ = { ...item.task };
         delete item.task;
@@ -40,13 +44,31 @@ export class TaskService {
     }
   }
 
-  async getCreatedTasksByUserId(query: ReadTaskQuery) {
+  async getFirst(taskId: number): Promise<TaskDto> {
+    return await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        creatorId: true,
+        workers: {
+          select: new SelectAssignedTask(),
+        },
+      },
+    });
+  }
+
+  async getCreatedTasksByUserId(query: ReadTaskQuery): Promise<TaskDto[]> {
     const { title, userId } = query;
     try {
       return this.prisma.task.findMany({
         where: {
           title: {
-            startsWith: title,
+            contains: title || "",
+            mode: "insensitive",
           },
           creatorId: userId,
         },
@@ -55,7 +77,12 @@ export class TaskService {
           title: true,
           description: true,
           creatorId: true,
-          workers: true,
+          workers: {
+            select: new SelectAssignedTask(),
+          },
+        },
+        orderBy: {
+          id: "asc",
         },
       });
     } catch (e) {
@@ -63,19 +90,34 @@ export class TaskService {
     }
   }
 
-  async getAll() {
-    return await this.prisma.task.findMany();
+  async getAll(): Promise<TaskDto[]> {
+    return await this.prisma.task.findMany({
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        creatorId: true,
+        workers: {
+          select: new SelectAssignedTask(),
+        },
+      },
+      orderBy: {
+        id: "asc",
+      },
+    });
   }
 
   async create(data: CreateTaskDto): Promise<TaskDto> {
     try {
-      return await this.prisma.task.create({
+      const { id } = await this.prisma.task.create({
         data: {
           title: data.title,
           description: data.description,
           creatorId: data.creatorId,
         },
       });
+
+      return await this.getFirst(id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -90,9 +132,11 @@ export class TaskService {
 
   async remove(param: UpdateTaskParam): Promise<TaskDto> {
     try {
-      return await this.prisma.task.delete({
+      await this.prisma.task.delete({
         where: param,
       });
+
+      return await this.getFirst(param.id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -103,16 +147,12 @@ export class TaskService {
 
   async update(param: UpdateTaskParam, data: UpdateTaskDto): Promise<TaskDto> {
     try {
-      return await this.prisma.task.update({
+      await this.prisma.task.update({
         where: param,
         data: data,
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          creatorId: true,
-        },
       });
+
+      return await this.getFirst(param.id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -120,9 +160,12 @@ export class TaskService {
     }
   }
 
-  async removeUsersFromTaskById(taskId: number, userId: number) {
+  async removeUsersFromTaskById(
+    taskId: number,
+    userId: number
+  ): Promise<TaskDto> {
     try {
-      return await this.prisma.assignedTask.delete({
+      await this.prisma.assignedTask.delete({
         where: {
           taskid: {
             workerId: userId,
@@ -130,6 +173,8 @@ export class TaskService {
           },
         },
       });
+
+      return await this.getFirst(taskId);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -139,14 +184,19 @@ export class TaskService {
     }
   }
 
-  async assignUsersToTaskById(taskId: number, userId: number) {
+  async assignUsersToTaskById(
+    taskId: number,
+    userId: number
+  ): Promise<TaskDto> {
     try {
-      return await this.prisma.assignedTask.create({
+      await this.prisma.assignedTask.create({
         data: {
           taskId: taskId,
           workerId: userId,
         },
       });
+
+      return await this.getFirst(taskId);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -159,22 +209,22 @@ export class TaskService {
   }
 
   async deleteById(id: number) {
-    return await this.prisma.task.delete({
+    await this.prisma.task.delete({
       where: {
         id: id,
       },
     });
   }
 
-  async startTask(id: number) {
+  async startTask(id: number): Promise<AssignedTaskInfoDto> {
     const date = new Date();
-    const task = await this.getFirstAssignedTaskByFilter({
-      id: id,
-    });
+    const task = await this.getFirstAssignedTaskById(id);
+
     if (task.isComplete) throw new BadRequestException("Task already finished");
     if (task.isStarted) throw new BadRequestException("Task already start");
+
     try {
-      const data = await this.prisma.assignedTask.update({
+      await this.prisma.assignedTask.update({
         where: {
           id: id,
         },
@@ -182,19 +232,9 @@ export class TaskService {
           startTime: date,
           isStarted: true,
         },
-        select: {
-          task: {
-            select: {
-              title: true,
-              description: true,
-              creatorId: true,
-            },
-          },
-          ...new SelectAssignedTask(),
-        },
       });
-      const { task: taskData, ...taskInfo } = data;
-      return { ...taskData, ...taskInfo };
+
+      return await this.getFirstAssignedTaskById(id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -203,17 +243,18 @@ export class TaskService {
     }
   }
 
-  async finishTask(id: number) {
+  async finishTask(id: number): Promise<AssignedTaskInfoDto> {
     const date = new Date();
-    const task = await this.getFirstAssignedTaskByFilter({
-      id: id,
-    });
+    const task = await this.getFirstAssignedTaskById(id);
+
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
     if (task.isPaused) throw new BadRequestException("Task on pause!");
+
     const workTIme = date.getTime() - task.startTime.getTime() - task.pauseTime;
+
     try {
-      const data = await this.prisma.assignedTask.update({
+      await this.prisma.assignedTask.update({
         where: {
           id: id,
         },
@@ -222,19 +263,9 @@ export class TaskService {
           isComplete: true,
           workTime: workTIme,
         },
-        select: {
-          task: {
-            select: {
-              title: true,
-              description: true,
-              creatorId: true,
-            },
-          },
-          ...new SelectAssignedTask(),
-        },
       });
-      const { task: taskData, ...taskInfo } = data;
-      return { ...taskData, ...taskInfo };
+
+      return await this.getFirstAssignedTaskById(id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -243,14 +274,16 @@ export class TaskService {
     }
   }
 
-  async startPause(id: number) {
-    const task = await this.getFirstAssignedTaskByFilter({ id: id });
+  async startPause(id: number): Promise<AssignedTaskInfoDto> {
+    const task = await this.getFirstAssignedTaskById(id);
+
     if (task.isPaused) throw new BadRequestException("Task already paused");
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
+
     try {
       const date = new Date();
-      const data = await this.prisma.assignedTask.update({
+      await this.prisma.assignedTask.update({
         where: {
           id: id,
         },
@@ -258,19 +291,9 @@ export class TaskService {
           startPauseTime: date,
           isPaused: true,
         },
-        select: {
-          task: {
-            select: {
-              title: true,
-              description: true,
-              creatorId: true,
-            },
-          },
-          ...new SelectAssignedTask(),
-        },
       });
-      const { task: taskData, ...taskInfo } = data;
-      return { ...taskData, ...taskInfo };
+
+      return await this.getFirstAssignedTaskById(id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -279,8 +302,9 @@ export class TaskService {
     }
   }
 
-  async endPause(id: number) {
-    const task = await this.getFirstAssignedTaskByFilter({ id: id });
+  async endPause(id: number): Promise<AssignedTaskInfoDto> {
+    const task = await this.getFirstAssignedTaskById(id);
+
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
     if (!task.isPaused) throw new BadRequestException("Task not paused");
@@ -288,11 +312,12 @@ export class TaskService {
     try {
       const date = new Date();
       let pauseTime = date.getTime() - task.startPauseTime.getTime();
+
       if (task.pauseTime) {
         pauseTime += task.pauseTime;
       }
 
-      const data = await this.prisma.assignedTask.update({
+      await this.prisma.assignedTask.update({
         where: {
           id: id,
         },
@@ -302,19 +327,9 @@ export class TaskService {
           endPauseTime: date,
           startPauseTime: null,
         },
-        select: {
-          task: {
-            select: {
-              title: true,
-              description: true,
-              creatorId: true,
-            },
-          },
-          ...new SelectAssignedTask(),
-        },
       });
-      const { task: taskData, ...taskInfo } = data;
-      return { ...taskData, ...taskInfo };
+
+      return await this.getFirstAssignedTaskById(id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -323,11 +338,21 @@ export class TaskService {
     }
   }
 
-  private async getFirstAssignedTaskByFilter(filter) {
+  private async getFirstAssignedTaskById(
+    id: number
+  ): Promise<AssignedTaskInfoDto> {
     const data = await this.prisma.assignedTask.findFirst({
-      where: filter,
+      where: {
+        id: id,
+      },
+      include: {
+        task: true,
+      },
     });
+
     if (!data) throw new BadRequestException("Task not exists");
-    return data;
+    const { task, ...info } = data;
+
+    return { ...data.task, ...info };
   }
 }

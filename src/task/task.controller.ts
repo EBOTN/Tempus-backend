@@ -12,6 +12,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
 import { AssignedTaskDto } from "./dto/assigned-task-dto";
+import { AssignedTaskInfoDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { EditUsersToTaskDto } from "./dto/edit-users-to-task-dto";
 import { ReadTaskQuery as GetTasksQuery } from "./dto/read-task-query";
@@ -30,7 +31,7 @@ export class TaskController {
   @ApiResponse({ status: 200, type: [AssignedTaskDto] })
   @Get("getAssignedTasks")
   getAssignedTasks(@Query() query: GetTasksQuery) {
-    return this.taskService.getAssignedTasksByUserId(query);
+    return this.taskService.getAssignedTasksByUserId(query.userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -43,14 +44,22 @@ export class TaskController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  @ApiOperation({ summary: "Get all tasks" })
+  @ApiOperation({ summary: "Get all tasks and them workers" })
   @ApiResponse({ status: 200, type: [TaskDto] })
   getAll() {
     return this.taskService.getAll();
   }
+  
+  @UseGuards(JwtAuthGuard)
+  @Get("/:id")
+  @ApiOperation({ summary: "Get all tasks" })
+  @ApiResponse({ status: 200, type: [TaskDto] })
+  getFirst(@Param() param: UpdateTaskParam) {
+    return this.taskService.getFirst(param.id);
+  }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: "Create task and set to user" })
+  @ApiOperation({ summary: "Create task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Post()
   create(@Body() body: CreateTaskDto) {
@@ -84,7 +93,7 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Unassign user from task" })
   @ApiResponse({ status: 200, type: TaskDto })
-  @Delete("/:id/unassignWorker")
+  @Post("/:id/unassignWorker")
   removeUser(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
     return this.taskService.removeUsersFromTaskById(param.id, body.userId);
   }
@@ -92,7 +101,7 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   @Post("/:id/start")
   @ApiOperation({ summary: "Start task" })
-  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
   startTask(@Param() param: UpdateTaskParam) {
     return this.taskService.startTask(param.id);
   }
@@ -100,7 +109,7 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   @Post("/:id/complete")
   @ApiOperation({ summary: "Finish task" })
-  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
   finishTask(@Param() param: UpdateTaskParam) {
     return this.taskService.finishTask(param.id);
   }
@@ -108,7 +117,7 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   @Post("/:id/startpause")
   @ApiOperation({ summary: "Pause task" })
-  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
   startPause(@Param() param: UpdateTaskParam) {
     return this.taskService.startPause(param.id);
   }
@@ -116,7 +125,7 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   @Post("/:id/endpause")
   @ApiOperation({ summary: "Unpause task" })
-  @ApiResponse({ status: 200, type: [AssignedTaskDto] })
+  @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
   endPause(@Param() param: UpdateTaskParam) {
     return this.taskService.endPause(param.id);
   }

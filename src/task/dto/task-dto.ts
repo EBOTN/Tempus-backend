@@ -1,4 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { AssignedTaskDto } from "./assigned-task-dto";
+import { SelectAssignedTask } from "./select-assigned-task-dto";
 
 export class TaskDto {
   @ApiProperty({ example: "1", description: "Unique identificator" })
@@ -12,4 +14,10 @@ export class TaskDto {
 
   @ApiProperty({ example: "1", description: "Creator id" })
   readonly creatorId: number;
+
+  @ApiProperty({
+    type: [AssignedTaskDto],
+    description: "Array workers are assigned to task",
+  })
+  readonly workers: AssignedTaskDto[];
 }
