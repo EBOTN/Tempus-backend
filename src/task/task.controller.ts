@@ -116,31 +116,37 @@ export class TaskController {
   @Post("/:id/start")
   @ApiOperation({ summary: "Start task" })
   @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  startTask(@Param() param: UpdateTaskParam) {
-    return this.taskService.startTask(param.id);
+  startTask(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
+    return this.taskService.startTask(param.id, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post("/:id/complete")
   @ApiOperation({ summary: "Finish task" })
   @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  finishTask(@Param() param: UpdateTaskParam) {
-    return this.taskService.finishTask(param.id);
+  finishTask(
+    @Param() param: UpdateTaskParam,
+    @Body() body: EditUsersToTaskDto
+  ) {
+    return this.taskService.finishTask(param.id, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post("/:id/startpause")
   @ApiOperation({ summary: "Pause task" })
   @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  startPause(@Param() param: UpdateTaskParam) {
-    return this.taskService.startPause(param.id);
+  startPause(
+    @Param() param: UpdateTaskParam,
+    @Body() body: EditUsersToTaskDto
+  ) {
+    return this.taskService.startPause(param.id, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post("/:id/endpause")
   @ApiOperation({ summary: "Unpause task" })
   @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  endPause(@Param() param: UpdateTaskParam) {
-    return this.taskService.endPause(param.id);
+  endPause(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
+    return this.taskService.endPause(param.id, body.userId);
   }
 }

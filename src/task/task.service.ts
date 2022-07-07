@@ -111,15 +111,20 @@ export class TaskService {
     data: CreateTaskDto
   ): Promise<AssignedTaskInfoDto> {
     try {
-      const { id } = await this.prisma.task.create({
+      const { id, creatorId } = await this.prisma.task.create({
         data: {
           title: data.title,
           description: data.description,
           creatorId: data.creatorId,
+          workers: {
+            create: {
+              workerId: data.creatorId,
+            },
+          },
         },
       });
 
-      return await this.getFirstAssignedTaskById(id);
+      return await this.getFirstAssignedTaskById(id, creatorId);
     } catch (e) {}
   }
 
@@ -234,17 +239,24 @@ export class TaskService {
     });
   }
 
-  async startTask(id: number): Promise<AssignedTaskInfoDto> {
+  async startTask(
+    taskId: number,
+    userId: number
+  ): Promise<AssignedTaskInfoDto> {
     const date = new Date();
-    const task = await this.getFirstAssignedTaskById(id);
+    const task = await this.getFirstAssignedTaskById(taskId, userId);
 
     if (task.isComplete) throw new BadRequestException("Task already finished");
     if (task.isStarted) throw new BadRequestException("Task already start");
 
     try {
+      await this.checkTraceableTask(userId);
       await this.prisma.assignedTask.update({
         where: {
-          id: id,
+          taskid: {
+            taskId: taskId,
+            workerId: userId,
+          },
         },
         data: {
           startTime: date,
@@ -252,7 +264,7 @@ export class TaskService {
         },
       });
 
-      return await this.getFirstAssignedTaskById(id);
+      return await this.getFirstAssignedTaskById(taskId, userId);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -261,9 +273,12 @@ export class TaskService {
     }
   }
 
-  async finishTask(id: number): Promise<AssignedTaskInfoDto> {
+  async finishTask(
+    taskId: number,
+    userId: number
+  ): Promise<AssignedTaskInfoDto> {
     const date = new Date();
-    const task = await this.getFirstAssignedTaskById(id);
+    const task = await this.getFirstAssignedTaskById(taskId, userId);
 
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
@@ -274,7 +289,10 @@ export class TaskService {
     try {
       await this.prisma.assignedTask.update({
         where: {
-          id: id,
+          taskid: {
+            taskId: taskId,
+            workerId: userId,
+          },
         },
         data: {
           endTime: date,
@@ -283,7 +301,7 @@ export class TaskService {
         },
       });
 
-      return await this.getFirstAssignedTaskById(id);
+      return await this.getFirstAssignedTaskById(taskId, userId);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -292,8 +310,11 @@ export class TaskService {
     }
   }
 
-  async startPause(id: number): Promise<AssignedTaskInfoDto> {
-    const task = await this.getFirstAssignedTaskById(id);
+  async startPause(
+    taskId: number,
+    userId: number
+  ): Promise<AssignedTaskInfoDto> {
+    const task = await this.getFirstAssignedTaskById(taskId, userId);
 
     if (task.isPaused) throw new BadRequestException("Task already paused");
     if (task.isComplete) throw new BadRequestException("Task already finish");
@@ -303,7 +324,10 @@ export class TaskService {
       const date = new Date();
       await this.prisma.assignedTask.update({
         where: {
-          id: id,
+          taskid: {
+            taskId: taskId,
+            workerId: userId,
+          },
         },
         data: {
           startPauseTime: date,
@@ -311,7 +335,7 @@ export class TaskService {
         },
       });
 
-      return await this.getFirstAssignedTaskById(id);
+      return await this.getFirstAssignedTaskById(taskId, userId);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -320,8 +344,8 @@ export class TaskService {
     }
   }
 
-  async endPause(id: number): Promise<AssignedTaskInfoDto> {
-    const task = await this.getFirstAssignedTaskById(id);
+  async endPause(taskId: number, userId: number): Promise<AssignedTaskInfoDto> {
+    const task = await this.getFirstAssignedTaskById(taskId, userId);
 
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
@@ -337,7 +361,10 @@ export class TaskService {
 
       await this.prisma.assignedTask.update({
         where: {
-          id: id,
+          taskid: {
+            taskId: taskId,
+            workerId: userId,
+          },
         },
         data: {
           pauseTime: pauseTime,
@@ -347,7 +374,7 @@ export class TaskService {
         },
       });
 
-      return await this.getFirstAssignedTaskById(id);
+      return await this.getFirstAssignedTaskById(taskId, userId);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -357,11 +384,13 @@ export class TaskService {
   }
 
   private async getFirstAssignedTaskById(
-    id: number
+    taskId: number,
+    userId: number
   ): Promise<AssignedTaskInfoDto> {
     const data = await this.prisma.assignedTask.findFirst({
       where: {
-        id: id,
+        taskId: taskId,
+        workerId: userId,
       },
       include: {
         task: true,
@@ -372,5 +401,28 @@ export class TaskService {
     const { task, ...info } = data;
 
     return { ...data.task, ...info };
+  }
+
+  private async checkTraceableTask(userId: number) {
+    const traceableTask = await this.prisma.assignedTask.findFirst({
+      where: {
+        workerId: userId,
+        isStarted: true,
+        isPaused: false,
+      },
+    });
+    if (traceableTask) {
+      await this.prisma.assignedTask.update({
+        where: {
+          taskid: {
+            taskId: traceableTask.taskId,
+            workerId: userId,
+          },
+        },
+        data: {
+          isPaused: true,
+        },
+      });
+    }
   }
 }
