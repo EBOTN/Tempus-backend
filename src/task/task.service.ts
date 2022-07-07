@@ -282,7 +282,7 @@ export class TaskService {
 
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
-    if (task.isPaused) throw new BadRequestException("Task on pause!");
+    // if (task.isPaused) throw new BadRequestException("Task on pause!");
 
     const workTIme = date.getTime() - task.startTime.getTime() - task.pauseTime;
 
@@ -350,7 +350,7 @@ export class TaskService {
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
     if (!task.isPaused) throw new BadRequestException("Task not paused");
-    
+
     try {
       await this.checkTraceableTask(userId);
       const date = new Date();
@@ -405,6 +405,7 @@ export class TaskService {
   }
 
   private async checkTraceableTask(userId: number) {
+    const date = new Date();
     const traceableTask = await this.prisma.assignedTask.findFirst({
       where: {
         workerId: userId,
@@ -423,6 +424,7 @@ export class TaskService {
         },
         data: {
           isPaused: true,
+          startPauseTime: date,
         },
       });
     }
