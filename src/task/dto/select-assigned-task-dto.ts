@@ -9,4 +9,5 @@ export class SelectAssignedTask {
   readonly isPaused: boolean = true;
   readonly workTime: boolean = true;
   readonly pauseTime: boolean = true;
+  readonly startPauseTime: boolean =true;
 }
