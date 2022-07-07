@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Prisma, Task } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { AssignedTaskInfoDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
@@ -107,6 +107,22 @@ export class TaskService {
     });
   }
 
+  async createTaskForCreator(
+    data: CreateTaskDto
+  ): Promise<AssignedTaskInfoDto> {
+    try {
+      const { id } = await this.prisma.task.create({
+        data: {
+          title: data.title,
+          description: data.description,
+          creatorId: data.creatorId,
+        },
+      });
+
+      return await this.getFirstAssignedTaskById(id);
+    } catch (e) {}
+  }
+
   async create(data: CreateTaskDto): Promise<TaskDto> {
     try {
       const { id } = await this.prisma.task.create({
@@ -156,6 +172,8 @@ export class TaskService {
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
+        if (e.code === "P2002")
+          throw new BadRequestException("You try change unique field");
       }
     }
   }

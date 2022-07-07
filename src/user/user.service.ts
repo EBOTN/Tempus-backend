@@ -50,15 +50,15 @@ export class UserService {
     return this.getAllUsers(searchText, skip, take);
   }
 
-  async getAllUsers(filter, skip, take) {
+  async getAllUsers(searchText: string, skip: number, take: number) {
     return await this.prisma.user.findMany({
       where: {
         OR: {
           firstName: {
-            contains: filter || "",
+            contains: searchText || "",
             mode: "insensitive",
           },
-          lastName: { contains: filter || "", mode: "insensitive" },
+          lastName: { contains: searchText || "", mode: "insensitive" },
         },
       },
       skip: skip,
@@ -67,15 +67,20 @@ export class UserService {
     });
   }
 
-  async getUsersFromTask(filter, taskId, skip, take) {
+  async getUsersFromTask(
+    searchText: string,
+    taskId: number,
+    skip: number,
+    take: number
+  ) {
     return await this.prisma.user.findMany({
       where: {
         OR: {
           firstName: {
-            contains: filter || "",
+            contains: searchText || "",
             mode: "insensitive",
           },
-          lastName: { contains: filter || "", mode: "insensitive" },
+          lastName: { contains: searchText || "", mode: "insensitive" },
         },
         assignedTasks: {
           some: { taskId: taskId },

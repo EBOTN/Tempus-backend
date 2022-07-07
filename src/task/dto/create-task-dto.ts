@@ -1,8 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
-  ArrayNotEmpty,
-  ArrayUnique,
-  IsArray,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -29,14 +26,14 @@ export class CreateTaskDto {
   @IsNumber()
   readonly creatorId: number;
 
-  @ApiProperty({
-    type: [Number],
-    description: "Array workers are assigned to created task",
-  })
-  @IsOptional()
-  @ArrayNotEmpty()
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @ArrayUnique()
-  readonly addedWorkers?: number[];
+  // @ApiProperty({
+  //   type: [Number],
+  //   description: "Array workers are assigned to created task",
+  // })
+  // @IsOptional()
+  // @ArrayNotEmpty()
+  // @IsArray()
+  // @IsNumber({}, { each: true })
+  // @ArrayUnique()
+  // readonly addedWorkers?: number[];
 }

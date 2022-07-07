@@ -49,7 +49,7 @@ export class TaskController {
   getAll() {
     return this.taskService.getAll();
   }
-  
+
   @UseGuards(JwtAuthGuard)
   @Get("/:id")
   @ApiOperation({ summary: "Get all tasks" })
@@ -64,6 +64,14 @@ export class TaskController {
   @Post()
   create(@Body() body: CreateTaskDto) {
     return this.taskService.create(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Create task for one user" })
+  @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
+  @Post("createUserTask")
+  createForCreator(@Body() body: CreateTaskDto) {
+    return this.taskService.createTaskForCreator(body);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -86,7 +94,10 @@ export class TaskController {
   @ApiOperation({ summary: "Assign worker to task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Post("/:id/assignWorker")
-  assignUser(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
+  assignUser(
+    @Param() param: UpdateTaskParam,
+    @Body() body: EditUsersToTaskDto
+  ) {
     return this.taskService.assignUsersToTaskById(param.id, body.userId);
   }
 
@@ -94,7 +105,10 @@ export class TaskController {
   @ApiOperation({ summary: "Unassign user from task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Post("/:id/unassignWorker")
-  removeUser(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
+  removeUser(
+    @Param() param: UpdateTaskParam,
+    @Body() body: EditUsersToTaskDto
+  ) {
     return this.taskService.removeUsersFromTaskById(param.id, body.userId);
   }
 
