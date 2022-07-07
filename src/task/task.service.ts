@@ -350,8 +350,9 @@ export class TaskService {
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
     if (!task.isPaused) throw new BadRequestException("Task not paused");
-
+    
     try {
+      await this.checkTraceableTask(userId);
       const date = new Date();
       let pauseTime = date.getTime() - task.startPauseTime.getTime();
 
@@ -409,6 +410,7 @@ export class TaskService {
         workerId: userId,
         isStarted: true,
         isPaused: false,
+        isComplete: false,
       },
     });
     if (traceableTask) {
