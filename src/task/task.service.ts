@@ -282,7 +282,7 @@ export class TaskService {
 
     if (task.isComplete) throw new BadRequestException("Task already finish");
     if (!task.isStarted) throw new BadRequestException("Task not yet start");
-    // if (task.isPaused) throw new BadRequestException("Task on pause!");
+    if (task.isPaused) await this.endPause(taskId, userId);
 
     const workTIme = date.getTime() - task.startTime.getTime() - task.pauseTime;
 
@@ -415,6 +415,7 @@ export class TaskService {
       },
     });
     if (traceableTask) {
+      // await this.startPause()
       await this.prisma.assignedTask.update({
         where: {
           taskid: {
