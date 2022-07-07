@@ -126,27 +126,26 @@ export class TaskController {
   @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
   finishTask(
     @Param() param: UpdateTaskParam,
-    @Body() body: EditUsersToTaskDto
   ) {
-    return this.taskService.finishTask(param.id, body.userId);
+    return this.taskService.finishTask(param.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post("/:id/startpause")
-  @ApiOperation({ summary: "Pause task" })
-  @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  startPause(
-    @Param() param: UpdateTaskParam,
-    @Body() body: EditUsersToTaskDto
-  ) {
-    return this.taskService.startPause(param.id, body.userId);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Post("/:id/startpause")
+  // @ApiOperation({ summary: "Pause task" })
+  // @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
+  // startPause(
+  //   @Param() param: UpdateTaskParam,
+  //   @Body() body: EditUsersToTaskDto
+  // ) {
+  //   return this.taskService.startPause(param.id, body.userId);
+  // }
 
-  @UseGuards(JwtAuthGuard)
-  @Post("/:id/endpause")
-  @ApiOperation({ summary: "Unpause task" })
-  @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  endPause(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
-    return this.taskService.endPause(param.id, body.userId);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Post("/:id/endpause")
+  // @ApiOperation({ summary: "Unpause task" })
+  // @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
+  // endPause(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
+  //   return this.taskService.endPause(param.id, body.userId);
+  // }
 }

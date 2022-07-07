@@ -40,7 +40,7 @@ export class TokenService {
     return await this.userService.update(user.id, { refreshtoken: null });
   }
 
-  validateAccessToken(token: string): Promise<userDTO> {
+  validateAccessToken(token: string) {
     if (!token)
       throw new UnauthorizedException({ message: "User unauthorized" });
 
