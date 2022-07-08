@@ -31,7 +31,7 @@ export class TaskController {
   @ApiResponse({ status: 200, type: [AssignedTaskDto] })
   @Get("getAssignedTasks")
   getAssignedTasks(@Query() query: GetTasksQuery) {
-    return this.taskService.getAssignedTasksByUserId(query.userId);
+    return this.taskService.getAssignedTasksByUserId(query);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -13,11 +13,17 @@ import { UpdateTaskParam } from "./dto/update-task-param";
 export class TaskService {
   constructor(private prisma: PrismaService) {}
 
-  async getAssignedTasksByUserId(userId: number) {
+  async getAssignedTasksByUserId(query: ReadTaskQuery) {
     try {
       const data = await this.prisma.assignedTask.findMany({
         where: {
-          workerId: userId,
+          workerId: query.userId,
+          task:{
+            title: {
+              contains: query.title || "",
+              mode: "insensitive",
+            },
+          }
         },
         select: {
           task: {
@@ -38,7 +44,7 @@ export class TaskService {
       return data.map((item) => {
         const date = new Date()
         if(item.isActive)
-          item.workTime += date.getTime() - item.TimeLines[item.TimeLines.length-1].startTime.getTime()
+          item.workTime + date.getTime() - item.TimeLines[item.TimeLines.length-1].startTime.getTime()
         const _ = { ...item.task };
         delete item.task;
         return { ..._, ...item };
@@ -68,7 +74,7 @@ export class TaskService {
   async getCreatedTasksByUserId(query: ReadTaskQuery) {
     const { title, userId } = query;
     try {
-      return this.prisma.task.findMany({
+      return await this.prisma.task.findMany({
         where: {
           title: {
             contains: title || "",
