@@ -271,7 +271,7 @@ export class TaskService {
       throw new BadRequestException("Task already closed");
     if (activeTimeLine) await this.endTimeLine(activeTimeLine.taskId);
     try {
-      const data = await this.prisma.assignedTask.update({
+      return await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
         },
@@ -285,19 +285,8 @@ export class TaskService {
         },
         include: {
           TimeLines: true,
-          task: {
-            include: {
-              workers: {
-                include: {
-                  TimeLines: true,
-                },
-              },
-            },
-          },
         },
       });
-      const { task } = data;
-      return { workers: task.workers };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -329,7 +318,7 @@ export class TaskService {
       const newWorkTime =
         date.getTime() - lastTimeLine.startTime.getTime() + activeTask.workTime;
 
-      const data = await this.prisma.assignedTask.update({
+      return await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
         },
@@ -349,20 +338,8 @@ export class TaskService {
         },
         include: {
           TimeLines: true,
-          task: {
-            include: {
-              workers: {
-                include: {
-                  TimeLines: true,
-                },
-              },
-            },
-          },
         },
       });
-
-      const { task } = data;
-      return { workers: task.workers };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
