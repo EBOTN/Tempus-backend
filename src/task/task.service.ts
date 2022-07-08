@@ -18,12 +18,12 @@ export class TaskService {
       const data = await this.prisma.assignedTask.findMany({
         where: {
           workerId: query.userId,
-          task:{
+          task: {
             title: {
               contains: query.title || "",
               mode: "insensitive",
             },
-          }
+          },
         },
         select: {
           task: {
@@ -42,14 +42,17 @@ export class TaskService {
       });
 
       return data.map((item) => {
-        const date = new Date()
-        if(item.isActive)
-          item.workTime + date.getTime() - item.TimeLines[item.TimeLines.length-1].startTime.getTime()
+        const date = new Date();
+        if (item.isActive)
+          item.workTime +=
+            date.getTime() -
+            item.TimeLines[item.TimeLines.length - 1].startTime.getTime();
         const _ = { ...item.task };
         delete item.task;
         return { ..._, ...item };
       });
     } catch (e) {
+      console.log(e);
       throw new BadRequestException(e);
     }
   }
@@ -262,7 +265,8 @@ export class TaskService {
         TimeLines: true,
       },
     });
-    if (activeTask.isActive) throw new BadRequestException("Task already started");
+    if (activeTask.isActive)
+      throw new BadRequestException("Task already started");
     if (activeTask.isComplete)
       throw new BadRequestException("Task already closed");
     if (activeTimeLine) await this.endTimeLine(activeTimeLine.taskId);
