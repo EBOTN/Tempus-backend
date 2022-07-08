@@ -135,6 +135,11 @@ export class TaskService {
           description: data.description,
           creatorId: data.creatorId,
         },
+        include: {
+          workers: {
+            include: { TimeLines: true },
+          },
+        },
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -152,6 +157,11 @@ export class TaskService {
     try {
       await this.prisma.task.delete({
         where: param,
+        include: {
+          workers: {
+            include: { TimeLines: true },
+          },
+        },
       });
 
       return await this.getFirst(param.id);
@@ -240,11 +250,15 @@ export class TaskService {
         id: assTaskId,
         isActive: true,
       },
+      include: {
+        TimeLines: true,
+      },
     });
     if (activeTask) throw new BadRequestException("Task already started");
-    if (activeTimeLine) await this.finishTask(activeTimeLine.taskId);
+    if (activeTimeLine)
+      await this.finishTask(activeTimeLine.taskId);
     try {
-      return await this.prisma.assignedTask.update({
+      const data = await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
         },
@@ -258,15 +272,25 @@ export class TaskService {
         },
         include: {
           TimeLines: true,
+          task: {
+            include: {
+              workers: {
+                include: {
+                  TimeLines: true,
+                },
+              },
+            },
+          },
         },
       });
+      const { task } = data;
+      return { workers: task.workers };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
           throw new BadRequestException("Task not exists");
       }
       console.log(e);
-      
     }
   }
 
@@ -279,14 +303,24 @@ export class TaskService {
         endTime: null,
       },
     });
+    const activeTask = await this.prisma.assignedTask.findFirst({
+      where: {
+        id: assTaskId,
+        isActive: true,
+      },
+    });
     if (!lastTimeLine) throw new BadRequestException("Task not started");
     try {
-      return await this.prisma.assignedTask.update({
+      const newWorkTime =
+        date.getTime() - lastTimeLine.startTime.getTime() + activeTask.workTime;
+
+      const data = await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
         },
         data: {
           isActive: false,
+          workTime: newWorkTime,
           TimeLines: {
             update: {
               where: {
@@ -300,14 +334,26 @@ export class TaskService {
         },
         include: {
           TimeLines: true,
+          task: {
+            include: {
+              workers: {
+                include: {
+                  TimeLines: true,
+                },
+              },
+            },
+          },
         },
       });
+
+      const { task } = data;
+      return { workers: task.workers };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
           throw new BadRequestException("Task not exists");
       }
-      console.log(e)
+      console.log(e);
     }
   }
 
