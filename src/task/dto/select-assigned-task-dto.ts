@@ -3,4 +3,6 @@ export class SelectAssignedTask {
   readonly taskId: boolean = true;
   readonly workerId: boolean = true;
   readonly isActive: boolean = true;
+  readonly workTime: boolean = true;
+  readonly isComplete: boolean = true;
 }

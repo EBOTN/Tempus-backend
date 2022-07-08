@@ -28,14 +28,15 @@ model Task {
 }
 
 model AssignedTask {
-  id        Int         @id @default(autoincrement())
-  taskId    Int
-  workerId  Int?
-  isActive  Boolean?    @default(false)
-  task      Task        @relation(fields: [taskId], references: [id], onDelete: Cascade, map: "task_fkey")
-  user      User?       @relation(fields: [workerId], references: [id], onDelete: Cascade, map: "user_fkey")
-  workTime  Int         @default(0)
-  TimeLines TimeLines[]
+  id         Int         @id @default(autoincrement())
+  taskId     Int
+  workerId   Int?
+  isActive   Boolean?    @default(false)
+  isComplete Boolean?    @default(false)
+  task       Task        @relation(fields: [taskId], references: [id], onDelete: Cascade, map: "task_fkey")
+  user       User?       @relation(fields: [workerId], references: [id], onDelete: Cascade, map: "user_fkey")
+  workTime   Int         @default(0)
+  TimeLines  TimeLines[]
 
   @@unique([taskId, workerId], name: "taskid")
 }

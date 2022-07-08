@@ -52,7 +52,7 @@ export class TaskController {
 
   @UseGuards(JwtAuthGuard)
   @Get("/:id")
-  @ApiOperation({ summary: "Get all tasks" })
+  @ApiOperation({ summary: "Get first task" })
   @ApiResponse({ status: 200, type: [TaskDto] })
   getFirst(@Param() param: UpdateTaskParam) {
     return this.taskService.getFirst(param.id);
@@ -113,23 +113,28 @@ export class TaskController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post("/:id/start")
+  @Post("/:id/startTimeLine")
   @ApiOperation({ summary: "Start task" })
   @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  startTask(@Param() param: UpdateTaskParam, @Body() body: EditUsersToTaskDto) {
-    return this.taskService.startTask(param.id, body.userId);
+  starTimeLine(
+    @Param() param: UpdateTaskParam,
+    @Body() body: EditUsersToTaskDto
+  ) {
+    return this.taskService.startTimeLine(param.id, body.userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post("/:id/complete")
+  @Post("/:id/endTimeLine")
   @ApiOperation({ summary: "Finish task" })
   @ApiResponse({ status: 200, type: AssignedTaskInfoDto })
-  finishTask(
-    @Param() param: UpdateTaskParam,
-  ) {
-    return this.taskService.finishTask(param.id);
+  endTimeLine(@Param() param: UpdateTaskParam) {
+    return this.taskService.endTimeLine(param.id);
   }
 
+  @Post("/:id/completeTask")
+  completeTask(@Param() param: UpdateTaskParam) {
+    return this.taskService.completeTask(param.id);
+  }
   // @UseGuards(JwtAuthGuard)
   // @Post("/:id/startpause")
   // @ApiOperation({ summary: "Pause task" })
