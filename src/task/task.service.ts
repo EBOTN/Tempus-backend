@@ -135,7 +135,7 @@ export class TaskService {
         },
       });
     } catch (e) {
-      throw new BadRequestException("sad");
+      throw new BadRequestException("Hohoho");
     }
   }
 
@@ -187,7 +187,7 @@ export class TaskService {
 
   async update(param: UpdateTaskParam, data: UpdateTaskDto) {
     try {
-      await this.prisma.task.update({
+      return await this.prisma.task.update({
         where: param,
         data: data,
       });
@@ -238,38 +238,30 @@ export class TaskService {
     }
   }
 
-  async deleteById(id: number) {
-    await this.prisma.task.delete({
-      where: {
-        id: id,
-      },
-    });
-  }
-
   async startTimeLine(assTaskId: number, userId: number) {
     const date = new Date();
 
-    const activeTimeLine = await this.prisma.timeLines.findFirst({
-      where: {
-        AssignedTask: {
-          workerId: userId,
-          isActive: true,
-        },
-      },
-    });
     const activeTask = await this.prisma.assignedTask.findFirst({
       where: {
-        id: assTaskId,
-      },
-      include: {
-        TimeLines: true,
+        OR: [
+          {
+            workerId: userId,
+            isActive: true,
+          },
+          {
+            id: assTaskId,
+          },
+        ],
       },
     });
-    if (activeTask.isActive)
+
+    if (!activeTask) throw new BadRequestException("Task not found");
+    if (activeTask.isActive && activeTask.id === assTaskId)
       throw new BadRequestException("Task already started");
-    if (activeTask.isComplete)
+    if (activeTask.isComplete && activeTask.id === assTaskId)
       throw new BadRequestException("Task already closed");
-    if (activeTimeLine) await this.endTimeLine(activeTimeLine.taskId);
+    if (activeTask.isActive) await this.endTimeLine(activeTask.id);
+
     try {
       return await this.prisma.assignedTask.update({
         where: {
@@ -292,31 +284,36 @@ export class TaskService {
         if (e.code === "P2025")
           throw new BadRequestException("Task not exists");
       }
-      console.log(e);
     }
   }
 
   async endTimeLine(assTaskId: number) {
     const date = new Date();
-    const lastTimeLine = await this.prisma.timeLines.findFirst({
+
+    const activeTimeLine = await this.prisma.timeLines.findFirst({
       where: {
         taskId: assTaskId,
         startTime: { not: null },
         endTime: null,
       },
-    });
-    const activeTask = await this.prisma.assignedTask.findFirst({
-      where: {
-        id: assTaskId,
-        isActive: true,
+      include: {
+        AssignedTask: true,
       },
     });
-    if (!lastTimeLine) throw new BadRequestException("Task not started");
-    if (activeTask.isComplete)
+
+    if (!activeTimeLine) throw new BadRequestException("Task not started");
+    if (activeTimeLine.AssignedTask.isComplete)
       throw new BadRequestException("Task already closed");
+
+    const timeLineWorkTime =
+      date.getTime() - activeTimeLine.startTime.getTime();
+    console.log(date.getDate());
+    if (timeLineWorkTime < 60000)
+      throw new BadRequestException("You work enough!");
+
     try {
       const newWorkTime =
-        date.getTime() - lastTimeLine.startTime.getTime() + activeTask.workTime;
+        timeLineWorkTime + activeTimeLine.AssignedTask.workTime;
 
       return await this.prisma.assignedTask.update({
         where: {
@@ -328,7 +325,7 @@ export class TaskService {
           TimeLines: {
             update: {
               where: {
-                id: lastTimeLine.id,
+                id: activeTimeLine.id,
               },
               data: {
                 endTime: date,
@@ -349,21 +346,23 @@ export class TaskService {
     }
   }
   async completeTask(assTaskId: number) {
-    const lastTimeLine = await this.prisma.timeLines.findFirst({
+    const completedTask = await this.prisma.timeLines.findFirst({
       where: {
         taskId: assTaskId,
-        startTime: { not: null },
-        endTime: null,
+        OR: [
+          { startTime: { not: null }, endTime: null, taskId: assTaskId },
+          { taskId: assTaskId },
+        ],
+      },
+      include: {
+        AssignedTask: true,
       },
     });
-    const activeTask = await this.prisma.assignedTask.findFirst({
-      where: {
-        id: assTaskId,
-      },
-    });
-    if (activeTask.isComplete)
-      throw new BadRequestException("Task already closed");
-    if (lastTimeLine) await this.endTimeLine(assTaskId);
+    if (!completedTask) throw new BadRequestException("Task not found");
+    if (completedTask.AssignedTask.isComplete)
+      throw new BadRequestException("Task already complete");
+    if (completedTask.startTime && !completedTask.endTime)
+      await this.endTimeLine(assTaskId);
     try {
       return await this.prisma.assignedTask.update({
         where: {
