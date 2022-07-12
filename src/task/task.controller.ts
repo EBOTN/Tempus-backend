@@ -16,7 +16,7 @@ import { AssignedTaskInfoDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { EditUsersToTaskDto } from "./dto/edit-users-to-task-dto";
 import { ReadTaskQuery as GetTasksQuery } from "./dto/read-task-query";
-import { TaskDto } from "./dto/task-dto";
+import { TaskDto, Tesst } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { UpdateTaskParam } from "./dto/update-task-param";
 import { TaskService } from "./task.service";
@@ -135,4 +135,10 @@ export class TaskController {
   completeTask(@Param() param: UpdateTaskParam) {
     return this.taskService.completeTask(param.id);
   }
+
+  @Post("test")
+  test(@Body() body: Tesst){
+    return this.taskService.getWorkerTimeLines(body.startTime, body.endTime, body.workerId)
+  }
 }
+

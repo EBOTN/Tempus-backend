@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { Prisma, TimeLines } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { AssignedTaskInfoDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
@@ -261,7 +261,8 @@ export class TaskService {
     if (activeTask.isComplete && activeTask.id === assTaskId)
       throw new BadRequestException("Task already closed");
     if (activeTask.isActive) await this.endTimeLine(activeTask.id);
-
+    if (this.checkWorkHours(userId))
+      throw new BadRequestException("You already work 40 hours");
     try {
       return await this.prisma.assignedTask.update({
         where: {
@@ -307,7 +308,7 @@ export class TaskService {
 
     const timeLineWorkTime =
       date.getTime() - activeTimeLine.startTime.getTime();
-    console.log(date.getDate());
+
     if (timeLineWorkTime < 60000)
       throw new BadRequestException("You work enough!");
 
@@ -386,5 +387,183 @@ export class TaskService {
         },
       });
     } catch (e) {}
+  }
+
+  // need assTaskId and timeLineId
+  divTimeLine(
+    startTime: Date,
+    endTime: Date
+  ): { startTime: Date; endTime: Date }[] {
+    var timeLines = [];
+
+    const startTimeCopy = new Date(startTime);
+    const endTimeCopy = new Date(endTime);
+
+    startTimeCopy.setUTCHours(0, 0, 0, 0);
+    endTimeCopy.setUTCHours(0, 0, 0, 0);
+
+    const diffDays = Math.ceil(
+      (endTimeCopy.getTime() - startTimeCopy.getTime()) / (1000 * 3600 * 24)
+    );
+    // const diffDays = Math.ceil(
+    //   (endTime.getTime() - startTime.getTime()) / (1000 * 3600 * 24)
+    // );
+    if (diffDays < 1) return null;
+
+    const endStartTimeDate = new Date(startTime);
+    const startEndTimeDate = new Date(endTime);
+
+    endStartTimeDate.setUTCHours(23, 59, 59, 999);
+    startEndTimeDate.setUTCHours(0, 0, 0, 0);
+
+    timeLines.push({ startTime: startTime, endTime: endStartTimeDate });
+
+    if (diffDays > 1)
+      for (var i = 1; i < diffDays; i++) {
+        const startTimeNextDay = new Date(startTime);
+        startTimeNextDay.setDate(startTimeNextDay.getDate() + i);
+        startTimeNextDay.setUTCHours(0, 0, 0, 0);
+        const endTimeNextDay = new Date(startTimeNextDay);
+
+        endTimeNextDay.setUTCHours(23, 59, 59, 999);
+        timeLines.push({
+          startTime: startTimeNextDay,
+          endTime: endTimeNextDay,
+        });
+      }
+
+    timeLines.push({ startTime: startEndTimeDate, endTime: endTime });
+    // console.log(timeLines);
+    return timeLines;
+    // return timeLines
+    // return await this.prisma.assignedTask.update({
+    //   where: {
+    //     id: 1,
+    //   },
+    //   data: {
+    //     TimeLines: {
+    //       update: {
+    //         where: {
+    //           id: 1,
+    //         },
+    //         data: {
+    //           endTime: endTime,
+    //         },
+    //       },
+    //       createMany: {
+    //         data: timeLines,
+    //       },
+    //     },
+    //   },
+    // });
+  }
+
+  async checkWorkHours(workerId: number) {
+    const date = new Date();
+    const startWeekOfDate = new Date(date);
+    const endWeekOfDate = new Date(date);
+
+    if (date.getDay() != 0) {
+      startWeekOfDate.setDate(date.getDate() - date.getDay());
+      startWeekOfDate.setUTCHours(0, 0, 0, 0);
+
+      endWeekOfDate.setDate(date.getDate() - date.getDay() + 6);
+      endWeekOfDate.setUTCHours(0, 0, 0, 0);
+    }
+
+    const tasks = await this.prisma.assignedTask.findMany({
+      where: {
+        workerId: workerId,
+        TimeLines: {
+          some: {
+            startTime: { gte: startWeekOfDate },
+            endTime: { lte: endWeekOfDate },
+          },
+        },
+      },
+      include: {
+        TimeLines: true,
+      },
+    });
+
+    let ms;
+    tasks.map((task) => {
+      task.TimeLines.map((timeline) => {
+        ms += timeline.endTime.getTime() - timeline.startTime.getTime();
+      });
+    });
+    if (ms >= 144000000) return false;
+    return true;
+  }
+
+  async getWorkerTimeLines(
+    startTimeLine: Date,
+    endTimeLine: Date,
+    workerId: number
+  ) {
+    const timeLines = this.divTimeLine(startTimeLine, endTimeLine) || [
+      { startTime: startTimeLine, endTime: endTimeLine },
+    ];
+
+    const bebra = await this.prisma.assignedTask.findMany({
+      where: {
+        workerId: workerId,
+        TimeLines: {
+          some: {
+            startTime: { gte: startTimeLine },
+            endTime: { lte: endTimeLine },
+          },
+        },
+      },
+      include: {
+        TimeLines: true,
+        task: true,
+      },
+    });
+
+    type ReturnedData = {
+      title: string;
+      description?: string;
+      timeLines: TimeLines[];
+    };
+
+    type GrouppedTasks = {
+      date: string;
+      data: ReturnedData[];
+    };
+
+    const aaa = timeLines.map((timeLine) => {
+      var info: GrouppedTasks = {} as GrouppedTasks;
+
+      const month = timeLine.startTime.getMonth() + 1;
+      const day = timeLine.startTime.getDate();
+      const year = timeLine.startTime.getFullYear();
+
+      bebra.map((obj) => {
+        var a = obj.TimeLines.filter((timeline) => {
+          if (
+            timeline.startTime > timeLine.startTime &&
+            timeline.endTime < timeLine.endTime &&
+            timeline.taskId === obj.taskId
+          )
+            return true;
+        });
+
+        if (a.length > 0) {
+
+          info.date = `${day}.${month}.${year}`;
+          info.data = [];
+
+          info.data.push({
+            title: obj.task.title,
+            description: obj.task.description,
+            timeLines: a,
+          });
+        }
+      });
+
+      if (Object.keys(info).length !== 0) return info;
+    });
+    return aaa.filter((a) => a);
   }
 }
