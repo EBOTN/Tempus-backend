@@ -191,6 +191,9 @@ export class TaskService {
       return await this.prisma.task.update({
         where: param,
         data: data,
+        include:{
+          workers:true
+        }
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {

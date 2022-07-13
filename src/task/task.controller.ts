@@ -10,6 +10,8 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import { IsDate } from "class-validator";
 import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
 import { AssignedTaskDto } from "./dto/assigned-task-dto";
 import { AssignedTaskInfoDto } from "./dto/assigned_task-info-dto";
@@ -32,6 +34,16 @@ export class TaskController {
   @Get("getAssignedTasks")
   getAssignedTasks(@Query() query: GetTasksQuery) {
     return this.taskService.getAssignedTasksByUserId(query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("/getReport")
+  getReport(@Query() query: Tesst) {
+    return this.taskService.getReportForWorker(
+      query.startTime,
+      query.endTime,
+      query.workerId
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -134,14 +146,5 @@ export class TaskController {
   @Post("/:id/completeTask")
   completeTask(@Param() param: UpdateTaskParam) {
     return this.taskService.completeTask(param.id);
-  }
-
-  @Get("getReport")
-  getReport(@Query() query: Tesst) {
-    return this.taskService.getReportForWorker(
-      query.startTime,
-      query.endTime,
-      query.workerId
-    );
   }
 }
