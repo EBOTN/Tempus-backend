@@ -1,16 +1,12 @@
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
   Injectable,
 } from "@nestjs/common";
 import { Prisma, TimeLines } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
-import { AssignedTaskInfoDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { ReadTaskQuery } from "./dto/read-task-query";
 import { SelectAssignedTask } from "./dto/select-assigned-task-dto";
-import { TaskDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { UpdateTaskParam } from "./dto/update-task-param";
 
@@ -266,7 +262,7 @@ export class TaskService {
     if (activeTask.isComplete && activeTask.id === assTaskId)
       throw new BadRequestException("Task already closed");
     if (activeTask.isActive) await this.endTimeLine(activeTask.id);
-    if (!this.checkWorkHours(userId))
+    if (await this.checkWeekWorkHours(userId))
       throw new BadRequestException("You already work 40 hours");
     try {
       return await this.prisma.assignedTask.update({
@@ -295,7 +291,7 @@ export class TaskService {
 
   async endTimeLine(assTaskId: number) {
     const date = new Date();
-    // date.setDate(15);
+
     const activeTimeLine = await this.prisma.timeLines.findFirst({
       where: {
         taskId: assTaskId,
@@ -312,24 +308,28 @@ export class TaskService {
       throw new BadRequestException("Task already closed");
 
     const timeLineWorkTime =
-      date.getTime() - activeTimeLine.startTime.getTime();
+      date.getTime() - activeTimeLine.startTime.getTime(); // Time line work time
 
     try {
-      let newWorkTime;
+      let newWorkTime: number;
+      // if user work > 60s then track time
       if (timeLineWorkTime > 60000) {
         newWorkTime = timeLineWorkTime + activeTimeLine.AssignedTask.workTime;
       } else {
         newWorkTime = activeTimeLine.AssignedTask.workTime;
-      }
+      } // else time not track
 
-      const timelines = this.divTimeLine(activeTimeLine.startTime, date);
+      const timelines = this.divTimeLine(activeTimeLine.startTime, date); // divide time line if can
+
       if (timelines)
+        // if time line divided, then save all timelines
         return await this.saveTimeLines(
           timelines,
           assTaskId,
           activeTimeLine.id,
           newWorkTime
         );
+
       const updatedAssTask = await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
@@ -352,6 +352,7 @@ export class TaskService {
           TimeLines: true,
         },
       });
+      // if time not tracking then throw exception with data
       if (newWorkTime === activeTimeLine.AssignedTask.workTime)
         throw new BadRequestException({
           ...updatedAssTask,
@@ -414,36 +415,36 @@ export class TaskService {
 
   // need assTaskId and timeLineId
   divTimeLine(
-    startTime: Date,
-    endTime: Date
+    startTimeLine: Date,
+    endTimeLine: Date
   ): { startTime: Date; endTime: Date }[] {
-    var timeLines = [];
+    var timeLines = []; // all time lines
 
-    const startTimeCopy = new Date(startTime);
-    const endTimeCopy = new Date(endTime);
+    const startTimeCopy = new Date(startTimeLine);
+    const endTimeCopy = new Date(endTimeLine);
 
-    startTimeCopy.setUTCHours(0, 0, 0, 0);
+    startTimeCopy.setUTCHours(0, 0, 0, 0); // for comparision
     endTimeCopy.setUTCHours(0, 0, 0, 0);
 
     const diffDays = Math.ceil(
       (endTimeCopy.getTime() - startTimeCopy.getTime()) / (1000 * 3600 * 24)
-    );
+    ); // how many days between dates
 
     if (diffDays < 1) return null;
 
-    const endStartTimeDate = new Date(startTime);
-    const startEndTimeDate = new Date(endTime);
+    const endStartTimeDate = new Date(startTimeLine); // end time day for startTimeLine
+    const startEndTimeDate = new Date(endTimeLine); // start time day for endTimeLine
 
     endStartTimeDate.setUTCHours(23, 59, 59, 999);
     startEndTimeDate.setUTCHours(0, 0, 0, 0);
 
-    timeLines.push({ startTime: startTime, endTime: endStartTimeDate });
+    timeLines.push({ startTime: startTimeLine, endTime: endStartTimeDate }); // first time line start today, end tomorrow
 
     for (var i = 1; i < diffDays; i++) {
-      const startTimeNextDay = new Date(startTime);
+      const startTimeNextDay = new Date(startTimeLine); // start time for +i day
       startTimeNextDay.setDate(startTimeNextDay.getDate() + i);
       startTimeNextDay.setUTCHours(0, 0, 0, 0);
-      const endTimeNextDay = new Date(startTimeNextDay);
+      const endTimeNextDay = new Date(startTimeNextDay); // end time for +i day
 
       endTimeNextDay.setUTCHours(23, 59, 59, 999);
       timeLines.push({
@@ -452,17 +453,17 @@ export class TaskService {
       });
     }
 
-    timeLines.push({ startTime: startEndTimeDate, endTime: endTime });
+    timeLines.push({ startTime: startEndTimeDate, endTime: endTimeLine });
 
     return timeLines;
   }
 
-  async checkWorkHours(workerId: number) {
+  async checkWeekWorkHours(workerId: number) {
     const date = new Date();
     const startWeekOfDate = new Date(date);
     const endWeekOfDate = new Date(date);
 
-    if (date.getDay() != 0) {
+    if (date.getDay() != 0) { // if today not monday
       startWeekOfDate.setDate(date.getDate() - date.getDay());
       startWeekOfDate.setUTCHours(0, 0, 0, 0);
 
@@ -484,17 +485,17 @@ export class TaskService {
         TimeLines: true,
       },
     });
-    console.log(tasks);
-    let ms;
+
+    let weekWorkTime: number;
     tasks.map((task) => {
       task.TimeLines.map((timeline) => {
-        ms += timeline.endTime.getTime() - timeline.startTime.getTime();
+        weekWorkTime += timeline.endTime.getTime() - timeline.startTime.getTime();
       });
     });
 
-    if (ms >= 144000000) return false;
+    if (weekWorkTime >= 144000000) return true;
 
-    return true;
+    return false;
   }
 
   async getReportForWorker(
@@ -506,7 +507,7 @@ export class TaskService {
       { startTime: startTimeLine, endTime: endTimeLine },
     ];
 
-    const bebra = await this.prisma.assignedTask.findMany({
+    const timeLinesByFilter = await this.prisma.assignedTask.findMany({
       where: {
         workerId: workerId,
         TimeLines: {
@@ -522,8 +523,6 @@ export class TaskService {
       },
     });
 
-    
-
     const returnedData = timeLines.map((timeLine) => {
       var info: GrouppedTasks = {} as GrouppedTasks;
 
@@ -531,35 +530,36 @@ export class TaskService {
       const day = timeLine.startTime.getDate();
       const year = timeLine.startTime.getFullYear();
 
-      bebra.map((obj) => {
-        const a = obj.TimeLines.filter((timeline) => {
+      timeLinesByFilter.map((obj) => {
+        const checkTimeLine = obj.TimeLines.filter((timeline) => {
           if (
             timeline.startTime >= timeLine.startTime &&
             timeline.endTime <= timeLine.endTime &&
             timeline.taskId === obj.taskId
           ) {
-            // console.log(timeline);
+
             return true;
           }
         }) as MyTimeLine[];
-        if (a.length > 0) {
-          // console.log(a);
+        if (checkTimeLine.length > 0) {
+
           if (!info.date && !info.data && !info.workTime) {
             info.date = `${day}.${month}.${year}`;
             info.data = [];
             info.workTime = 0;
           }
+
           let taskWorkTime: number = 0;
-          a.map((tl) => {
+          checkTimeLine.map((tl) => {
             taskWorkTime += tl.endTime.getTime() - tl.startTime.getTime();
-            tl.workTime = tl.endTime.getTime() - tl.startTime.getTime()
+            tl.workTime = tl.endTime.getTime() - tl.startTime.getTime();
           });
-          
+
           info.workTime += taskWorkTime;
           info.data.push({
             title: obj.task.title,
             description: obj.task.description,
-            timeLines: a,
+            timeLines: checkTimeLine,
             workTime: taskWorkTime,
           });
         }
@@ -610,7 +610,7 @@ export class TaskService {
   }
 }
 export interface MyTimeLine extends TimeLines {
-  workTime: number
+  workTime: number;
 }
 export type ReturnedData = {
   title: string;
