@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma, TimeLines } from "@prisma/client";
 import { PrismaService } from "src/prisma.service";
 import { CreateTaskDto } from "./dto/create-task-dto";
@@ -191,9 +188,9 @@ export class TaskService {
       return await this.prisma.task.update({
         where: param,
         data: data,
-        include:{
-          workers:true
-        }
+        include: {
+          workers: true,
+        },
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -361,6 +358,7 @@ export class TaskService {
           ...updatedAssTask,
           message: "You work enough!",
         });
+      return updatedAssTask;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -466,7 +464,8 @@ export class TaskService {
     const startWeekOfDate = new Date(date);
     const endWeekOfDate = new Date(date);
 
-    if (date.getDay() != 0) { // if today not monday
+    if (date.getDay() != 0) {
+      // if today not monday
       startWeekOfDate.setDate(date.getDate() - date.getDay());
       startWeekOfDate.setUTCHours(0, 0, 0, 0);
 
@@ -492,7 +491,8 @@ export class TaskService {
     let weekWorkTime: number;
     tasks.map((task) => {
       task.TimeLines.map((timeline) => {
-        weekWorkTime += timeline.endTime.getTime() - timeline.startTime.getTime();
+        weekWorkTime +=
+          timeline.endTime.getTime() - timeline.startTime.getTime();
       });
     });
 
@@ -534,18 +534,22 @@ export class TaskService {
       const year = timeLine.startTime.getFullYear();
 
       timeLinesByFilter.map((obj) => {
+
         const checkTimeLine = obj.TimeLines.filter((timeline) => {
-          if (
-            timeline.startTime >= timeLine.startTime &&
-            timeline.endTime <= timeLine.endTime &&
-            timeline.taskId === obj.taskId
-          ) {
-
-            return true;
+          if (timeline.endTime !==null) {
+            if (
+              timeline.startTime >= timeLine.startTime &&
+              timeline.endTime <= timeLine.endTime &&
+              timeline.taskId === obj.taskId
+            ) {
+              return true;
+            }
           }
+          
+          return false
         }) as MyTimeLine[];
+        
         if (checkTimeLine.length > 0) {
-
           if (!info.date && !info.data && !info.workTime) {
             info.date = `${day}.${month}.${year}`;
             info.data = [];
@@ -554,6 +558,7 @@ export class TaskService {
 
           let taskWorkTime: number = 0;
           checkTimeLine.map((tl) => {
+            
             taskWorkTime += tl.endTime.getTime() - tl.startTime.getTime();
             tl.workTime = tl.endTime.getTime() - tl.startTime.getTime();
           });

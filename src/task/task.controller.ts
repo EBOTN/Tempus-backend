@@ -39,6 +39,7 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   @Get("/getReport")
   getReport(@Query() query: Tesst) {
+    
     return this.taskService.getReportForWorker(
       query.startTime,
       query.endTime,
