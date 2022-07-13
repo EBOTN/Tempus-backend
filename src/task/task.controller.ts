@@ -136,9 +136,12 @@ export class TaskController {
     return this.taskService.completeTask(param.id);
   }
 
-  @Post("test")
-  test(@Body() body: Tesst){
-    return this.taskService.getWorkerTimeLines(body.startTime, body.endTime, body.workerId)
+  @Get("getReport")
+  getReport(@Query() query: Tesst) {
+    return this.taskService.getReportForWorker(
+      query.startTime,
+      query.endTime,
+      query.workerId
+    );
   }
 }
-

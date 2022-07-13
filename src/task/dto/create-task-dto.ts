@@ -25,15 +25,4 @@ export class CreateTaskDto {
   @IsNotEmpty()
   @IsNumber()
   readonly creatorId: number;
-
-  // @ApiProperty({
-  //   type: [Number],
-  //   description: "Array workers are assigned to created task",
-  // })
-  // @IsOptional()
-  // @ArrayNotEmpty()
-  // @IsArray()
-  // @IsNumber({}, { each: true })
-  // @ArrayUnique()
-  // readonly addedWorkers?: number[];
 }

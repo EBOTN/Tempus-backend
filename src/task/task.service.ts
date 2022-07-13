@@ -428,9 +428,7 @@ export class TaskService {
     const diffDays = Math.ceil(
       (endTimeCopy.getTime() - startTimeCopy.getTime()) / (1000 * 3600 * 24)
     );
-    // const diffDays = Math.ceil(
-    //   (endTime.getTime() - startTime.getTime()) / (1000 * 3600 * 24)
-    // );
+
     if (diffDays < 1) return null;
 
     const endStartTimeDate = new Date(startTime);
@@ -455,29 +453,8 @@ export class TaskService {
     }
 
     timeLines.push({ startTime: startEndTimeDate, endTime: endTime });
-    // console.log(timeLines);
+
     return timeLines;
-    // return timeLines
-    // return await this.prisma.assignedTask.update({
-    //   where: {
-    //     id: 1,
-    //   },
-    //   data: {
-    //     TimeLines: {
-    //       update: {
-    //         where: {
-    //           id: 1,
-    //         },
-    //         data: {
-    //           endTime: endTime,
-    //         },
-    //       },
-    //       createMany: {
-    //         data: timeLines,
-    //       },
-    //     },
-    //   },
-    // });
   }
 
   async checkWorkHours(workerId: number) {
@@ -520,7 +497,7 @@ export class TaskService {
     return true;
   }
 
-  async getWorkerTimeLines(
+  async getReportForWorker(
     startTimeLine: Date,
     endTimeLine: Date,
     workerId: number
