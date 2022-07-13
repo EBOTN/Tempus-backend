@@ -355,7 +355,7 @@ export class TaskService {
       // if time not tracking then throw exception with data
       if (newWorkTime === activeTimeLine.AssignedTask.workTime)
         throw new BadRequestException({
-          ...updatedAssTask,
+          task: updatedAssTask,
           message: "You work enough!",
         });
       return updatedAssTask;
@@ -558,7 +558,7 @@ export class TaskService {
 
           let taskWorkTime: number = 0;
           checkTimeLine.map((tl) => {
-            
+
             taskWorkTime += tl.endTime.getTime() - tl.startTime.getTime();
             tl.workTime = tl.endTime.getTime() - tl.startTime.getTime();
           });
