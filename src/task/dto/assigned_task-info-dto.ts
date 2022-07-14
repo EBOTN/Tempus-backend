@@ -1,9 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { FullTimeLineDto } from "src/time-line/dto/full-time-line-dto";
 
-export class AssignedTaskInfoDto {
-  @ApiProperty({ example: "1", description: "Assigned task id" })
-  readonly id: number;
-
+export class BadRequestAssignedTaskDto {
   @ApiProperty({ example: "Title", description: "Task title" })
   readonly title: string;
 
@@ -13,6 +11,9 @@ export class AssignedTaskInfoDto {
   @ApiProperty({ example: "1", description: "Creator id" })
   readonly creatorId: number;
 
+  @ApiProperty({ example: "1", description: "Assigned task id" })
+  readonly id: number;
+
   @ApiProperty({ example: "1", description: "Task id" })
   readonly taskId: number;
 
@@ -20,26 +21,13 @@ export class AssignedTaskInfoDto {
   readonly workerId: number;
 
   @ApiProperty({ example: "1", description: "Task started?" })
-  readonly isStarted: boolean;
+  readonly isActive: boolean;
+
+  @ApiProperty({})
+  readonly workTime: number;
 
   @ApiProperty({ example: "1", description: "Task completed?" })
   readonly isComplete: boolean;
 
-  @ApiProperty({ description: "Task start time" })
-  readonly startTime: Date;
-
-  @ApiProperty({ description: "Task end time" })
-  readonly endTime: Date;
-
-  @ApiProperty({ example: "1", description: "Task paused?" })
-  readonly isPaused: boolean;
-
-  @ApiProperty({ example: "10000", description: "Worker work time" })
-  readonly workTime: number;
-
-  @ApiProperty({ example: "10000", description: "Worker pause time" })
-  readonly pauseTime: number;
-
-  @ApiProperty({ description: "Worker start pause time" })
-  readonly startPauseTime: Date;
+  readonly TimeLines: FullTimeLineDto[];
 }

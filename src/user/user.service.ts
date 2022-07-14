@@ -8,7 +8,7 @@ import {
 import { Prisma, User } from "@prisma/client";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { userDTO } from "src/user/dto/user-dto";
-import { PrismaService } from "src/prisma.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
 import { FilterUserQuery } from "./dto/filter-user-query";
 

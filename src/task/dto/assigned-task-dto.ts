@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { FullTimeLineDto } from "src/time-line/dto/full-time-line-dto";
 
 export class AssignedTaskDto {
   @ApiProperty({ example: "1", description: "Assigned task id" })
@@ -10,24 +11,18 @@ export class AssignedTaskDto {
   @ApiProperty({ example: "1", description: "Worker id" })
   readonly workerId: number;
 
-  @ApiProperty({ example: "1", description: "Task started?" })
-  readonly isStarted: boolean;
+  @ApiProperty({ example: false, description: "Task started?" })
+  readonly isActive: boolean;
 
-  @ApiProperty({ example: "1", description: "Task completed?" })
+  @ApiProperty({ example: false, description: "Task completed?" })
   readonly isComplete: boolean;
 
-  @ApiProperty({ description: "Task start time" })
-  readonly startTime: Date;
-
-  @ApiProperty({ description: "Task end time" })
-  readonly endTime: Date;
-
-  @ApiProperty({ example: "1", description: "Task paused?" })
-  readonly isPaused: boolean;
-
-  @ApiProperty({ example: "10000", description: "Worker work time" })
+  @ApiProperty({example: "1000", description: "Task work time"})
   readonly workTime: number;
 
-  @ApiProperty({ example: "10000", description: "Worker pause time" })
-  readonly pauseTime: number;
+  @ApiProperty({
+    type: [FullTimeLineDto],
+    description: "Time lines",
+  })
+  readonly TimeLines: FullTimeLineDto[];
 }

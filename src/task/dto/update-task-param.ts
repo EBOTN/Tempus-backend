@@ -8,10 +8,4 @@ export class UpdateTaskParam {
   @IsNumber()
   @Type(() => Number)
   readonly id: number;
-
-  // @ApiProperty({example: "1", description: "Updated task id"})
-  // @IsNotEmpty()
-  // @IsNumber()
-  // @Type(() => Number)
-  // readonly workerId: number;
 }

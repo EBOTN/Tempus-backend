@@ -1,8 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { Allow, IsDate, isDate, IsNumber } from "class-validator";
+import {  IsDate, IsNotEmpty } from "class-validator";
 import { AssignedTaskDto } from "./assigned-task-dto";
-import { SelectAssignedTask } from "./select-assigned-task-dto";
 
 export class TaskDto {
   @ApiProperty({ example: "1", description: "Unique identificator" })
@@ -23,17 +22,16 @@ export class TaskDto {
   })
   readonly workers: AssignedTaskDto[];
 }
-export class Tesst{
+export class Tesst {
   @IsDate()
   @Type(() => Date)
-  readonly startTime: Date
+  readonly startTime: Date;
 
   @IsDate()
   @Type(() => Date)
-  readonly endTime: Date
+  readonly endTime: Date;
 
-  // @IsNumber()
-  @Allow()
+  @IsNotEmpty()
   @Type(() => Number)
-  readonly workerId: number
+  readonly workerId: number;
 }

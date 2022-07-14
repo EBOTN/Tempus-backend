@@ -1,14 +1,13 @@
 import { Module } from "@nestjs/common";
-import { PrismaService } from "./prisma.service";
 import { UserModule } from "./user/user.module";
 import { AuthModule } from "./auth/auth.module";
-import { TokenService } from "./token/token.service";
-import { transformAndValidateSync } from "class-transformer-validator";
-import { TaskService } from './task/task.service';
 import { TaskModule } from './task/task.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { TimeLineModule } from "./time-line/time-line.module";
+import { ReportModule } from "./report/report.module";
 
 @Module({
-  imports: [UserModule, AuthModule, TaskModule],
+  imports: [UserModule, AuthModule, TaskModule, TimeLineModule, PrismaModule, ReportModule],
   controllers: [],
   providers: [],
 })
