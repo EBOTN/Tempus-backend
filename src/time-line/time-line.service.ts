@@ -68,7 +68,7 @@ export class TimeLineService {
 
   async startTimeLine(assTaskId: number, userId: number) {
     const date = new Date();
-
+    date.setMilliseconds(0)
     const activeTask = await this.prisma.assignedTask.findFirst({
       where: {
         OR: [
@@ -118,6 +118,7 @@ export class TimeLineService {
 
   async endTimeLine(assTaskId: number) {
     const date = new Date();
+    date.setMilliseconds(0)
 
     const activeTimeLine = await this.prisma.timeLines.findFirst({
       where: {
