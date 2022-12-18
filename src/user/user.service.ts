@@ -8,9 +8,8 @@ import {
 import { Prisma, User } from "@prisma/client";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { userDTO } from "src/user/dto/user-dto";
-import { PrismaService } from "src/prisma.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
-import { skip } from "rxjs";
 import { FilterUserQuery } from "./dto/filter-user-query";
 
 @Injectable()
@@ -46,26 +45,20 @@ export class UserService {
   }
 
   async getByFilter(query: FilterUserQuery): Promise<userDTO[]> {
-    const { skip, take, taskId, ...filter } = query;
-    if (taskId) return this.getUsersFromTask(filter, taskId, skip, take);
-    return this.getAllUsers(filter, skip, take);
+    const { skip, take, taskId, searchText } = query;
+    if (taskId) return this.getUsersFromTask(searchText, taskId, skip, take);
+    return this.getAllUsers(searchText, skip, take);
   }
 
-  async getAllUsers(filter, skip, take) {
-    return await this.prisma.user.findMany({
-      where: filter,
-      skip: skip,
-      take: take,
-      select: new ConfigUserWithoutPassword(),
-    });
-  }
-
-  async getUsersFromTask(filter, taskId, skip, take) {
+  async getAllUsers(searchText: string, skip: number, take: number) {
     return await this.prisma.user.findMany({
       where: {
-        ...filter,
-        assignedTasks: {
-          some: { taskId: taskId },
+        OR: {
+          firstName: {
+            contains: searchText || "",
+            mode: "insensitive",
+          },
+          lastName: { contains: searchText || "", mode: "insensitive" },
         },
       },
       skip: skip,
@@ -74,7 +67,34 @@ export class UserService {
     });
   }
 
-  // TODO: Add validation if user not exist | ? Конфликт с регистрацией
+  async getUsersFromTask(
+    searchText: string,
+    taskId: number,
+    skip: number,
+    take: number
+  ) {
+    return await this.prisma.user.findMany({
+      where: {
+        OR: {
+          firstName: {
+            contains: searchText || "",
+            mode: "insensitive",
+          },
+          lastName: { contains: searchText || "", mode: "insensitive" },
+        },
+        assignedTasks: {
+          some: { taskId: taskId },
+        },
+      },
+      skip: skip,
+      take: take,
+      select: new ConfigUserWithoutPassword(),
+      orderBy: {
+        id: "asc",
+      },
+    });
+  }
+
   async getFirstByFilter(filter): Promise<User> {
     if (!filter) throw new BadRequestException("Filter not specified");
     return await this.prisma.user.findFirst({
@@ -91,7 +111,6 @@ export class UserService {
     });
   }
 
-  // TODO: Add validation if user not exist | +
   async update(id: number, newData): Promise<userDTO> {
     try {
       return await this.prisma.user.update({

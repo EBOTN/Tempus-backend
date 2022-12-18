@@ -19,7 +19,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "start:migrate:dev": "prisma migrate deploy && npm run start:dev"
+    "start:migrate:dev": "npx prisma migrate dev --name init && npm run start:dev"
   },
   "dependencies": {
     "-": "^0.0.1",
