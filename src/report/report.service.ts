@@ -1,13 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { TimeLines } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
 import { FullTimeLineDto } from "src/time-line/dto/full-time-line-dto";
 import { TimeLineService } from "src/time-line/time-line.service";
-import { ReportDto } from "./dto/report-dto";
+import { DayReportDto, ReportDto } from "./dto/report-dto";
 
 @Injectable()
 export class ReportService {
   constructor(
     private timeLineService: TimeLineService,
+    private prismaService: PrismaService
   ) {}
 
   async getReportForWorker(
@@ -19,66 +21,90 @@ export class ReportService {
       startTimeLine,
       endTimeLine
     ) || [{ startTime: startTimeLine, endTime: endTimeLine }];
-
-    const timeLinesBetweenDates =
-      await this.timeLineService.getAllTimeLinesByWorkerBetweenDates(
-        workerId,
-        startTimeLine,
-        endTimeLine
-      );
-
-    const returnedData = dividedTimeLines.map((workerTimeLine) => {
-      var info: ReportDto = new ReportDto();
-
-      const month = workerTimeLine.startTime.getMonth() + 1;
-      const day = workerTimeLine.startTime.getDate();
-      const year = workerTimeLine.startTime.getFullYear();
-
-      timeLinesBetweenDates.map((obj) => {
-        const approvedTimeLines = obj.TimeLines.filter((timeLine) => {
-          if (timeLine.endTime === null) return false;
-          if (
-            timeLine.startTime >= workerTimeLine.startTime &&
-            timeLine.endTime <= workerTimeLine.endTime &&
-            timeLine.taskId === obj.taskId
-          ) {
-            return true;
-          }
-
-          return false;
-        }) as FullTimeLineDto[];
-
-        // initialize fields of info
-        if (approvedTimeLines.length <= 0) return;
-        if (!info.date && !info.data && !info.workTime) {
-          info.date = `${day}.${month}.${year}`;
-          info.data = [];
-          info.workTime = 0;
-        }
-
-        let taskWorkTime: number = 0;
-        approvedTimeLines.map((approvedTimeLine) => {
-          taskWorkTime +=
-            approvedTimeLine.endTime.getTime() -
-            approvedTimeLine.startTime.getTime();
-          approvedTimeLine.workTime =
-            approvedTimeLine.endTime.getTime() -
-            approvedTimeLine.startTime.getTime();
-        });
-
-        info.workTime += taskWorkTime;
-        info.data.push({
-          title: obj.task.title,
-          description: obj.task.description,
-          timeLines: approvedTimeLines,
-          workTime: taskWorkTime,
-        });
+    const returnedData: ReportDto[] = [];
+    for (let i = 0; i < dividedTimeLines.length; i++) {
+      const month = dividedTimeLines[i].startTime.getMonth() + 1;
+      const day = dividedTimeLines[i].startTime.getDate();
+      const year = dividedTimeLines[i].startTime.getFullYear();
+      returnedData.push({
+        date: `${day}.${month}.${year}`,
+        data: [],
+        workTime: 0,
       });
-
-      if (Object.keys(info).length !== 0) {
-        return info;
-      }
+    }
+    const tasks = await this.prismaService.task.findMany({
+      // Задачи, которые выполнялись в указанный промежуток
+      where: {
+        workers: {
+          some: {
+            workerId: workerId,
+            TimeLines: {
+              some: {
+                startTime: { gte: startTimeLine },
+                endTime: { lte: endTimeLine },
+              },
+            },
+          },
+        },
+      },
+      include: {
+        workers: {
+          include: { TimeLines: true },
+          where: {
+            workerId: workerId,
+            TimeLines: {
+              some: {
+                startTime: { gte: startTimeLine },
+                endTime: { lte: endTimeLine },
+              },
+            },
+          },
+        },
+      },
     });
-    return returnedData.filter((a) => a);
+
+    for (let i = 0; i < dividedTimeLines.length; i++) {
+      const currentDay = dividedTimeLines[i]; // день из заданного промежутка
+      const tasksInCurrentDay = tasks.filter((obj) =>
+        obj.workers.filter(
+          (worker) =>
+            worker.TimeLines.filter(
+              (timeLine) =>
+                timeLine.startTime > currentDay.startTime &&
+                timeLine.endTime < currentDay.endTime
+            ).length > 0 //фильтруем таски так, чтобы у неё был хоть один таймлайн в currentDay
+        )
+      ); // фильтруем таски, которые выполнялись в currentDay
+      let taskWorkTime: number = 0;
+      // проходим по таскам, которые отслеживались в currentDay
+      for (let j = 0; j < tasksInCurrentDay.length; j++) {
+        const currentTask = tasksInCurrentDay[j];
+        tasksInCurrentDay[j].workers[0].TimeLines = tasksInCurrentDay[
+          j
+        ].workers[0].TimeLines.filter(
+          (obj) =>
+            obj.startTime > currentDay.startTime &&
+            obj.endTime < currentDay.endTime
+        ); // убираем таймлайны, не вписывающиеся в currentDay
+
+        const extendedTimeLine: FullTimeLineDto[] = tasksInCurrentDay[
+          j
+        ].workers[0].TimeLines.map((item) => {
+          const workTime = item.endTime.getTime() - item.startTime.getTime();
+          taskWorkTime += workTime;
+          return { ...item, workTime };
+        }); // добавляем в таймлайн его длительность
+
+        const returnedItem: DayReportDto = {
+          title: currentTask.title,
+          description: currentTask.description,
+          timeLines: extendedTimeLine,
+          workTime: taskWorkTime,
+        };
+
+        returnedData[i].data.push(returnedItem);
+      }
+    }
+    return;
   }
 }
