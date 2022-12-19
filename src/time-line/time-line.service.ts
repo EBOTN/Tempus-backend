@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { AssignedTask, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
+import { AssignedTaskDto } from "src/task/dto/assigned-task-dto";
 import { TimeLineDto } from "./dto/time-line-dto";
 
 @Injectable()
@@ -12,7 +13,7 @@ export class TimeLineService {
     assTaskId: number,
     activeTimeLineId: number,
     newWorkTime: number
-  ) {
+  ): Promise<AssignedTaskDto> {
     const updatedTimeLine = timelines[0];
 
     timelines.shift();
@@ -48,7 +49,7 @@ export class TimeLineService {
     workerId: number,
     startDate: Date,
     endDate: Date
-  ) {
+  ): Promise<AssignedTaskDto[]> {
     return await this.prisma.assignedTask.findMany({
       where: {
         workerId: workerId,
@@ -61,12 +62,14 @@ export class TimeLineService {
       },
       include: {
         TimeLines: true,
-        task: true,
       },
     });
   }
 
-  async startTimeLine(assTaskId: number, userId: number) {
+  async startTimeLine(
+    assTaskId: number,
+    userId: number
+  ): Promise<AssignedTaskDto> {
     const date = new Date();
     date.setMilliseconds(0);
     const activeTask = await this.prisma.assignedTask.findFirst({
@@ -116,7 +119,7 @@ export class TimeLineService {
     }
   }
 
-  async endTimeLine(assTaskId: number) {
+  async endTimeLine(assTaskId: number): Promise<AssignedTaskDto> {
     const date = new Date();
     date.setMilliseconds(0);
 
