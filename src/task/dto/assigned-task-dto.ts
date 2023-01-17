@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { FullTimeLineDto } from "src/time-line/dto/full-time-line-dto";
 import { TimeLineDto } from "src/time-line/dto/time-line-dto";
 
 export class AssignedTaskDto {

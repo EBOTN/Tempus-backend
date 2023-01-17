@@ -1,5 +1,5 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { AssignedTask, Prisma } from "@prisma/client";
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AssignedTaskDto } from "src/task/dto/assigned-task-dto";
 import { TimeLineDto } from "./dto/time-line-dto";

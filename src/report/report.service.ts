@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { TimeLines } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { FullTimeLineDto } from "src/time-line/dto/full-time-line-dto";
 import { TimeLineService } from "src/time-line/time-line.service";
