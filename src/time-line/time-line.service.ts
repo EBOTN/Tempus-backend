@@ -1,6 +1,7 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
+import { AssignedTaskDto } from "src/task/dto/assigned-task-dto";
 import { TimeLineDto } from "./dto/time-line-dto";
 
 @Injectable()
@@ -12,7 +13,7 @@ export class TimeLineService {
     assTaskId: number,
     activeTimeLineId: number,
     newWorkTime: number
-  ) {
+  ): Promise<AssignedTaskDto> {
     const updatedTimeLine = timelines[0];
 
     timelines.shift();
@@ -48,7 +49,7 @@ export class TimeLineService {
     workerId: number,
     startDate: Date,
     endDate: Date
-  ) {
+  ): Promise<AssignedTaskDto[]> {
     return await this.prisma.assignedTask.findMany({
       where: {
         workerId: workerId,
@@ -61,14 +62,16 @@ export class TimeLineService {
       },
       include: {
         TimeLines: true,
-        task: true,
       },
     });
   }
 
-  async startTimeLine(assTaskId: number, userId: number) {
+  async startTimeLine(
+    assTaskId: number,
+    userId: number
+  ): Promise<AssignedTaskDto> {
     const date = new Date();
-    date.setMilliseconds(0)
+    date.setMilliseconds(0);
     const activeTask = await this.prisma.assignedTask.findFirst({
       where: {
         OR: [
@@ -116,9 +119,9 @@ export class TimeLineService {
     }
   }
 
-  async endTimeLine(assTaskId: number) {
+  async endTimeLine(assTaskId: number): Promise<AssignedTaskDto> {
     const date = new Date();
-    date.setMilliseconds(0)
+    date.setMilliseconds(0);
 
     const activeTimeLine = await this.prisma.timeLines.findFirst({
       where: {
@@ -138,68 +141,49 @@ export class TimeLineService {
     const timeLineWorkTime =
       date.getTime() - activeTimeLine.startTime.getTime(); // Time line work time
 
+    let newWorkTime: number;
+
+    // if user work > 60s then track time
+    if (timeLineWorkTime > 60000) {
+      newWorkTime = timeLineWorkTime + activeTimeLine.AssignedTask.workTime;
+    } else {
+      throw new BadRequestException("Time less than a minute is not tracked.");
+    } // else time not track
+
+    const timelines = this.divTimeLine(activeTimeLine.startTime, date); // divide time line if can
+
+    if (timelines)
+      // if time line divided, then save all timelines
+      return await this.saveTimeLines(
+        timelines,
+        assTaskId,
+        activeTimeLine.id,
+        newWorkTime
+      );
+
     try {
-      let newWorkTime: number;
-      // if user work > 60s then track time
-      if (timeLineWorkTime > 60000) {
-        newWorkTime = timeLineWorkTime + activeTimeLine.AssignedTask.workTime;
-      } else {
-        newWorkTime = activeTimeLine.AssignedTask.workTime;
-      } // else time not track
-
-      const timelines = this.divTimeLine(activeTimeLine.startTime, date); // divide time line if can
-
-      if (timelines)
-        // if time line divided, then save all timelines
-        return await this.saveTimeLines(
-          timelines,
-          assTaskId,
-          activeTimeLine.id,
-          newWorkTime
-        );
-
-      if (newWorkTime > activeTimeLine.AssignedTask.workTime) {
-        return await this.prisma.assignedTask.update({
-          where: {
-            id: assTaskId,
-          },
-          data: {
-            isActive: false,
-            workTime: newWorkTime,
-            TimeLines: {
-              update: {
-                where: {
-                  id: activeTimeLine.id,
-                },
-                data: {
-                  endTime: date,
-                },
-              },
-            },
-          },
-          include: {
-            TimeLines: true,
-          },
-        });
-      }
-      const updatedAssTask = await this.prisma.assignedTask.update({
+      return await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
         },
         data: {
           isActive: false,
+          workTime: newWorkTime,
           TimeLines: {
-            delete: { id: activeTimeLine.id },
+            update: {
+              where: {
+                id: activeTimeLine.id,
+              },
+              data: {
+                endTime: date,
+              },
+            },
           },
         },
+        include: {
+          TimeLines: true,
+        },
       });
-      // if time not tracking then throw exception with data
-      if (newWorkTime === activeTimeLine.AssignedTask.workTime)
-        throw new BadRequestException({
-          task: updatedAssTask,
-          message: "You work enough!",
-        });
-      return updatedAssTask;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -211,27 +195,28 @@ export class TimeLineService {
   }
 
   divTimeLine(startTimeLine: Date, endTimeLine: Date): TimeLineDto[] {
-    var timeLines = [] as TimeLineDto[]; // all time lines
+    const timeLines = [] as TimeLineDto[]; // all time lines
 
-    const startTimeCopy = new Date(startTimeLine);
-    const endTimeCopy = new Date(endTimeLine);
+    const firstDayOfTimeLine = new Date(startTimeLine);
+    const lastDayOfTimeLine = new Date(endTimeLine);
 
-    startTimeCopy.setUTCHours(0, 0, 0, 0); // for comparision
-    endTimeCopy.setUTCHours(0, 0, 0, 0);
+    firstDayOfTimeLine.setUTCHours(0, 0, 0, 0); // for comparision
+    lastDayOfTimeLine.setUTCHours(0, 0, 0, 0);
 
     const diffDays = Math.ceil(
-      (endTimeCopy.getTime() - startTimeCopy.getTime()) / (1000 * 3600 * 24)
+      (lastDayOfTimeLine.getTime() - firstDayOfTimeLine.getTime()) /
+        (1000 * 3600 * 24)
     ); // how many days between dates
 
     if (diffDays < 1) return null;
 
-    const endStartTimeDate = new Date(startTimeLine); // end time day for startTimeLine
-    const startEndTimeDate = new Date(endTimeLine); // start time day for endTimeLine
+    const endFirstDateTime = new Date(startTimeLine); // end time day for startTimeLine
+    const startLastDayTime = new Date(endTimeLine); // start time day for endTimeLine
 
-    endStartTimeDate.setUTCHours(23, 59, 59, 999);
-    startEndTimeDate.setUTCHours(0, 0, 0, 0);
+    endFirstDateTime.setUTCHours(23, 59, 59, 999);
+    startLastDayTime.setUTCHours(0, 0, 0, 0);
 
-    timeLines.push({ startTime: startTimeLine, endTime: endStartTimeDate }); // first time line start today, end tomorrow
+    timeLines.push({ startTime: startTimeLine, endTime: endFirstDateTime }); // first time line start today, end tomorrow
 
     for (var i = 1; i < diffDays; i++) {
       const startTimeNextDay = new Date(startTimeLine); // start time for +i day
@@ -246,7 +231,7 @@ export class TimeLineService {
       });
     }
 
-    timeLines.push({ startTime: startEndTimeDate, endTime: endTimeLine });
+    timeLines.push({ startTime: startLastDayTime, endTime: endTimeLine });
 
     return timeLines;
   }
