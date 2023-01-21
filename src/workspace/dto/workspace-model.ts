@@ -35,7 +35,7 @@ export class WorkSpaceModel {
   @IsNotEmpty()
   @IsNumber()
   @Type(()=>Number)
-  readonly owner_id: number;
+  readonly ownerId: number;
 
 //   @ApiProperty({
 //     example: true,

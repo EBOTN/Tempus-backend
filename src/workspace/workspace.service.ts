@@ -1,26 +1,73 @@
-import { Injectable } from '@nestjs/common';
-import { CreateWorkspaceDto } from './dto/create-workspace.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
+import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 
 @Injectable()
 export class WorkspaceService {
-  create(createWorkspaceDto: CreateWorkspaceDto) {
-    return 'This action adds a new workspace';
+  constructor(private prisma: PrismaService) {}
+  async create(createWorkspaceDto: CreateWorkspaceDto) {
+    try {
+      const returnedData = await this.prisma.workSpace.create({
+        data: createWorkspaceDto,
+      });
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        console.log(e);
+      }
+    }
   }
 
-  findAll() {
-    return `This action returns all workspace`;
+  async findAll() {
+    try {
+      const returnedData = await this.prisma.workSpace.findMany();
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        console.log(e);
+      }
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} workspace`;
+  async findOne(id: number) {
+    try {
+      const returnedData = await this.prisma.workSpace.findFirst({
+        where: { id },
+      });
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        console.log(e);
+      }
+    }
   }
 
-  update(id: number, updateWorkspaceDto: UpdateWorkspaceDto) {
-    return `This action updates a #${id} workspace`;
+  async update(id: number, updateWorkspaceDto: UpdateWorkspaceDto) {
+    try {
+      const returnedData = await this.prisma.workSpace.update({
+        where: { id },
+        data: updateWorkspaceDto,
+      });
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        console.log(e);
+      }
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} workspace`;
+  async remove(id: number) {
+    try {
+      const returnedData = await this.prisma.workSpace.delete({
+        where: { id },
+      });
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        console.log(e);
+      }
+    }
   }
 }
