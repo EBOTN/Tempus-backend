@@ -2,7 +2,6 @@ import {
   MiddlewareConsumer,
   Module,
   NestModule,
-  RequestMethod,
 } from "@nestjs/common";
 import { WorkspaceService } from "./workspace.service";
 import { WorkspaceController } from "./workspace.controller";
@@ -20,7 +19,6 @@ export class WorkspaceModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .exclude({ path: "api/workspace/", method: RequestMethod.POST })
       .forRoutes("workspace");
   }
 }
