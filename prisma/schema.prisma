@@ -8,6 +8,7 @@ datasource db {
 }
 
 model User {
+
   id                 Int                @id @default(autoincrement())
   email              String             @unique
   password           String
@@ -18,6 +19,7 @@ model User {
   createdTasks       Task[]             @relation("createdTasks")
   ownedWorkSpace     WorkSpace[]
   memberedWorkSpaces WorkSpaceMembers[]
+  ProjectMembers ProjectMembers[]
 }
 
 model Task {
@@ -25,7 +27,9 @@ model Task {
   title       String
   description String?
   creatorId   Int
+  projectId   Int
   creator     User           @relation("createdTasks", fields: [creatorId], references: [id], onDelete: Cascade, map: "creator_fkey")
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "project_fkey")
   workers     AssignedTask[]
 }
 
@@ -51,15 +55,6 @@ model TimeLines {
   AssignedTask AssignedTask @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "nasjk")
 }
 
-model Projects {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String
-  workspaceId Int
-  workspace   WorkSpace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "workspace_fk")
-  isHidden    Boolean   @default(false)
-}
-
 model WorkSpace {
   id               Int                @id @default(autoincrement())
   title            String
@@ -76,4 +71,23 @@ model WorkSpaceMembers {
   memberId    Int
   member      User      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_fk")
   workspace   WorkSpace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "workspace_fk")
+
+model Project {
+  id             Int              @id @default(autoincrement())
+  title          String
+  description    String
+  workspaceId    Int
+  isHidden       Boolean          @default(false)
+  Task           Task[]
+  ProjectMembers ProjectMembers[]
+  workspaceId Int
+  workspace   WorkSpace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "workspace_fk")
+}
+
+model ProjectMembers {
+  id        Int     @id @default(autoincrement())
+  projectId Int
+  member_id Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "project_fkey")
+  member    User    @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_fkey")
 }
