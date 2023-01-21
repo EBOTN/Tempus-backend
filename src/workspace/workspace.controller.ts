@@ -4,6 +4,8 @@ import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ReadWorkSpaceDto } from './dto/read-workspace.dto';
+import { UseGuards } from '@nestjs/common/decorators';
+import { WorkSpaceOwnerGuard } from './WorkSpaceOwnerGuards';
 
 @ApiTags('Workspace')
 @Controller('workspace')
@@ -31,6 +33,7 @@ export class WorkspaceController {
     return this.workspaceService.findOne(id);
   }
 
+  @UseGuards(WorkSpaceOwnerGuard)
   @ApiOperation({ summary: "Update workspace by id" })
   @ApiResponse({ status: 200, type: ReadWorkSpaceDto })
   @Put('/:id')
@@ -38,6 +41,7 @@ export class WorkspaceController {
     return this.workspaceService.update(id, updateWorkspaceDto);
   }
 
+  @UseGuards(WorkSpaceOwnerGuard)
   @ApiOperation({ summary: "Delete workspace by id" })
   @ApiResponse({ status: 200, type: ReadWorkSpaceDto })
   @Delete('/:id')
