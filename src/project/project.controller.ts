@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from "@nestjs/common";
 import { ProjectService } from "./project.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
@@ -15,6 +16,7 @@ import { UpdateProjectDto } from "./dto/update-project.dto";
 import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ReadProjectDto } from "./dto/read-project.dto";
+import { GetProjectQuerry } from "./dto/get-project-querry.dto";
 
 @ApiTags("projects")
 @Controller("projects")
@@ -30,11 +32,11 @@ export class ProjectController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: "Get all projects" })
+  @ApiOperation({ summary: "Get projects by filter" })
   @ApiResponse({ status: 200, type: [ReadProjectDto] })
   @Get()
-  findAll() {
-    return this.projectService.findAll();
+  findAll(@Query() querry: GetProjectQuerry) {
+    return this.projectService.findAll(querry);
   }
 
   @UseGuards(JwtAuthGuard)
