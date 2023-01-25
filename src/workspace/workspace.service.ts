@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
+import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
 import { ReadWorkSpaceDto } from "./dto/read-workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 
@@ -39,9 +40,12 @@ export class WorkspaceService {
     }
   }
 
-  async findAll(): Promise<ReadWorkSpaceDto[]> {
+  async findAll(querry: GetWorkspacesQuerry): Promise<ReadWorkSpaceDto[]> {
     try {
       const returnedData = await this.prisma.workSpace.findMany({
+        where: {
+          title: { contains: querry.title || "", mode: "insensitive" },
+        },
         include: {
           owner: true,
           members: {
@@ -57,6 +61,8 @@ export class WorkspaceService {
             },
           },
         },
+        skip: querry.offset || undefined,
+        take: querry.limit || undefined,
       });
 
       return returnedData;

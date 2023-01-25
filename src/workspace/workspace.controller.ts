@@ -13,8 +13,9 @@ import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ReadWorkSpaceDto } from "./dto/read-workspace.dto";
-import { UseGuards } from "@nestjs/common/decorators";
+import { Query, UseGuards } from "@nestjs/common/decorators";
 import { WorkSpaceOwnerGuard } from "./WorkSpaceOwnerGuards";
+import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
 
 @ApiTags("Workspace")
 @Controller("workspace")
@@ -31,8 +32,8 @@ export class WorkspaceController {
   @ApiOperation({ summary: "Get workspaces by querry" })
   @ApiResponse({ status: 200, type: [ReadWorkSpaceDto] })
   @Get()
-  findAll() {
-    return this.workspaceService.findAll();
+  findAll(@Query() querry: GetWorkspacesQuerry) {
+    return this.workspaceService.findAll(querry);
   }
 
   @ApiOperation({ summary: "Get workspace by id" })
