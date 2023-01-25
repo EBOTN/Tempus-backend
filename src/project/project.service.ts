@@ -80,23 +80,34 @@ export class ProjectService {
   }
 
   async remove(id: number): Promise<ReadProjectDto> {
-    const returnedData = await this.prisma.project.delete({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        isHidden: true,
-      },
-    });
-    return returnedData;
+    try {
+      const returnedData = await this.prisma.project.delete({
+        where: { id },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          isHidden: true,
+        },
+      });
+      return returnedData;
+    } catch (e) {}
   }
 
-  async addMember(projectId: number, memberId: number) {
+  async addMember(
+    projectId: number,
+    memberId: number
+  ): Promise<ReadProjectDto> {
     try {
       const returnedData = await this.prisma.project.update({
         where: {
           id: projectId,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          isHidden: true,
         },
         data: {
           members: {
@@ -110,11 +121,20 @@ export class ProjectService {
     } catch (e) {}
   }
 
-  async removeMember(projectId: number, memberId: number) {
+  async removeMember(
+    projectId: number,
+    memberId: number
+  ): Promise<ReadProjectDto> {
     try {
       const returnedData = await this.prisma.project.update({
         where: {
           id: projectId,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          isHidden: true,
         },
         data: {
           members: {
