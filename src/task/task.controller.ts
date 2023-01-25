@@ -10,7 +10,6 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
 import { ReportService } from "src/report/report.service";
 import { TimeLineService } from "src/time-line/time-line.service";
 import { BadRequestAssignedTaskDto } from "./dto/assigned_task-info-dto";
@@ -31,7 +30,6 @@ export class TaskController {
     private reportService: ReportService,
     private timeLineService: TimeLineService) {}
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get all assigned tasks by user" })
   @ApiResponse({ status: 200, type: [BadRequestAssignedTaskDto] })
   @Get("getAssignedTasks")
@@ -39,7 +37,6 @@ export class TaskController {
     return this.taskService.getAssignedTasksByUserId(query);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get report about work for user" })
   @ApiResponse({ status: 200, type: [ReportDto] })
   @Get("/getReport")
@@ -52,7 +49,6 @@ export class TaskController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get("getUserTasks")
   @ApiOperation({ summary: "Get all created tasks by user" })
   @ApiResponse({ status: 200, type: [TaskDto] })
@@ -60,7 +56,6 @@ export class TaskController {
     return this.taskService.getCreatedTasksByUserId(query);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({ summary: "Get all tasks and them workers" })
   @ApiResponse({ status: 200, type: [TaskDto] })
@@ -68,7 +63,6 @@ export class TaskController {
     return this.taskService.getAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get("/:id")
   @ApiOperation({ summary: "Get first task" })
   @ApiResponse({ status: 200, type: [TaskDto] })
@@ -76,7 +70,6 @@ export class TaskController {
     return this.taskService.getFirst(param.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Create task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Post()
@@ -84,7 +77,6 @@ export class TaskController {
     return this.taskService.create(body);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Create task for one user" })
   @ApiResponse({ status: 200, type: BadRequestAssignedTaskDto })
   @Post("createUserTask")
@@ -92,7 +84,6 @@ export class TaskController {
     return this.taskService.createTaskForCreator(body);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Delete task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Delete("/:id")
@@ -100,7 +91,6 @@ export class TaskController {
     return this.taskService.remove(param);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Update task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Put("/:id")
@@ -108,7 +98,6 @@ export class TaskController {
     return this.taskService.update(param, body);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Assign worker to task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @Post("/:id/assignWorker")
@@ -119,7 +108,6 @@ export class TaskController {
     return this.taskService.assignUserToTask(param.id, body.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Unassign user from task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @Post("/:id/unassignWorker")
@@ -130,7 +118,6 @@ export class TaskController {
     return this.taskService.removeUserFromTask(param.id, body.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post("/:id/startTimeLine")
   @ApiOperation({ summary: "Start track task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
@@ -141,7 +128,6 @@ export class TaskController {
     return this.timeLineService.startTimeLine(param.id, body.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post("/:id/endTimeLine")
   @ApiOperation({ summary: "Finish track task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
@@ -149,7 +135,6 @@ export class TaskController {
     return this.timeLineService.endTimeLine(param.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post("/:id/completeTask")
   @ApiOperation({ summary: "Complete task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })

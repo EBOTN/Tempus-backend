@@ -5,7 +5,6 @@ import {
   Post,
   Req,
   Res,
-  UseGuards,
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
@@ -13,7 +12,6 @@ import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { userDTO } from "src/user/dto/user-dto";
 import { AuthUserDto } from "./dto/auth-user-dto";
-import { JwtAuthGuard } from "./jwt-auth-guard";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -34,7 +32,6 @@ export class AuthController {
     return await this.authService.signUp(res, data); // попытка зарегистрироваться
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Logout" })
   @ApiResponse({ status: 200 })
   @Post("/signOut")

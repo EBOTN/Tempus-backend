@@ -1,7 +1,6 @@
-import { Controller, Get, Query, Req, UseGuards } from "@nestjs/common";
+import { Controller, Get, Query, Req } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
-import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
 import { userDTO } from "src/user/dto/user-dto";
 import { TokenService } from "src/token/token.service";
 import { UserService } from "./user.service";
@@ -15,7 +14,6 @@ export class UserController {
     private readonly tokenService: TokenService
   ) {}
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get all users by filter", description: "Need authorization" })
   @ApiResponse({ status: 200, type: [userDTO] })
   @Get()
@@ -23,7 +21,6 @@ export class UserController {
     return await this.userService.getByFilter(query);
   }
 
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get current user" })
   @ApiResponse({ status: 200, type: userDTO })
   @Get("/currentUser")
