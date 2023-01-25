@@ -9,7 +9,7 @@ export class ProjectService {
   constructor(private prisma: PrismaService) {}
   async create(createProjectDto: CreateProjectDto): Promise<ReadProjectDto> {
     try {
-      const returnedData = await this.prisma.projects.create({
+      const returnedData = await this.prisma.project.create({
         data: createProjectDto,
         select: {
           id: true,
@@ -25,7 +25,7 @@ export class ProjectService {
   }
 
   async findAll(): Promise<ReadProjectDto[]> {
-    return await this.prisma.projects.findMany({
+    return await this.prisma.project.findMany({
       select: {
         id: true,
         title: true,
@@ -36,7 +36,7 @@ export class ProjectService {
   }
 
   async findOne(id: number): Promise<ReadProjectDto> {
-    const returnedData = await this.prisma.projects.findFirst({
+    const returnedData = await this.prisma.project.findFirst({
       where: {
         id,
       },
@@ -55,7 +55,7 @@ export class ProjectService {
     updateProjectDto: UpdateProjectDto
   ): Promise<ReadProjectDto> {
     try {
-      const returnedData = await this.prisma.projects.update({
+      const returnedData = await this.prisma.project.update({
         where: { id },
         data: updateProjectDto,
         select: {
@@ -72,7 +72,7 @@ export class ProjectService {
   }
 
   async remove(id: number): Promise<ReadProjectDto> {
-    const returnedData = await this.prisma.projects.delete({
+    const returnedData = await this.prisma.project.delete({
       where: { id },
       select: {
         id: true,
@@ -82,5 +82,44 @@ export class ProjectService {
       },
     });
     return returnedData;
+  }
+
+  async addMember(projectId: number, memberId: number) {
+    try {
+      const returnedData = await this.prisma.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          members: {
+            create: {
+              memberId,
+            },
+          },
+        },
+      });
+      return returnedData;
+    } catch (e) {}
+  }
+
+  async removeMember(projectId: number, memberId: number) {
+    try {
+      const returnedData = await this.prisma.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          members: {
+            delete: {
+              projectId_memberId: {
+                projectId,
+                memberId,
+              },
+            },
+          },
+        },
+      });
+      return returnedData;
+    } catch (e) {}
   }
 }

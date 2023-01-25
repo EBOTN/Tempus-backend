@@ -63,4 +63,26 @@ export class ProjectController {
   remove(@Param("id", ParseIntPipe) id: number) {
     return this.projectService.remove(id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Add member to project" })
+  @ApiResponse({ status: 200, type: ReadProjectDto })
+  @Post("/:id/addMember")
+  addMember(
+    @Param("id", ParseIntPipe) id: number,
+    @Body("memberId", ParseIntPipe) memberId: number
+  ) {
+    return this.projectService.addMember(id, memberId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Remove member from project" })
+  @ApiResponse({ status: 200, type: ReadProjectDto })
+  @Post("/:id/removeMember")
+  removeMember(
+    @Param("id", ParseIntPipe) id: number,
+    @Body("memberId", ParseIntPipe) memberId: number
+  ) {
+    return this.projectService.removeMember(id, memberId);
+  }
 }
