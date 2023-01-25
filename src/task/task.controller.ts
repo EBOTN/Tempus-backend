@@ -26,9 +26,11 @@ import { AssignedTaskDto } from "./dto/assigned-task-dto";
 @ApiTags("tasks")
 @Controller("tasks")
 export class TaskController {
-  constructor(private taskService: TaskService,
+  constructor(
+    private taskService: TaskService,
     private reportService: ReportService,
-    private timeLineService: TimeLineService) {}
+    private timeLineService: TimeLineService
+  ) {}
 
   @ApiOperation({ summary: "Get all assigned tasks by user" })
   @ApiResponse({ status: 200, type: [BadRequestAssignedTaskDto] })
@@ -41,7 +43,6 @@ export class TaskController {
   @ApiResponse({ status: 200, type: [ReportDto] })
   @Get("/getReport")
   getReport(@Query() query: ReportQuerryDto) {
-    
     return this.reportService.getReportForWorker(
       query.startTime,
       query.endTime,
@@ -101,20 +102,14 @@ export class TaskController {
   @ApiOperation({ summary: "Assign worker to task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @Post("/:id/assignWorker")
-  assignUser(
-    @Param() param: UpdateTaskParam,
-    @Body() body: ValidationUserId
-  ) {
+  assignUser(@Param() param: UpdateTaskParam, @Body() body: ValidationUserId) {
     return this.taskService.assignUserToTask(param.id, body.userId);
   }
 
   @ApiOperation({ summary: "Unassign user from task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @Post("/:id/unassignWorker")
-  removeUser(
-    @Param() param: UpdateTaskParam,
-    @Body() body: ValidationUserId
-  ) {
+  removeUser(@Param() param: UpdateTaskParam, @Body() body: ValidationUserId) {
     return this.taskService.removeUserFromTask(param.id, body.userId);
   }
 

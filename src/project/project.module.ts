@@ -4,11 +4,12 @@ import { ProjectController } from "./project.controller";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { AuthModule } from "src/auth/auth.module";
 import { AuthMiddleware } from "src/auth/AuthMiddlWare";
+import { UserModule } from "src/user/user.module";
 
 @Module({
   controllers: [ProjectController],
   providers: [ProjectService],
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, UserModule],
 })
 export class ProjectModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
