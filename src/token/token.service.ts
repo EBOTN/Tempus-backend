@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { userDTO } from "src/user/dto/user-dto";
+import { ReadUserDto } from "src/user/dto/read-user-dto";
 import { UserService } from "src/user/user.service";
 
 @Injectable()
@@ -14,7 +14,7 @@ export class TokenService {
     private jwtService: JwtService
   ) {}
 
-  generateTokens(payload: userDTO) {
+  generateTokens(payload: ReadUserDto) {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
       secret: process.env.JWT_ACCESS_SECRET,
@@ -29,11 +29,11 @@ export class TokenService {
     };
   }
 
-  async saveToken(id: number, refreshtoken: string): Promise<userDTO> {
+  async saveToken(id: number, refreshtoken: string): Promise<ReadUserDto> {
     return this.userService.update(id, { refreshtoken }); // записывает пользователю RT
   }
 
-  async removeToken(refreshToken: string): Promise<userDTO> {
+  async removeToken(refreshToken: string): Promise<ReadUserDto> {
     const user = await this.validateRefreshToken(refreshToken);
     if (!user) throw new BadRequestException();
 
@@ -54,7 +54,7 @@ export class TokenService {
     }
   }
 
-  validateRefreshToken(token: string): Promise<userDTO> {
+  validateRefreshToken(token: string): Promise<ReadUserDto> {
     if (!token)
       throw new UnauthorizedException({ message: "User unauthorized" });
 

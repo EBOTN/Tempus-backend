@@ -1,7 +1,7 @@
 import { Controller, Get, Query, Req } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
-import { userDTO } from "src/user/dto/user-dto";
+import { ReadUserDto } from "src/user/dto/read-user-dto";
 import { TokenService } from "src/token/token.service";
 import { UserService } from "./user.service";
 import { FilterUserQuery } from "./dto/filter-user-query";
@@ -15,14 +15,14 @@ export class UserController {
   ) {}
 
   @ApiOperation({ summary: "Get all users by filter", description: "Need authorization" })
-  @ApiResponse({ status: 200, type: [userDTO] })
+  @ApiResponse({ status: 200, type: [ReadUserDto] })
   @Get()
   async getAll(@Query() query: FilterUserQuery) {
     return await this.userService.getByFilter(query);
   }
 
   @ApiOperation({ summary: "Get current user" })
-  @ApiResponse({ status: 200, type: userDTO })
+  @ApiResponse({ status: 200, type: ReadUserDto })
   @Get("/currentUser")
   async getCurrentUser(@Req() req: Request) {
     return await this.tokenService.validateAccessToken(req.cookies.accessToken);
