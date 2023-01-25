@@ -200,14 +200,6 @@ export class WorkspaceService {
     memberId: number
   ): Promise<ReadWorkSpaceDto> {
     try {
-      const member = await this.prisma.workSpaceMembers.findFirst({
-        where: {
-          AND: {
-            workspaceId: workSpaceId,
-            memberId: memberId,
-          },
-        },
-      });
       const returnedData = await this.prisma.workSpace.update({
         where: {
           id: workSpaceId,
@@ -215,7 +207,10 @@ export class WorkspaceService {
         data: {
           members: {
             delete: {
-              id: member.id,
+              workspaceId_memberId: {
+                workspaceId: workSpaceId,
+                memberId: memberId,
+              },
             },
           },
         },
