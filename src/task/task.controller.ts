@@ -16,7 +16,7 @@ import { BadRequestAssignedTaskDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { ValidationUserId } from "./dto/user-id-body";
 import { ReadTaskQuery } from "./dto/read-task-query";
-import { TaskDto, Tesst } from "./dto/task-dto";
+import { TaskDto, ReportQuerryDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { UpdateTaskParam } from "./dto/update-task-param";
 import { TaskService } from "./task.service";
@@ -40,7 +40,7 @@ export class TaskController {
   @ApiOperation({ summary: "Get report about work for user" })
   @ApiResponse({ status: 200, type: [ReportDto] })
   @Get("/getReport")
-  getReport(@Query() query: Tesst) {
+  getReport(@Query() query: ReportQuerryDto) {
     
     return this.reportService.getReportForWorker(
       query.startTime,

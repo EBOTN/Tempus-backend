@@ -22,7 +22,7 @@ export class TaskDto {
   })
   readonly workers: AssignedTaskDto[];
 }
-export class Tesst {
+export class ReportQuerryDto {
   @IsDate()
   @Type(() => Date)
   readonly startTime: Date;

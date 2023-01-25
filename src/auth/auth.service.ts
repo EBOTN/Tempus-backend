@@ -11,6 +11,7 @@ import { ReadUserDto } from "src/user/dto/read-user-dto";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { TokenService } from "src/token/token.service";
 import { Request, Response } from "express";
+import { ServerSideTokensDto } from "./dto/server-side-tokens.dto";
 
 @Injectable()
 export class AuthService {
@@ -95,14 +96,40 @@ export class AuthService {
       throw new UnauthorizedException("User undefined");
     }
 
-    const actualUser =
-      await this.userService.getFirstByFilterWithOutPassword({
-        id: userData.id,
-      });
-    const { tokens, user } = await this.generateAndSaveToken(actualUser);
+    const currentUser = await this.userService.getFirstByFilterWithOutPassword({
+      id: userData.id,
+    });
+    const { tokens, user } = await this.generateAndSaveToken(currentUser);
     res = this.setCookies(res, tokens);
 
     return res.json(user);
+  }
+
+  async refreshServerSide(refreshToken: string): Promise<ServerSideTokensDto> {
+    if (!refreshToken) {
+      throw new UnauthorizedException("User not auth");
+    }
+    const userData = await this.tokenService.validateRefreshToken(refreshToken);
+    const tokenFromDb = await this.tokenService.findToken(refreshToken);
+
+    if (!userData || !tokenFromDb) {
+      throw new UnauthorizedException("User undefined");
+    }
+    const currentUser = await this.userService.getFirstByFilterWithOutPassword({
+      id: userData.id,
+    });
+    const { tokens } = await this.generateAndSaveToken(currentUser);
+
+    let returnedData: {
+      accessToken: { token: string; maxAge: number };
+      refreshToken: { token: string; maxAge: number };
+    };
+    returnedData.accessToken.token = tokens.accessToken;
+    returnedData.refreshToken.token = tokens.refreshToken;
+    returnedData.accessToken.maxAge = 15 * 60 * 1000;
+    returnedData.refreshToken.maxAge = 7 * 24 * 60 * 60 * 1000;
+
+    return returnedData;
   }
 
   private async generateAndSaveToken(user: ReadUserDto) {

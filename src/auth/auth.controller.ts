@@ -1,17 +1,11 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  Res,
-} from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, Res } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ReadUserDto } from "src/user/dto/read-user-dto";
 import { AuthUserDto } from "./dto/auth-user-dto";
+import { ServerSideTokensDto } from "./dto/server-side-tokens.dto";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -44,5 +38,12 @@ export class AuthController {
   @Get("/refresh")
   async refresh(@Req() req: Request, @Res() res: Response) {
     return await this.authService.refresh(req, res);
+  }
+  
+  @ApiOperation({ summary: "Refresh tokens for server side" })
+  @ApiResponse({ status: 200, type: ServerSideTokensDto })
+  @Post("/refresh-server-side")
+  async refreshServerSide(@Body("refreshToken") refreshToken: string) {
+    return await this.authService.refreshServerSide(refreshToken);
   }
 }
