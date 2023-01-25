@@ -16,6 +16,7 @@ export class WorkspaceService {
         data: createWorkspaceDto,
         include: { owner: true },
       });
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -29,6 +30,7 @@ export class WorkspaceService {
       const returnedData = await this.prisma.workSpace.findMany({
         include: { owner: true },
       });
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -43,6 +45,7 @@ export class WorkspaceService {
         where: { id },
         include: { owner: true },
       });
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -61,6 +64,7 @@ export class WorkspaceService {
         data: updateWorkspaceDto,
         include: { owner: true },
       });
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -75,6 +79,51 @@ export class WorkspaceService {
         where: { id },
         include: { owner: true },
       });
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        console.log(e);
+      }
+    }
+  }
+
+  async addMember(workspaceId: number, memberId: number) {
+    try {
+      const returnedData = await this.prisma.workSpace.update({
+        where: { id: workspaceId },
+        data: {
+          members: {
+            create: {
+              memberId: memberId,
+            },
+          },
+        },
+      });
+
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        console.log(e);
+      }
+    }
+  }
+
+  async removeMember(workSpaceId: number, memberId: number) {
+    try {
+      const member = await this.prisma.workSpaceMembers.findFirst({
+        where: {
+          AND: {
+            workspaceId: workSpaceId,
+            memberId: memberId,
+          },
+        },
+      });
+      const returnedData = await this.prisma.workSpaceMembers.delete({
+        where: {
+          id: member.id,
+        },
+      });
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
