@@ -14,7 +14,21 @@ export class WorkspaceService {
     try {
       const returnedData = await this.prisma.workSpace.create({
         data: createWorkspaceDto,
-        include: { owner: true },
+        include: {
+          owner: true,
+          members: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       return returnedData;
@@ -28,7 +42,21 @@ export class WorkspaceService {
   async findAll(): Promise<ReadWorkSpaceDto[]> {
     try {
       const returnedData = await this.prisma.workSpace.findMany({
-        include: { owner: true },
+        include: {
+          owner: true,
+          members: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       return returnedData;
@@ -43,7 +71,21 @@ export class WorkspaceService {
     try {
       const returnedData = await this.prisma.workSpace.findFirst({
         where: { id },
-        include: { owner: true },
+        include: {
+          owner: true,
+          members: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       return returnedData;
@@ -62,9 +104,22 @@ export class WorkspaceService {
       const returnedData = await this.prisma.workSpace.update({
         where: { id },
         data: updateWorkspaceDto,
-        include: { owner: true },
+        include: {
+          owner: true,
+          members: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
       });
-
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -77,7 +132,21 @@ export class WorkspaceService {
     try {
       const returnedData = await this.prisma.workSpace.delete({
         where: { id },
-        include: { owner: true },
+        include: {
+          owner: true,
+          members: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
       });
       return returnedData;
     } catch (e) {
@@ -87,7 +156,10 @@ export class WorkspaceService {
     }
   }
 
-  async addMember(workspaceId: number, memberId: number) {
+  async addMember(
+    workspaceId: number,
+    memberId: number
+  ): Promise<ReadWorkSpaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.update({
         where: { id: workspaceId },
@@ -95,6 +167,21 @@ export class WorkspaceService {
           members: {
             create: {
               memberId: memberId,
+            },
+          },
+        },
+        include: {
+          owner: true,
+          members: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
             },
           },
         },
@@ -108,7 +195,10 @@ export class WorkspaceService {
     }
   }
 
-  async removeMember(workSpaceId: number, memberId: number) {
+  async removeMember(
+    workSpaceId: number,
+    memberId: number
+  ): Promise<ReadWorkSpaceDto> {
     try {
       const member = await this.prisma.workSpaceMembers.findFirst({
         where: {
@@ -118,9 +208,31 @@ export class WorkspaceService {
           },
         },
       });
-      const returnedData = await this.prisma.workSpaceMembers.delete({
+      const returnedData = await this.prisma.workSpace.update({
         where: {
-          id: member.id,
+          id: workSpaceId,
+        },
+        data: {
+          members: {
+            delete: {
+              id: member.id,
+            },
+          },
+        },
+        include: {
+          owner: true,
+          members: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
         },
       });
 
