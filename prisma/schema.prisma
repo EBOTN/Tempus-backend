@@ -8,14 +8,17 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  password      String
-  refreshtoken  String?
-  firstName     String
-  lastName      String
-  assignedTasks AssignedTask[]
-  createdTasks  Task[]         @relation("createdTasks")
+  id                 Int                @id @default(autoincrement())
+  email              String             @unique
+  password           String
+  refreshtoken       String?
+  firstName          String
+  lastName           String
+  assignedTasks      AssignedTask[]
+  createdTasks       Task[]             @relation("createdTasks")
+  ownedWorkSpace     WorkSpace[]
+  memberedWorkSpaces WorkSpaceMembers[]
+  memberedProjects   ProjectMembers[]
 }
 
 model Task {
@@ -23,7 +26,9 @@ model Task {
   title       String
   description String?
   creatorId   Int
+  projectId   Int            @default(0)
   creator     User           @relation("createdTasks", fields: [creatorId], references: [id], onDelete: Cascade, map: "creator_fkey")
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "project_fkey")
   workers     AssignedTask[]
 }
 
@@ -47,4 +52,45 @@ model TimeLines {
   startTime    DateTime?    @db.Timestamp(6)
   endTime      DateTime?    @db.Timestamp(6)
   AssignedTask AssignedTask @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "nasjk")
+}
+
+model WorkSpace {
+  id          Int                @id @default(autoincrement())
+  title       String
+  description String
+  ownerId     Int
+  owner       User               @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "owner_fk")
+  projects    Project[]
+  members     WorkSpaceMembers[]
+}
+
+model WorkSpaceMembers {
+  id          Int       @id @default(autoincrement())
+  workspaceId Int
+  memberId    Int
+  member      User      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_fk")
+  workspace   WorkSpace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "workspace_fk")
+
+  @@unique([workspaceId, memberId])
+}
+
+model Project {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String
+  workspaceId Int
+  isHidden    Boolean          @default(false)
+  tasks       Task[]
+  members     ProjectMembers[]
+  workspace   WorkSpace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "workspace_fk")
+}
+
+model ProjectMembers {
+  id        Int     @id @default(autoincrement())
+  projectId Int
+  memberId  Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "project_fkey")
+  member    User    @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_fkey")
+
+  @@unique([projectId, memberId])
 }
