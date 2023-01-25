@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
+import { GetProjectQuerry } from "./dto/get-project-querry.dto";
 import { ReadProjectDto } from "./dto/read-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 
@@ -24,15 +25,22 @@ export class ProjectService {
     }
   }
 
-  async findAll(): Promise<ReadProjectDto[]> {
-    return await this.prisma.project.findMany({
+  async findAll(query: GetProjectQuerry): Promise<ReadProjectDto[]> {
+    const returnedData = await this.prisma.project.findMany({
+      where: {
+        title: { contains: query.title || "", mode: "insensitive" },
+        isHidden: query.isHidden || undefined,
+      },
       select: {
         id: true,
         title: true,
         description: true,
         isHidden: true,
       },
+      skip: query.offset || undefined,
+      take: query.limit || undefined,
     });
+    return returnedData;
   }
 
   async findOne(id: number): Promise<ReadProjectDto> {
@@ -82,5 +90,44 @@ export class ProjectService {
       },
     });
     return returnedData;
+  }
+
+  async addMember(projectId: number, memberId: number) {
+    try {
+      const returnedData = await this.prisma.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          members: {
+            create: {
+              memberId,
+            },
+          },
+        },
+      });
+      return returnedData;
+    } catch (e) {}
+  }
+
+  async removeMember(projectId: number, memberId: number) {
+    try {
+      const returnedData = await this.prisma.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          members: {
+            delete: {
+              projectId_memberId: {
+                projectId,
+                memberId,
+              },
+            },
+          },
+        },
+      });
+      return returnedData;
+    } catch (e) {}
   }
 }
