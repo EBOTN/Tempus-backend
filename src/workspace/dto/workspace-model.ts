@@ -22,11 +22,11 @@ export class WorkSpaceModel {
 
   @ApiProperty({
     example: "Description 1",
-    description: "WorkSpace description",
+    description: "WorkSpace cover(url)",
   })
   @IsNotEmpty()
   @IsString()
-  readonly description: string;
+  readonly cover: string;
 
   @ApiProperty({
     example: 1,

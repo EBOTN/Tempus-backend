@@ -15,7 +15,7 @@ export class WorkspaceService {
   ): Promise<ReadWorkSpaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.create({
-        data: {...createWorkspaceDto, ownerId},
+        data: { ...createWorkspaceDto, ownerId },
         include: {
           owner: true,
           members: {
