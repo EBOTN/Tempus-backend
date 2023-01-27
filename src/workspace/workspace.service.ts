@@ -10,11 +10,12 @@ import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 export class WorkspaceService {
   constructor(private prisma: PrismaService) {}
   async create(
+    ownerId: number,
     createWorkspaceDto: CreateWorkspaceDto
   ): Promise<ReadWorkSpaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.create({
-        data: createWorkspaceDto,
+        data: {...createWorkspaceDto, ownerId},
         include: {
           owner: true,
           members: {

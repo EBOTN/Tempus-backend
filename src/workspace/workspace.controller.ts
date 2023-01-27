@@ -13,9 +13,10 @@ import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ReadWorkSpaceDto } from "./dto/read-workspace.dto";
-import { Query, UseGuards } from "@nestjs/common/decorators";
+import { Query, Req, UseGuards } from "@nestjs/common/decorators";
 import { WorkSpaceOwnerGuard } from "./WorkSpaceOwnerGuards";
 import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
+import { ExtendedRequest } from "src/shared/extended-request";
 
 @ApiTags("Workspace")
 @Controller("workspace")
@@ -25,8 +26,8 @@ export class WorkspaceController {
   @ApiOperation({ summary: "Create workspace" })
   @ApiResponse({ status: 200, type: ReadWorkSpaceDto })
   @Post()
-  create(@Body() createWorkspaceDto: CreateWorkspaceDto) {
-    return this.workspaceService.create(createWorkspaceDto);
+  create(@Body() createWorkspaceDto: CreateWorkspaceDto, @Req() req: ExtendedRequest) {
+    return this.workspaceService.create(req.userInfo.id, createWorkspaceDto);
   }
 
   @ApiOperation({ summary: "Get workspaces by querry" })
