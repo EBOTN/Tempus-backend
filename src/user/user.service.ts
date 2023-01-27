@@ -11,10 +11,16 @@ import { UserDto } from "src/user/dto/user-dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
 import { FilterUserQuery } from "./dto/filter-user-query";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { AuthService } from "src/auth/auth.service";
+import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private authService: AuthService
+  ) {}
 
   async create(data: CreateUserDto): Promise<UserDto> {
     try {
@@ -72,7 +78,7 @@ export class UserService {
     taskId: number,
     skip: number,
     take: number
-  ) {
+  ): Promise<UserDto[]> {
     return await this.prisma.user.findMany({
       where: {
         OR: {
@@ -111,21 +117,46 @@ export class UserService {
     });
   }
 
-  async update(id: number, newData): Promise<UserDto> {
+  async update(id: number, newData: UpdateUserDto): Promise<UserDto> {
     try {
       return await this.prisma.user.update({
         where: { id },
-        data: { ...newData },
+        data: newData,
         select: new ConfigUserWithoutPassword(),
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("User not found");
         if (e.code === "P2002")
-          throw new BadRequestException("You try change unique field");
+          throw new BadRequestException("This email already exists");
       }
     }
   }
+
+  async changePassword(
+    id: number,
+    changeUserPasswordDto: ChangeUserPasswordDto
+  ): Promise<UserDto> {
+    const currentUser = await this.getFirstByFilter({ id });
+    const passwordEquals = await this.authService.isPasswordCorrect(
+      changeUserPasswordDto.currentPassword,
+      currentUser.password
+    );
+    if (!passwordEquals) throw new BadRequestException("Password incorrect!");
+    const hashPassword = await this.authService.hashPassword(
+      changeUserPasswordDto.newPassword
+    );
+
+    try {
+      const returnedData = await this.prisma.user.update({
+        where: { id },
+        data: { password: hashPassword },
+      });
+
+      return returnedData;
+    } catch (e) {}
+  }
+
   async getFirstByFilterWithOutPassword(filters): Promise<UserDto> {
     const userData = await this.prisma.user.findFirst({
       where: filters,

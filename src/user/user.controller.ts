@@ -1,10 +1,12 @@
-import { Controller, Get, Query, Req } from "@nestjs/common";
+import { Body, Controller, Get, Put, Query, Req } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
 import { UserDto } from "src/user/dto/user-dto";
 import { TokenService } from "src/token/token.service";
 import { UserService } from "./user.service";
 import { FilterUserQuery } from "./dto/filter-user-query";
+import { ExtendedRequest } from "src/shared/extended-request";
+import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
 
 @ApiTags("user")
 @Controller("user")
@@ -14,7 +16,10 @@ export class UserController {
     private readonly tokenService: TokenService
   ) {}
 
-  @ApiOperation({ summary: "Get all users by filter", description: "Need authorization" })
+  @ApiOperation({
+    summary: "Get all users by filter",
+    description: "Need authorization",
+  })
   @ApiResponse({ status: 200, type: [UserDto] })
   @Get()
   async getAll(@Query() query: FilterUserQuery) {
@@ -26,5 +31,15 @@ export class UserController {
   @Get("/currentUser")
   async getCurrentUser(@Req() req: Request) {
     return await this.tokenService.validateAccessToken(req.cookies.accessToken);
+  }
+
+  @ApiOperation({ summary: "Change password" })
+  @ApiResponse({ status: 200, type: UserDto })
+  @Put("/changePassword")
+  async changePassword(
+    @Req() req: ExtendedRequest,
+    @Body() body: ChangeUserPasswordDto
+  ) {
+    return await this.userService.changePassword(req.userInfo.id, body);
   }
 }

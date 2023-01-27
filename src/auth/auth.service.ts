@@ -29,7 +29,7 @@ export class AuthService {
   }
 
   async signUp(res, data: CreateUserDto): Promise<string> {
-    const hashPassword = await bcrypt.hash(data.password, 5); // хэширует пароль
+    const hashPassword = await this.hashPassword(data.password); // хэширует пароль
     const createdUser = await this.userService.create({
       ...data,
       password: hashPassword,
@@ -39,6 +39,19 @@ export class AuthService {
     res = this.setCookies(res, tokens);
 
     return res.json(user);
+  }
+
+  async isPasswordCorrect(
+    inputPassword: string,
+    password: string
+  ): Promise<boolean> {
+    const returnedData = bcrypt.compare(inputPassword, password);
+    return returnedData;
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const returnedData = await bcrypt.hash(password, 5);
+    return returnedData
   }
 
   private async validateUser(
@@ -62,7 +75,10 @@ export class AuthService {
       });
     }
     const { password, refreshtoken, ...user } = userData;
-    const passwordEquals = await bcrypt.compare(inputPassword, password); // сравнивает пароли
+    const passwordEquals = await this.isPasswordCorrect(
+      inputPassword,
+      password
+    ); // сравнивает пароли
 
     if (passwordEquals) {
       return user;
@@ -122,7 +138,10 @@ export class AuthService {
 
     const returnedData = {
       accessToken: { token: tokens.accessToken, maxAge: 15 * 60 * 1000 },
-      refreshToken: { token: tokens.refreshToken, maxAge: 7 * 24 * 60 * 60 * 1000 }
+      refreshToken: {
+        token: tokens.refreshToken,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      },
     };
 
     return returnedData;
