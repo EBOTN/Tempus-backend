@@ -120,14 +120,10 @@ export class AuthService {
     });
     const { tokens } = await this.generateAndSaveToken(currentUser);
 
-    let returnedData: {
-      accessToken: { token: string; maxAge: number };
-      refreshToken: { token: string; maxAge: number };
+    const returnedData = {
+      accessToken: { token: tokens.accessToken, maxAge: 15 * 60 * 1000 },
+      refreshToken: { token: tokens.refreshToken, maxAge: 7 * 24 * 60 * 60 * 1000 }
     };
-    returnedData.accessToken.token = tokens.accessToken;
-    returnedData.refreshToken.token = tokens.refreshToken;
-    returnedData.accessToken.maxAge = 15 * 60 * 1000;
-    returnedData.refreshToken.maxAge = 7 * 24 * 60 * 60 * 1000;
 
     return returnedData;
   }
