@@ -1,4 +1,4 @@
 import { OmitType } from "@nestjs/swagger";
-import { WorkSpaceModel } from "./workspace-model";
+import { WorkspaceModel } from "./workspace-model";
 
-export class CreateWorkspaceDto extends OmitType(WorkSpaceModel, ['id', 'ownerId', 'cover']) {}
+export class CreateWorkspaceDto extends OmitType(WorkspaceModel, ['id', 'ownerId', 'cover']) {}

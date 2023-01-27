@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { UserService } from "src/user/user.service";
 import * as bcrypt from "bcryptjs";
-import { ReadUserDto } from "src/user/dto/read-user-dto";
+import { UserDto } from "src/user/dto/user-dto";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { TokenService } from "src/token/token.service";
 import { Request, Response } from "express";
@@ -44,7 +44,7 @@ export class AuthService {
   private async validateUser(
     email: string,
     inputPassword: string
-  ): Promise<ReadUserDto> {
+  ): Promise<UserDto> {
     if (!email && !inputPassword) {
       throw new HttpException(
         "email or password empty",
@@ -132,7 +132,7 @@ export class AuthService {
     return returnedData;
   }
 
-  private async generateAndSaveToken(user: ReadUserDto) {
+  private async generateAndSaveToken(user: UserDto) {
     const tokens = this.tokenService.generateTokens(user); // генерируем два токена пользователю
     await this.tokenService.saveToken(user.id, tokens.refreshToken); // записываем токен в бд
 

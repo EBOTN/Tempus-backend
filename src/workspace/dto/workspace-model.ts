@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsNotEmpty, IsNumber, IsBoolean, IsString } from "class-validator";
 
-export class WorkSpaceModel {
+export class WorkspaceModel {
   @ApiProperty({
     example: 1,
     description: "WorkSpace id",

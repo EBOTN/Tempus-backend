@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
-import { ReadUserDto } from "src/user/dto/read-user-dto";
+import { UserDto } from "src/user/dto/user-dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ConfigUserWithoutPassword } from "./user.selecter.wpassword";
 import { FilterUserQuery } from "./dto/filter-user-query";
@@ -16,7 +16,7 @@ import { FilterUserQuery } from "./dto/filter-user-query";
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateUserDto): Promise<ReadUserDto> {
+  async create(data: CreateUserDto): Promise<UserDto> {
     try {
       return await this.prisma.user.create({
         data,
@@ -30,7 +30,7 @@ export class UserService {
     }
   }
 
-  async delete(id: number): Promise<ReadUserDto> {
+  async delete(id: number): Promise<UserDto> {
     try {
       return await this.prisma.user.delete({
         where: { id: id },
@@ -44,7 +44,7 @@ export class UserService {
     }
   }
 
-  async getByFilter(query: FilterUserQuery): Promise<ReadUserDto[]> {
+  async getByFilter(query: FilterUserQuery): Promise<UserDto[]> {
     const { skip, take, taskId, searchText } = query;
     if (taskId) return this.getUsersFromTask(searchText, taskId, skip, take);
     return this.getAllUsers(searchText, skip, take);
@@ -111,7 +111,7 @@ export class UserService {
     });
   }
 
-  async update(id: number, newData): Promise<ReadUserDto> {
+  async update(id: number, newData): Promise<UserDto> {
     try {
       return await this.prisma.user.update({
         where: { id },
@@ -126,7 +126,7 @@ export class UserService {
       }
     }
   }
-  async getFirstByFilterWithOutPassword(filters): Promise<ReadUserDto> {
+  async getFirstByFilterWithOutPassword(filters): Promise<UserDto> {
     const userData = await this.prisma.user.findFirst({
       where: filters,
       select: new ConfigUserWithoutPassword(),

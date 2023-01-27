@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
 import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
-import { ReadWorkSpaceDto } from "./dto/read-workspace.dto";
+import { WorkspaceDto } from "./dto/workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 
 @Injectable()
@@ -12,7 +12,7 @@ export class WorkspaceService {
   async create(
     ownerId: number,
     createWorkspaceDto: CreateWorkspaceDto
-  ): Promise<ReadWorkSpaceDto> {
+  ): Promise<WorkspaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.create({
         data: { ...createWorkspaceDto, ownerId },
@@ -41,7 +41,7 @@ export class WorkspaceService {
     }
   }
 
-  async findAll(querry: GetWorkspacesQuerry): Promise<ReadWorkSpaceDto[]> {
+  async findAll(querry: GetWorkspacesQuerry): Promise<WorkspaceDto[]> {
     try {
       const returnedData = await this.prisma.workSpace.findMany({
         where: {
@@ -74,7 +74,7 @@ export class WorkspaceService {
     }
   }
 
-  async findOne(id: number): Promise<ReadWorkSpaceDto> {
+  async findOne(id: number): Promise<WorkspaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.findFirst({
         where: { id },
@@ -106,7 +106,7 @@ export class WorkspaceService {
   async update(
     id: number,
     updateWorkspaceDto: UpdateWorkspaceDto
-  ): Promise<ReadWorkSpaceDto> {
+  ): Promise<WorkspaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.update({
         where: { id },
@@ -135,7 +135,7 @@ export class WorkspaceService {
     }
   }
 
-  async remove(id: number): Promise<ReadWorkSpaceDto> {
+  async remove(id: number): Promise<WorkspaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.delete({
         where: { id },
@@ -166,7 +166,7 @@ export class WorkspaceService {
   async addMember(
     workspaceId: number,
     memberId: number
-  ): Promise<ReadWorkSpaceDto> {
+  ): Promise<WorkspaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.update({
         where: { id: workspaceId },
@@ -205,7 +205,7 @@ export class WorkspaceService {
   async removeMember(
     workSpaceId: number,
     memberId: number
-  ): Promise<ReadWorkSpaceDto> {
+  ): Promise<WorkspaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.update({
         where: {
