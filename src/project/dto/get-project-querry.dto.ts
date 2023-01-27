@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsIn,
   IsNumber,
@@ -16,6 +16,7 @@ export class GetProjectQuerry {
   })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   readonly offset?: number;
 
   @ApiProperty({
@@ -25,6 +26,7 @@ export class GetProjectQuerry {
   })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   readonly limit?: number;
 
   @ApiProperty({ example: 1, description: 'Project owner', required: false })

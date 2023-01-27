@@ -19,15 +19,6 @@ async function start() {
     })
   );
   app.setGlobalPrefix("api");
-  app.use(
-    ["/api/docs", "/docs-json"]
-    // , basicAuth({
-    //   challenge: true,
-    //   users: {
-    //     [process.env.SWAGGER_USER]: process.env.SWAGGER_PASSWORD,
-    //   },
-    // })
-  );
 
   const config = new DocumentBuilder()
     .setTitle("Tempus SWAGGER")
