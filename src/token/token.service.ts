@@ -30,14 +30,14 @@ export class TokenService {
   }
 
   async saveToken(id: number, refreshtoken: string): Promise<UserDto> {
-    return this.userService.update(id, { refreshtoken }); // записывает пользователю RT
+    return this.userService.refreshToken(id, refreshtoken); // записывает пользователю RT
   }
 
   async removeToken(refreshToken: string): Promise<UserDto> {
     const user = await this.validateRefreshToken(refreshToken);
     if (!user) throw new BadRequestException();
 
-    return await this.userService.update(user.id, { refreshtoken: null });
+    return await this.userService.refreshToken(user.id, null);
   }
 
   validateAccessToken(token: string) {
@@ -69,9 +69,7 @@ export class TokenService {
   }
 
   async findToken(refreshToken: string): Promise<string> {
-    const user = await this.userService.gitFirstByRefreshToken(
-      refreshToken
-    );
+    const user = await this.userService.gitFirstByRefreshToken(refreshToken);
     if (user) {
       return user.refreshtoken;
     }

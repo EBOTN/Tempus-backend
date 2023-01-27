@@ -117,6 +117,14 @@ export class UserService {
     });
   }
 
+  async refreshToken(id: number, refreshToken: string): Promise<UserDto> {
+    const returnedData = await this.prisma.user.update({
+      where: { id },
+      data: { refreshtoken: refreshToken },
+    });
+    return returnedData;
+  }
+
   async update(id: number, newData: UpdateUserDto): Promise<UserDto> {
     try {
       return await this.prisma.user.update({
