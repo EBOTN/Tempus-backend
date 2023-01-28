@@ -3,10 +3,9 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TimeLineService } from "src/time-line/time-line.service";
 import { CreateTaskDto } from "./dto/create-task-dto";
-import { ReadTaskQuery } from "./dto/read-task-query";
+import { GetTaskQuery } from "./dto/get-task-query";
 import { SelectAssignedTask } from "./dto/select-assigned-task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
-import { UpdateTaskParam } from "./dto/update-task-param";
 
 @Injectable()
 export class TaskService {
@@ -15,7 +14,7 @@ export class TaskService {
     private timeLineService: TimeLineService
   ) {}
 
-  async getAssignedTasksByUserId(query: ReadTaskQuery) {
+  async getAssignedTasksByUserId(query: GetTaskQuery) {
     try {
       const data = await this.prisma.assignedTask.findMany({
         where: {
@@ -76,7 +75,7 @@ export class TaskService {
     });
   }
 
-  async getCreatedTasksByUserId(query: ReadTaskQuery) {
+  async getCreatedTasksByUserId(query: GetTaskQuery) {
     const { title, userId } = query;
     try {
       return await this.prisma.task.findMany({
@@ -167,10 +166,10 @@ export class TaskService {
     }
   }
 
-  async remove(param: UpdateTaskParam) {
+  async remove(id: number) {
     try {
       await this.prisma.task.delete({
-        where: param,
+        where: { id },
         include: {
           workers: {
             include: { TimeLines: true },
@@ -178,7 +177,7 @@ export class TaskService {
         },
       });
 
-      return await this.getFirst(param.id);
+      return await this.getFirst(id);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -187,10 +186,10 @@ export class TaskService {
     }
   }
 
-  async update(param: UpdateTaskParam, data: UpdateTaskDto) {
+  async update(id: number, data: UpdateTaskDto) {
     try {
       return await this.prisma.task.update({
-        where: param,
+        where: { id },
         data: data,
         include: {
           workers: true,
@@ -278,15 +277,6 @@ export class TaskService {
         },
         include: {
           TimeLines: true,
-          // task: {
-          //   include: {
-          //     workers: {
-          //       include: {
-          //         TimeLines: true,
-          //       },
-          //     },
-          //   },
-          // },
         },
       });
     } catch (e) {}

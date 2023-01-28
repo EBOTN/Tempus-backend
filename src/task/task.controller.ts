@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -15,10 +16,9 @@ import { TimeLineService } from "src/time-line/time-line.service";
 import { BadRequestAssignedTaskDto } from "./dto/assigned_task-info-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { ValidationUserId } from "./dto/user-id-body";
-import { ReadTaskQuery } from "./dto/read-task-query";
+import { GetTaskQuery } from "./dto/get-task-query";
 import { TaskDto, ReportQuerryDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
-import { UpdateTaskParam } from "./dto/update-task-param";
 import { TaskService } from "./task.service";
 import { ReportDto } from "src/report/dto/report-dto";
 import { AssignedTaskDto } from "./dto/assigned-task-dto";
@@ -35,7 +35,7 @@ export class TaskController {
   @ApiOperation({ summary: "Get all assigned tasks by user" })
   @ApiResponse({ status: 200, type: [BadRequestAssignedTaskDto] })
   @Get("getAssignedTasks")
-  getAssignedTasks(@Query() query: ReadTaskQuery) {
+  getAssignedTasks(@Query() query: GetTaskQuery) {
     return this.taskService.getAssignedTasksByUserId(query);
   }
 
@@ -53,7 +53,7 @@ export class TaskController {
   @Get("getUserTasks")
   @ApiOperation({ summary: "Get all created tasks by user" })
   @ApiResponse({ status: 200, type: [TaskDto] })
-  getByCreatorId(@Query() query: ReadTaskQuery) {
+  getByCreatorId(@Query() query: GetTaskQuery) {
     return this.taskService.getCreatedTasksByUserId(query);
   }
 
@@ -67,8 +67,8 @@ export class TaskController {
   @Get("/:id")
   @ApiOperation({ summary: "Get first task" })
   @ApiResponse({ status: 200, type: [TaskDto] })
-  getFirst(@Param() param: UpdateTaskParam) {
-    return this.taskService.getFirst(param.id);
+  getFirst(@Param('id', ParseIntPipe) id: number) {
+    return this.taskService.getFirst(id);
   }
 
   @ApiOperation({ summary: "Create task" })
@@ -88,52 +88,52 @@ export class TaskController {
   @ApiOperation({ summary: "Delete task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Delete("/:id")
-  remove(@Param() param: UpdateTaskParam) {
-    return this.taskService.remove(param);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.taskService.remove(id);
   }
 
   @ApiOperation({ summary: "Update task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @Put("/:id")
-  update(@Param() param: UpdateTaskParam, @Body() body: UpdateTaskDto) {
-    return this.taskService.update(param, body);
+  update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateTaskDto) {
+    return this.taskService.update(id, body);
   }
 
   @ApiOperation({ summary: "Assign worker to task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @Post("/:id/assignWorker")
-  assignUser(@Param() param: UpdateTaskParam, @Body() body: ValidationUserId) {
-    return this.taskService.assignUserToTask(param.id, body.userId);
+  assignUser(@Param('id', ParseIntPipe) id: number, @Body() body: ValidationUserId) {
+    return this.taskService.assignUserToTask(id, body.userId);
   }
 
   @ApiOperation({ summary: "Unassign user from task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @Post("/:id/unassignWorker")
-  removeUser(@Param() param: UpdateTaskParam, @Body() body: ValidationUserId) {
-    return this.taskService.removeUserFromTask(param.id, body.userId);
+  removeUser(@Param('id', ParseIntPipe) id: number, @Body() body: ValidationUserId) {
+    return this.taskService.removeUserFromTask(id, body.userId);
   }
 
   @Post("/:id/startTimeLine")
   @ApiOperation({ summary: "Start track task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   starTimeLine(
-    @Param() param: UpdateTaskParam,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: ValidationUserId
   ) {
-    return this.timeLineService.startTimeLine(param.id, body.userId);
+    return this.timeLineService.startTimeLine(id, body.userId);
   }
 
   @Post("/:id/endTimeLine")
   @ApiOperation({ summary: "Finish track task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
-  endTimeLine(@Param() param: UpdateTaskParam) {
-    return this.timeLineService.endTimeLine(param.id);
+  endTimeLine(@Param('id', ParseIntPipe) id: number) {
+    return this.timeLineService.endTimeLine(id);
   }
 
   @Post("/:id/completeTask")
   @ApiOperation({ summary: "Complete task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
-  completeTask(@Param() param: UpdateTaskParam) {
-    return this.taskService.completeTask(param.id);
+  completeTask(@Param('id', ParseIntPipe) id: number) {
+    return this.taskService.completeTask(id);
   }
 }

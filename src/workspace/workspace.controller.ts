@@ -40,7 +40,7 @@ export class WorkspaceController {
   @ApiOperation({ summary: "Get workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @Get("/:id")
-  findOne(@Param("id") id: number) {
+  findOne(@Param("id", ParseIntPipe) id: number) {
     return this.workspaceService.findOne(id);
   }
 

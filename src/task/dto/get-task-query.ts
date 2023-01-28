@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
-export class ReadTaskQuery {
+export class GetTaskQuery {
   @ApiProperty({ example: 1, description: "User id", required: false })
   @IsOptional()
   @IsNotEmpty()
