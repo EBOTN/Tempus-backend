@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -16,7 +18,9 @@ import { ServerSideTokensDto } from "./dto/server-side-tokens.dto";
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(forwardRef(()=> UserService))
     private userService: UserService,
+    @Inject(forwardRef(()=> TokenService))
     private tokenService: TokenService
   ) {}
 

@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -19,6 +21,7 @@ import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
 export class UserService {
   constructor(
     private prisma: PrismaService,
+    @Inject(forwardRef(()=>AuthService))
     private authService: AuthService
   ) {}
 
