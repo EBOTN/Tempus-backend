@@ -11,12 +11,20 @@ import {
 import { WorkspaceService } from "./workspace.service";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { WorkspaceDto } from "./dto/workspace.dto";
 import { Query, Req, UseGuards } from "@nestjs/common/decorators";
 import { WorkSpaceOwnerGuard } from "./WorkSpaceOwnerGuards";
 import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
 import { ExtendedRequest } from "src/shared/extended-request";
+import { FormDataRequest } from "nestjs-form-data/dist/decorators";
+import { MemoryStoredFile } from "nestjs-form-data";
 
 @ApiTags("Workspace")
 @Controller("workspace")
@@ -25,8 +33,13 @@ export class WorkspaceController {
 
   @ApiOperation({ summary: "Create workspace" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
+  @ApiConsumes("multipart/form-data")
   @Post()
-  create(@Body() createWorkspaceDto: CreateWorkspaceDto, @Req() req: ExtendedRequest) {
+  @FormDataRequest({ storage: MemoryStoredFile })
+  create(
+    @Body() createWorkspaceDto: CreateWorkspaceDto,
+    @Req() req: ExtendedRequest
+  ) {
     return this.workspaceService.create(req.userInfo.id, createWorkspaceDto);
   }
 

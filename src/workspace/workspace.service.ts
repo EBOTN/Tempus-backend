@@ -5,17 +5,22 @@ import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
 import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
 import { WorkspaceDto } from "./dto/workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
+import { FileService } from "src/file/file.service";
 
 @Injectable()
 export class WorkspaceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private fileService: FileService) {}
   async create(
     ownerId: number,
     createWorkspaceDto: CreateWorkspaceDto
   ): Promise<WorkspaceDto> {
     try {
+      let coverUrl: string;
+      if(createWorkspaceDto.cover){
+        coverUrl = await this.fileService.createFile(createWorkspaceDto.cover)
+      }
       const returnedData = await this.prisma.workSpace.create({
-        data: { ...createWorkspaceDto, ownerId },
+        data: { title: createWorkspaceDto.title, cover: coverUrl || undefined, ownerId },
         include: {
           owner: true,
           members: {

@@ -9,11 +9,13 @@ import { PrismaModule } from "src/prisma/prisma.module";
 import { AuthModule } from "src/auth/auth.module";
 import { AuthMiddleware } from "src/auth/AuthMiddlWare";
 import { UserModule } from "src/user/user.module";
+import { FileModule } from "src/file/file.module";
+import { NestjsFormDataModule } from "nestjs-form-data";
 
 @Module({
   controllers: [WorkspaceController],
   providers: [WorkspaceService],
-  imports: [PrismaModule, AuthModule, UserModule],
+  imports: [PrismaModule, AuthModule, UserModule, FileModule, NestjsFormDataModule],
 })
 export class WorkspaceModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

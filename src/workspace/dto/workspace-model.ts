@@ -5,7 +5,7 @@ import { IsNotEmpty, IsNumber, IsBoolean, IsString } from "class-validator";
 export class WorkspaceModel {
   @ApiProperty({
     example: 1,
-    description: "WorkSpace id",
+    description: "Workspace id",
   })
   @IsNotEmpty()
   @IsNumber()
@@ -13,8 +13,8 @@ export class WorkspaceModel {
   readonly id: number;
 
   @ApiProperty({
-    example: "WorkSpace 1",
-    description: "WorkSpace description",
+    example: "Workspace 1",
+    description: "Workspace title",
   })
   @IsNotEmpty()
   @IsString()
@@ -22,7 +22,7 @@ export class WorkspaceModel {
 
   @ApiProperty({
     example: "Description 1",
-    description: "WorkSpace cover(url)",
+    description: "Workspace cover(url)",
   })
   @IsNotEmpty()
   @IsString()
@@ -30,7 +30,7 @@ export class WorkspaceModel {
 
   @ApiProperty({
     example: 1,
-    description: "WorkSpace owner id",
+    description: "Workspace owner id",
   })
   @IsNotEmpty()
   @IsNumber()
