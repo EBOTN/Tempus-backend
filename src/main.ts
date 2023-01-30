@@ -11,7 +11,7 @@ async function start() {
   const app = await NestFactory.create(AppModule);
   const prismaService = app.get(PrismaService);
 
-  app.enableCors({ origin: "http://localhost:3000", credentials: true });
+  app.enableCors({ origin: ["http://localhost:3000", "http://localhost:5173"], credentials: true });
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
