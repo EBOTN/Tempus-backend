@@ -7,6 +7,7 @@ import { UserService } from "./user.service";
 import { FilterUserQuery } from "./dto/filter-user-query";
 import { ExtendedRequest } from "src/shared/extended-request";
 import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 
 @ApiTags("user")
 @Controller("user")
@@ -31,6 +32,16 @@ export class UserController {
   @Get("/currentUser")
   async getCurrentUser(@Req() req: Request) {
     return await this.tokenService.validateAccessToken(req.cookies.accessToken);
+  }
+
+  @ApiOperation({ summary: "Change password" })
+  @ApiResponse({ status: 200, type: UserDto })
+  @Put()
+  async update(
+    @Req() req: ExtendedRequest,
+    @Body() body: UpdateUserDto
+  ) {
+    return await this.userService.update(req.userInfo.id, body);
   }
 
   @ApiOperation({ summary: "Change password" })

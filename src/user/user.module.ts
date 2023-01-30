@@ -15,7 +15,7 @@ export class UserModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .forRoutes("workspace");
+      .forRoutes("user");
   }
 }
 
