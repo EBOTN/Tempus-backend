@@ -60,7 +60,9 @@ export class WorkspaceController {
   @UseGuards(WorkSpaceOwnerGuard)
   @ApiOperation({ summary: "Update workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
+  @ApiConsumes("multipart/form-data")
   @Put("/:id")
+  @FormDataRequest({ storage: MemoryStoredFile })
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateWorkspaceDto: UpdateWorkspaceDto

@@ -2,7 +2,7 @@ import { ApiProperty, OmitType } from "@nestjs/swagger";
 import { UserDto } from "src/user/dto/user-dto";
 import { WorkspaceModel } from "./workspace-model";
 
-export class WorkspaceDto extends OmitType(WorkspaceModel, ["ownerId"]) {
+export class WorkspaceDto extends OmitType(WorkspaceModel, ["ownerId", "cover"]) {
   @ApiProperty({ description: "Workspace owner" })
   readonly owner: UserDto;
 

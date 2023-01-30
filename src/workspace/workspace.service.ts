@@ -19,7 +19,7 @@ export class WorkspaceService {
   ): Promise<WorkspaceDto> {
     try {
       const coverUrl = await this.fileService.createFile(
-        createWorkspaceDto.cover
+        createWorkspaceDto.coverFile
       );
       const returnedData = await this.prisma.workSpace.create({
         data: {
@@ -28,7 +28,14 @@ export class WorkspaceService {
           ownerId,
         },
         include: {
-          owner: true,
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
           members: {
             select: {
               member: {
@@ -119,11 +126,25 @@ export class WorkspaceService {
     updateWorkspaceDto: UpdateWorkspaceDto
   ): Promise<WorkspaceDto> {
     try {
+      const coverUrl = await this.fileService.createFile(
+        updateWorkspaceDto.coverFile
+      );
       const returnedData = await this.prisma.workSpace.update({
         where: { id },
-        data: updateWorkspaceDto,
+        data: {
+          title: updateWorkspaceDto.title,
+          cover: coverUrl || undefined,
+          ownerId: updateWorkspaceDto.ownerId,
+        },
         include: {
-          owner: true,
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
           members: {
             select: {
               member: {
@@ -151,7 +172,14 @@ export class WorkspaceService {
       const returnedData = await this.prisma.workSpace.delete({
         where: { id },
         include: {
-          owner: true,
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
           members: {
             select: {
               member: {
@@ -189,7 +217,14 @@ export class WorkspaceService {
           },
         },
         include: {
-          owner: true,
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
           members: {
             select: {
               member: {
@@ -233,7 +268,14 @@ export class WorkspaceService {
           },
         },
         include: {
-          owner: true,
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
           members: {
             select: {
               member: {

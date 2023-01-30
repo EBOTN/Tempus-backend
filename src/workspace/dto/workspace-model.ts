@@ -1,6 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsBoolean, IsString } from "class-validator";
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsBoolean,
+  IsString,
+  IsOptional,
+} from "class-validator";
+import { HasMimeType, IsFile, MemoryStoredFile } from "nestjs-form-data";
 
 export class WorkspaceModel {
   @ApiProperty({
@@ -9,7 +16,7 @@ export class WorkspaceModel {
   })
   @IsNotEmpty()
   @IsNumber()
-  @Type(()=>Number)
+  @Type(() => Number)
   readonly id: number;
 
   @ApiProperty({
@@ -34,23 +41,34 @@ export class WorkspaceModel {
   })
   @IsNotEmpty()
   @IsNumber()
-  @Type(()=>Number)
+  @Type(() => Number)
   readonly ownerId: number;
 
-//   @ApiProperty({
-//     example: true,
-//     description: "Whether to hide the project from visible",
-//   })
-//   @IsNotEmpty()
-//   @IsBoolean()
-//   readonly isHidden: boolean;
+  @ApiProperty({
+    type: "string",
+    required: false,
+    format: "binary",
+    description: "Image cover",
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsFile()
+  @HasMimeType(["image/jpeg", "image/png"])
+  readonly coverFile?: MemoryStoredFile;
+  //   @ApiProperty({
+  //     example: true,
+  //     description: "Whether to hide the project from visible",
+  //   })
+  //   @IsNotEmpty()
+  //   @IsBoolean()
+  //   readonly isHidden: boolean;
 
-//   @ApiProperty({
-//     example: 2,
-//     description: "Workspace id",
-//   })
-//   @IsNotEmpty()
-//   @IsNumber()
-//   @Type(()=>Number)
-//   readonly workspaceId: number;
+  //   @ApiProperty({
+  //     example: 2,
+  //     description: "Workspace id",
+  //   })
+  //   @IsNotEmpty()
+  //   @IsNumber()
+  //   @Type(()=>Number)
+  //   readonly workspaceId: number;
 }
