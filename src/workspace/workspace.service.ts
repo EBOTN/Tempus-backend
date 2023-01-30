@@ -9,18 +9,24 @@ import { FileService } from "src/file/file.service";
 
 @Injectable()
 export class WorkspaceService {
-  constructor(private prisma: PrismaService, private fileService: FileService) {}
+  constructor(
+    private prisma: PrismaService,
+    private fileService: FileService
+  ) {}
   async create(
     ownerId: number,
     createWorkspaceDto: CreateWorkspaceDto
   ): Promise<WorkspaceDto> {
     try {
-      let coverUrl: string;
-      if(createWorkspaceDto.cover){
-        coverUrl = await this.fileService.createFile(createWorkspaceDto.cover)
-      }
+      const coverUrl = await this.fileService.createFile(
+        createWorkspaceDto.cover
+      );
       const returnedData = await this.prisma.workSpace.create({
-        data: { title: createWorkspaceDto.title, cover: coverUrl || undefined, ownerId },
+        data: {
+          title: createWorkspaceDto.title,
+          cover: coverUrl || undefined,
+          ownerId,
+        },
         include: {
           owner: true,
           members: {
