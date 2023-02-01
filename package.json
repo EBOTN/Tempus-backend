@@ -5,6 +5,9 @@
   "author": "",
   "private": false,
   "license": "UNLICENSED",
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -50,6 +53,7 @@
     "@nestjs/cli": "^9.1.9",
     "@nestjs/schematics": "^9.0.4",
     "@nestjs/testing": "^9.2.1",
+    "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.16",
     "@types/jest": "29.4.0",
     "@types/node": "^18.11.18",
