@@ -25,7 +25,7 @@ import { join } from "path";
     WorkspaceModule,
     NestjsFormDataModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, "..", "static"),
+      rootPath: join(__dirname, "..", "..", "static"),
       serveRoot: "/api/images/",
       exclude: ["/api/*"],
     }),
