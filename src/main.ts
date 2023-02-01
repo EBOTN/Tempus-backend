@@ -10,8 +10,14 @@ async function start() {
   const PORT = process.env.PORT || 5000;
   const app = await NestFactory.create(AppModule);
   const prismaService = app.get(PrismaService);
-
-  app.enableCors({ origin: ["http://localhost:3000", "http://localhost:5173"], credentials: true });
+  const origin =
+    process.env.IS_DEV === "true"
+      ? ["http://192.168.205.211:3000", "http://192.168.205.211:5173"]
+      : ["http://localhost:3000", "http://localhost:5173"];
+  app.enableCors({
+    origin,
+    credentials: true,
+  });
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
