@@ -28,7 +28,7 @@ export class WorkspaceModel {
   readonly title: string;
 
   @ApiProperty({
-    example: "Description 1",
+    example: "http://.../api/image/image1",
     description: "Workspace cover(url)",
   })
   @IsNotEmpty()
