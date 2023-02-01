@@ -7,7 +7,8 @@ async function main() {
   const email = "bebrin@mail.ru";
   const firstName = "Mike";
   const lastName = "Vazovsky";
-  const hashPassword = await bcrypt.hash(password, 5);
+  const salt = await bcrypt.genSalt()
+  const hashPassword = await bcrypt.hash(password, salt);
 
   const user = await prisma.user.create({
     data: {

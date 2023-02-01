@@ -54,7 +54,8 @@ export class AuthService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    const returnedData = await bcrypt.hash(password, 5);
+    const salt = await bcrypt.genSalt()
+    const returnedData = await bcrypt.hash(password, salt);
     return returnedData
   }
 
