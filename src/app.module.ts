@@ -9,6 +9,8 @@ import { ProjectModule } from "./project/project.module";
 import { WorkspaceModule } from "./workspace/workspace.module";
 import { FileModule } from "./file/file.module";
 import { NestjsFormDataModule } from "nestjs-form-data";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 
 @Module({
   imports: [
@@ -21,7 +23,12 @@ import { NestjsFormDataModule } from "nestjs-form-data";
     ReportModule,
     ProjectModule,
     WorkspaceModule,
-    NestjsFormDataModule
+    NestjsFormDataModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, "..", "static"),
+      serveRoot: "/api/images/",
+      exclude: ["/api/*"],
+    }),
   ],
   controllers: [],
   providers: [],
