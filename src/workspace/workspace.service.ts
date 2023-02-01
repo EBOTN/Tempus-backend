@@ -59,11 +59,22 @@ export class WorkspaceService {
     }
   }
 
-  async findAll(querry: GetWorkspacesQuerry): Promise<WorkspaceDto[]> {
+  async findAll(
+    userId: number,
+    querry: GetWorkspacesQuerry
+  ): Promise<WorkspaceDto[]> {
     try {
       const returnedData = await this.prisma.workSpace.findMany({
         where: {
           title: { contains: querry.title || "", mode: "insensitive" },
+          OR: [
+            { ownerId: userId },
+            {
+              members: {
+                some: { memberId: userId },
+              },
+            },
+          ],
         },
         include: {
           owner: {
@@ -99,10 +110,16 @@ export class WorkspaceService {
     }
   }
 
-  async findOne(id: number): Promise<WorkspaceDto> {
+  async findOne(userId: number, id: number): Promise<WorkspaceDto> {
     try {
       const returnedData = await this.prisma.workSpace.findFirst({
-        where: { id },
+        where: {
+          id,
+          OR: [
+            { ownerId: userId },
+            { members: { some: { memberId: userId } } },
+          ],
+        },
         include: {
           owner: {
             select: {

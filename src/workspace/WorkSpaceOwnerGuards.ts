@@ -16,8 +16,11 @@ export class WorkSpaceOwnerGuard implements CanActivate {
     try {
       const workSpaceId: number = +req.params.id;
       const { id } = req.userInfo;
-      const workSpaceData = await this.workSpaceService.findOne(+workSpaceId);
-      if (!workSpaceData) return true;
+      const workSpaceData = await this.workSpaceService.findOne(
+        id,
+        workSpaceId
+      );
+      if (!workSpaceData) return false;
 
       if (id === workSpaceData.owner.id) return true;
       throw new ForbiddenException({ message: "You are not owner!" });

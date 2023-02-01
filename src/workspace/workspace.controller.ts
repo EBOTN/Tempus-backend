@@ -46,15 +46,15 @@ export class WorkspaceController {
   @ApiOperation({ summary: "Get workspaces by querry" })
   @ApiResponse({ status: 200, type: [WorkspaceDto] })
   @Get()
-  findAll(@Query() querry: GetWorkspacesQuerry) {
-    return this.workspaceService.findAll(querry);
+  findAll(@Query() querry: GetWorkspacesQuerry, @Req() req: ExtendedRequest) {
+    return this.workspaceService.findAll(req.userInfo.id, querry);
   }
 
   @ApiOperation({ summary: "Get workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @Get("/:id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.workspaceService.findOne(id);
+  findOne(@Param("id", ParseIntPipe) id: number, @Req() req: ExtendedRequest) {
+    return this.workspaceService.findOne(req.userInfo.id, id);
   }
 
   @UseGuards(WorkSpaceOwnerGuard)
