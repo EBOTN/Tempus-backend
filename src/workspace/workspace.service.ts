@@ -66,7 +66,14 @@ export class WorkspaceService {
           title: { contains: querry.title || "", mode: "insensitive" },
         },
         include: {
-          owner: true,
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
           members: {
             select: {
               member: {
@@ -97,7 +104,14 @@ export class WorkspaceService {
       const returnedData = await this.prisma.workSpace.findFirst({
         where: { id },
         include: {
-          owner: true,
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
           members: {
             select: {
               member: {
