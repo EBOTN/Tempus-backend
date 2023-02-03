@@ -71,11 +71,11 @@ export class TokenService {
     }
   }
 
-  async findToken(refreshToken: string): Promise<string> {
-    const user = await this.userService.gitFirstByRefreshToken(refreshToken);
-    if (user) {
-      return user.refreshtoken;
-    }
-    return null;
-  }
+  // async findToken(refreshToken: string): Promise<string> {
+  //   const user = await this.userService.gitFirstByRefreshToken(refreshToken);
+  //   if (user) {
+  //     return user.refreshtoken;
+  //   }
+  //   return null;
+  // }
 }

@@ -1,11 +1,8 @@
 import {
   BadRequestException,
   forwardRef,
-  HttpException,
-  HttpStatus,
   Inject,
   Injectable,
-  UnauthorizedException,
 } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { CreateUserDto } from "src/user/dto/create-user-dto";
@@ -21,7 +18,7 @@ import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
 export class UserService {
   constructor(
     private prisma: PrismaService,
-    @Inject(forwardRef(()=>AuthService))
+    @Inject(forwardRef(() => AuthService))
     private authService: AuthService
   ) {}
 
@@ -103,20 +100,61 @@ export class UserService {
       },
     });
   }
-
-  async getFirstByFilter(filter): Promise<User> {
-    if (!filter) throw new BadRequestException("Filter not specified");
-    return await this.prisma.user.findFirst({
-      where: filter,
+  async getById(id: number, isExtended?: boolean): Promise<User | UserDto> {
+    const returnedData = await this.prisma.user.findFirst({
+      where: {
+        id,
+      },
+      select: isExtended
+        ? {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            password: true,
+            refreshtoken: true,
+          }
+        : new ConfigUserWithoutPassword(),
     });
+    return returnedData;
+  }
+  async getByEmail(
+    email: string,
+    isExtended?: boolean
+  ): Promise<User | UserDto> {
+    const returnedData = await this.prisma.user.findFirst({
+      where: {
+        email,
+      },
+      select: isExtended
+        ? {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            password: true,
+            refreshtoken: true,
+          }
+        : new ConfigUserWithoutPassword(),
+    });
+    return returnedData;
   }
 
-  async gitFirstByRefreshToken(refreshToken: string) {
-    if (!refreshToken) throw new UnauthorizedException("You not auth");
+  async getByRefreshToken(refreshToken: string, isExtended?: boolean): Promise<User | UserDto> {
     return await this.prisma.user.findFirst({
       where: {
         refreshtoken: refreshToken,
       },
+      select: isExtended
+        ? {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            password: true,
+            refreshtoken: true,
+          }
+        : new ConfigUserWithoutPassword(),
     });
   }
 
@@ -148,7 +186,7 @@ export class UserService {
     id: number,
     changeUserPasswordDto: ChangeUserPasswordDto
   ): Promise<UserDto> {
-    const currentUser = await this.getFirstByFilter({ id });
+    const currentUser = await this.getById(id, true) as User;
     const passwordEquals = await this.authService.isPasswordCorrect(
       changeUserPasswordDto.currentPassword,
       currentUser.password
@@ -168,16 +206,4 @@ export class UserService {
     } catch (e) {}
   }
 
-  async getFirstByFilterWithOutPassword(filters): Promise<UserDto> {
-    const userData = await this.prisma.user.findFirst({
-      where: filters,
-      select: new ConfigUserWithoutPassword(),
-    });
-
-    if (!userData) {
-      throw new HttpException("User not exists", HttpStatus.BAD_REQUEST);
-    }
-
-    return userData;
-  }
 }

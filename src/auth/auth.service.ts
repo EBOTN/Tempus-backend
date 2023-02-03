@@ -14,13 +14,14 @@ import { CreateUserDto } from "src/user/dto/create-user-dto";
 import { TokenService } from "src/token/token.service";
 import { Request, Response } from "express";
 import { ServerSideTokensDto } from "./dto/server-side-tokens.dto";
+import { User } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(forwardRef(()=> UserService))
+    @Inject(forwardRef(() => UserService))
     private userService: UserService,
-    @Inject(forwardRef(()=> TokenService))
+    @Inject(forwardRef(() => TokenService))
     private tokenService: TokenService
   ) {}
 
@@ -54,9 +55,9 @@ export class AuthService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt()
+    const salt = await bcrypt.genSalt();
     const returnedData = await bcrypt.hash(password, salt);
-    return returnedData
+    return returnedData;
   }
 
   private async validateUser(
@@ -70,9 +71,7 @@ export class AuthService {
       );
     }
 
-    const userData = await this.userService.getFirstByFilter({
-      email: email,
-    });
+    const userData = (await this.userService.getByEmail(email, true)) as User;
 
     if (!userData) {
       throw new BadRequestException({
@@ -94,7 +93,7 @@ export class AuthService {
     });
   }
 
-  async signOut(req: Request, res: Response): Promise<Response> {
+  async signOut(req: Request, res: Response): Promise<Response<UserDto>> {
     const { refreshToken } = req.cookies;
     const user = await this.tokenService.removeToken(refreshToken);
     res.clearCookie("refreshToken");
@@ -103,24 +102,25 @@ export class AuthService {
     return res.json(user);
   }
 
-  async refresh(req: Request, res: Response): Promise<Response> {
+  async refresh(req: Request, res: Response): Promise<Response<UserDto>> {
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
       throw new UnauthorizedException("User not auth");
     }
 
-    const userData = await this.tokenService.validateRefreshToken(refreshToken);
-    const tokenFromDb = await this.tokenService.findToken(refreshToken);
+    const tokenData = await this.tokenService.validateRefreshToken(
+      refreshToken
+    );
+    const userFromDb = (await this.userService.getByRefreshToken(
+      refreshToken
+    )) as UserDto;
 
-    if (!userData || !tokenFromDb) {
+    if (!tokenData || !userFromDb) {
       throw new UnauthorizedException("User undefined");
     }
 
-    const currentUser = await this.userService.getFirstByFilterWithOutPassword({
-      id: userData.id,
-    });
-    const { tokens, user } = await this.generateAndSaveToken(currentUser);
+    const { tokens, user } = await this.generateAndSaveToken(userFromDb);
     res = this.setCookies(res, tokens);
 
     return res.json(user);
@@ -130,16 +130,18 @@ export class AuthService {
     if (!refreshToken) {
       throw new UnauthorizedException("User not auth");
     }
-    const userData = await this.tokenService.validateRefreshToken(refreshToken);
-    const tokenFromDb = await this.tokenService.findToken(refreshToken);
+    const tokenData = await this.tokenService.validateRefreshToken(
+      refreshToken
+    );
+    const userFromDb = (await this.userService.getByRefreshToken(
+      refreshToken
+    )) as UserDto;
 
-    if (!userData || !tokenFromDb) {
+    if (!tokenData || !userFromDb) {
       throw new UnauthorizedException("User undefined");
     }
-    const currentUser = await this.userService.getFirstByFilterWithOutPassword({
-      id: userData.id,
-    });
-    const { tokens } = await this.generateAndSaveToken(currentUser);
+
+    const { tokens } = await this.generateAndSaveToken(userFromDb);
 
     const returnedData = {
       accessToken: { token: tokens.accessToken, maxAge: 15 * 60 * 1000 },
@@ -158,6 +160,7 @@ export class AuthService {
 
     return { tokens: tokens, user };
   }
+
   private setCookies(res: Response, tokens) {
     res.cookie("refreshToken", tokens.refreshToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
