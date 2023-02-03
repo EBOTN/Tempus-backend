@@ -26,6 +26,11 @@ export class WorkspaceService {
           title: createWorkspaceDto.title,
           cover: coverUrl || undefined,
           ownerId,
+          members: {
+            create: {
+              memberId: ownerId,
+            },
+          },
         },
         include: {
           owner: {
