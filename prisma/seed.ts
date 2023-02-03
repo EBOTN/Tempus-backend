@@ -7,7 +7,7 @@ async function main() {
   const email = "bebrin@mail.ru";
   const firstName = "Mike";
   const lastName = "Vazovsky";
-  const salt = await bcrypt.genSalt()
+  const salt = await bcrypt.genSalt();
   const hashPassword = await bcrypt.hash(password, salt);
 
   const user = await prisma.user.create({
@@ -19,21 +19,29 @@ async function main() {
     },
   });
 
-  const genWorkspaces = []
-  for(let i = 0; i < 100; i++){
-    genWorkspaces.push({title: `Workspace ${i}`, ownerId: user.id})
+  const genWorkspaces = [];
+  for (let i = 0; i < 100; i++) {
+    genWorkspaces.push({
+      title: `Workspace ${i}`,
+      ownerId: user.id,
+      members: {
+        create: {
+          memberId: user.id,
+        },
+      },
+    });
   }
   const workspaces = await prisma.workSpace.createMany({
-    data: genWorkspaces
-  })
+    data: genWorkspaces,
+  });
 }
 
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
