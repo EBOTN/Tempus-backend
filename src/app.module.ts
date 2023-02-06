@@ -11,6 +11,7 @@ import { FileModule } from "./file/file.module";
 import { NestjsFormDataModule } from "nestjs-form-data";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
+import { RoleModule } from './role/role.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { join } from "path";
       serveRoot: "/api/images/",
       exclude: ["/api/*"],
     }),
+    RoleModule,
   ],
   controllers: [],
   providers: [],
