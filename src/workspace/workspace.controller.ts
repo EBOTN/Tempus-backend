@@ -19,12 +19,14 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { WorkspaceDto } from "./dto/workspace.dto";
-import { Query, Req, UseGuards } from "@nestjs/common/decorators";
+import { Patch, Query, Req, SetMetadata, UseGuards } from "@nestjs/common/decorators";
 import { WorkSpaceOwnerGuard } from "./WorkSpaceOwnerGuards";
 import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
 import { ExtendedRequest } from "src/shared/extended-request";
 import { FormDataRequest } from "nestjs-form-data/dist/decorators";
 import { MemoryStoredFile } from "nestjs-form-data";
+import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
+import { UpdateRoleDto } from "src/shared/update-role.dto";
 
 @ApiTags("Workspace")
 @Controller("workspace")
@@ -98,5 +100,19 @@ export class WorkspaceController {
     @Body("memberId", ParseIntPipe) memberId: number
   ) {
     return this.workspaceService.removeMember(id, memberId);
+  }
+
+  @SetMetadata('roles', ["Owner", "Manager"])
+  @UseGuards(WorkspaceRoleGuard)
+  @Patch("/:id/changeWorkspaceRole")
+  async changeWorkspaceRole(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() updateRole: UpdateRoleDto
+  ) {
+    return await this.workspaceService.changeWorkspaceMemberRole(
+      id,
+      updateRole.memberId,
+      updateRole.role
+    );
   }
 }

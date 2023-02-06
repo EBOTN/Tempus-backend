@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
+import { Roles } from "src/shared/roles-enum";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { GetProjectQuerry } from "./dto/get-project-querry.dto";
 import { ProjectDto } from "./dto/read-project.dto";
@@ -149,5 +150,24 @@ export class ProjectService {
       });
       return returnedData;
     } catch (e) {}
+  }
+
+  async changeProjectMemberRole(
+    projectId: number,
+    userId: number,
+    role: Roles
+  ) {
+    const returnedData = await this.prisma.projectMembers.update({
+      where: {
+        projectId_memberId: {
+          projectId,
+          memberId: userId,
+        },
+      },
+      data: {
+        role,
+      },
+    });
+    return returnedData;
   }
 }
