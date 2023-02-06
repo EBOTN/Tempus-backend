@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Roles } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
@@ -27,6 +27,7 @@ async function main() {
       members: {
         create: {
           memberId: user.id,
+          role: Roles.Owner
         },
       },
     });
