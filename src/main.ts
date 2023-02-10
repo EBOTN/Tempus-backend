@@ -12,7 +12,11 @@ async function start() {
   const prismaService = app.get(PrismaService);
   const origin =
     process.env.IS_DEV === "true"
-      ? ["http://192.168.205.211:3000", "http://192.168.205.211:5173"]
+      ? [
+          "http://192.168.205.211:3000",
+          "http://192.168.205.211:5173",
+          "http://localhost:5173",
+        ]
       : ["http://localhost:3000", "http://localhost:5173"];
   app.enableCors({
     origin,
