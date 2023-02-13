@@ -69,17 +69,19 @@ export class WorkspaceService {
     querry: GetWorkspacesQuerry
   ): Promise<WorkspaceDto[]> {
     try {
+      const ownedFilter = querry.isOwned
+        ? { ownerId: userId }
+        : {
+            members: {
+              some: {
+                memberId: userId,
+              },
+            },
+          };
       const returnedData = await this.prisma.workSpace.findMany({
         where: {
           title: { contains: querry.title || "", mode: "insensitive" },
-          OR: [
-            { ownerId: userId },
-            {
-              members: {
-                some: { memberId: userId },
-              },
-            },
-          ],
+          ...ownedFilter,
         },
         include: {
           owner: {
