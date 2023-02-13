@@ -14,6 +14,7 @@ model User {
   refreshtoken       String?
   firstName          String
   lastName           String
+  avatar             String?
   assignedTasks      AssignedTask[]
   createdTasks       Task[]             @relation("createdTasks")
   ownedWorkSpace     WorkSpace[]

@@ -5,8 +5,10 @@ import {
   IsString,
   Length,
   Matches,
-  IsNumber
+  IsNumber,
+  IsOptional
 } from "class-validator";
+import { HasMimeType, IsFile, MemoryStoredFile } from "nestjs-form-data";
 
 export class UserModel {
   @ApiProperty({ example: 1, description: "User id" })
@@ -35,4 +37,22 @@ export class UserModel {
   @Matches(/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])/, { message: "Invalid password" })
   @Length(3, 15)
   readonly password: string;
+
+  @ApiProperty({
+    type: "string",
+    required: false,
+    format: "binary",
+    description: "User avatar (File)",
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsFile()
+  @HasMimeType(["image/jpeg", "image/png"])
+  readonly avatarFile?: MemoryStoredFile;
+
+  @ApiProperty({
+    example: "http://.../api/image/image1",
+    description: "User avatar (Url)",
+  })
+  readonly avatar?: string;
 }

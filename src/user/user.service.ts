@@ -13,13 +13,15 @@ import { FilterUserQuery } from "./dto/filter-user-query";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthService } from "src/auth/auth.service";
 import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
+import { FileService } from "src/file/file.service";
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     @Inject(forwardRef(() => AuthService))
-    private authService: AuthService
+    private authService: AuthService,
+    private fileService: FileService
   ) {}
 
   async create(data: CreateUserDto): Promise<UserDto> {
@@ -140,7 +142,10 @@ export class UserService {
     return returnedData;
   }
 
-  async getByRefreshToken(refreshToken: string, isExtended?: boolean): Promise<User | UserDto> {
+  async getByRefreshToken(
+    refreshToken: string,
+    isExtended?: boolean
+  ): Promise<User | UserDto> {
     return await this.prisma.user.findFirst({
       where: {
         refreshtoken: refreshToken,
@@ -168,9 +173,11 @@ export class UserService {
 
   async update(id: number, newData: UpdateUserDto): Promise<UserDto> {
     try {
+      const coverUrl = await this.fileService.createFile(newData.avatarFile);
+      const {avatarFile, ...data} = newData
       return await this.prisma.user.update({
         where: { id },
-        data: newData,
+        data: {...data, avatar: coverUrl || undefined },
         select: new ConfigUserWithoutPassword(),
       });
     } catch (e) {
@@ -186,7 +193,7 @@ export class UserService {
     id: number,
     changeUserPasswordDto: ChangeUserPasswordDto
   ): Promise<UserDto> {
-    const currentUser = await this.getById(id, true) as User;
+    const currentUser = (await this.getById(id, true)) as User;
     const passwordEquals = await this.authService.isPasswordCorrect(
       changeUserPasswordDto.currentPassword,
       currentUser.password
@@ -205,5 +212,4 @@ export class UserService {
       return returnedData;
     } catch (e) {}
   }
-
 }
