@@ -29,6 +29,7 @@ export class WorkspaceService {
           members: {
             create: {
               memberId: ownerId,
+              role: Roles.Owner
             },
           },
         },
@@ -72,6 +73,7 @@ export class WorkspaceService {
       const ownedFilter = querry.isOwned
         ? { ownerId: userId }
         : {
+            NOT: { ownerId: userId },
             members: {
               some: {
                 memberId: userId,
@@ -102,6 +104,7 @@ export class WorkspaceService {
                   lastName: true,
                 },
               },
+              role: true,
             },
           },
         },
