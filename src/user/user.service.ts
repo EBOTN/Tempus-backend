@@ -167,6 +167,7 @@ export class UserService {
     const returnedData = await this.prisma.user.update({
       where: { id },
       data: { refreshtoken: refreshToken },
+      select: new ConfigUserWithoutPassword(),
     });
     return returnedData;
   }
@@ -174,10 +175,10 @@ export class UserService {
   async update(id: number, newData: UpdateUserDto): Promise<UserDto> {
     try {
       const coverUrl = await this.fileService.createFile(newData.avatarFile);
-      const {avatarFile, ...data} = newData
+      const { avatarFile, ...data } = newData;
       return await this.prisma.user.update({
         where: { id },
-        data: {...data, avatar: coverUrl || undefined },
+        data: { ...data, avatar: coverUrl || undefined },
         select: new ConfigUserWithoutPassword(),
       });
     } catch (e) {

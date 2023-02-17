@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "-": "^0.0.1",
+    "@nestjs-modules/mailer": "^1.8.1",
     "@nestjs/common": "^9.2.1",
     "@nestjs/core": "^9.2.1",
     "@nestjs/jwt": "^10.0.1",
@@ -41,8 +42,10 @@
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
     "express-basic-auth": "^1.2.1",
+    "handlebars": "^4.7.7",
     "multer": "^1.4.5-lts.1",
     "nestjs-form-data": "^1.8.7",
+    "nodemailer": "^6.9.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^4.1.2",
     "rxjs": "^7.8.0",

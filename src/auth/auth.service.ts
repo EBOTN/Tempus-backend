@@ -15,6 +15,7 @@ import { TokenService } from "src/token/token.service";
 import { Request, Response } from "express";
 import { ServerSideTokensDto } from "./dto/server-side-tokens.dto";
 import { User } from "@prisma/client";
+import { EmailService } from "src/email/email.service";
 
 @Injectable()
 export class AuthService {
@@ -22,8 +23,23 @@ export class AuthService {
     @Inject(forwardRef(() => UserService))
     private userService: UserService,
     @Inject(forwardRef(() => TokenService))
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private mailService: EmailService
   ) {}
+
+  checkRecoveryToken(token: string, res: Response): Response {
+    const email = this.tokenService.validateRecoveryToken(token);
+    if (email) return res.status(200).send();
+    throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+  }
+
+  async recoveryPassword(token: string, newPassword: string): Promise<UserDto> {
+    const email = await this.tokenService.validateRecoveryToken(token);
+    if (!email) throw new BadRequestException("Token not valid");
+    const hashPassword = await this.hashPassword(newPassword);
+    const user = await this.userService.getByEmail(email);
+    return await this.userService.update(user.id, { password: hashPassword });
+  }
 
   async signIn({ email, password }, res: Response): Promise<Response> {
     const actualUser = await this.validateUser(email, password); // проверка правильности логина и пароля
@@ -173,5 +189,16 @@ export class AuthService {
     });
 
     return res;
+  }
+
+  async forgetPassword(email: string) {
+    const user = await this.userService.getByEmail(email);
+    if (!user) throw new BadRequestException("User not exists");
+    const token = this.tokenService.generateRecoveryPasswordToken({ email });
+    return await this.mailService.sendPasswordRecovery(
+      email,
+      user.firstName,
+      token
+    );
   }
 }

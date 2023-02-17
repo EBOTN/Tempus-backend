@@ -12,10 +12,21 @@ import { UserService } from "src/user/user.service";
 @Injectable()
 export class TokenService {
   constructor(
-    @Inject(forwardRef(()=> UserService))
+    @Inject(forwardRef(() => UserService))
     private userService: UserService,
     private jwtService: JwtService
   ) {}
+
+  validateRecoveryToken(token: string): Promise<string> {
+    try {
+      const { email } = this.jwtService.verify(token, {
+        secret: process.env.JWT_RECOVERY_PASS_SECRET,
+      });
+      return email;
+    } catch (e) {
+      return null;
+    }
+  }
 
   generateTokens(payload: UserDto) {
     const accessToken = this.jwtService.sign(payload, {
@@ -30,6 +41,14 @@ export class TokenService {
       accessToken: accessToken,
       refreshToken: refreshToken,
     };
+  }
+
+  generateRecoveryPasswordToken(payload: { email: string }) {
+    const token = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_RECOVERY_PASS_EXPIRES_IN || "15m",
+      secret: process.env.JWT_RECOVERY_PASS_SECRET,
+    });
+    return token;
   }
 
   async saveToken(id: number, refreshtoken: string): Promise<UserDto> {
