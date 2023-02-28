@@ -29,7 +29,7 @@ export class WorkspaceService {
           members: {
             create: {
               memberId: ownerId,
-              role: Roles.Owner
+              role: Roles.Owner,
             },
           },
         },
@@ -70,16 +70,18 @@ export class WorkspaceService {
     querry: GetWorkspacesQuerry
   ): Promise<WorkspaceDto[]> {
     try {
-      const ownedFilter = querry.isOwned
-        ? { ownerId: userId }
-        : {
-            NOT: { ownerId: userId },
-            members: {
-              some: {
-                memberId: userId,
+      let ownedFilter;
+      if (querry.isOwned !== undefined)
+        ownedFilter = querry.isOwned
+          ? { ownerId: userId }
+          : {
+              NOT: { ownerId: userId },
+              members: {
+                some: {
+                  memberId: userId,
+                },
               },
-            },
-          };
+            };
       const returnedData = await this.prisma.workSpace.findMany({
         where: {
           title: { contains: querry.title || "", mode: "insensitive" },
