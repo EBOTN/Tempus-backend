@@ -57,7 +57,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: "Restore password by token from email" })
-  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 200 })
   @Post("/recovery-password/:token")
   async recoveryPassword(
     @Param("token") token: string,

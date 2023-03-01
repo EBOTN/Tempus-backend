@@ -33,12 +33,12 @@ export class AuthService {
     throw new HttpException("Not found", HttpStatus.NOT_FOUND);
   }
 
-  async recoveryPassword(token: string, newPassword: string): Promise<UserDto> {
+  async recoveryPassword(token: string, newPassword: string) {
     const email = await this.tokenService.validateRecoveryToken(token);
     if (!email) throw new BadRequestException("Token not valid");
     const hashPassword = await this.hashPassword(newPassword);
     const user = await this.userService.getByEmail(email);
-    return await this.userService.update(user.id, { password: hashPassword });
+    await this.userService.update(user.id, { password: hashPassword });
   }
 
   async signIn({ email, password }, res: Response): Promise<Response> {
