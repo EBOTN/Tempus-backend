@@ -19,7 +19,13 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { WorkspaceDto } from "./dto/workspace.dto";
-import { Patch, Query, Req, SetMetadata, UseGuards } from "@nestjs/common/decorators";
+import {
+  Patch,
+  Query,
+  Req,
+  SetMetadata,
+  UseGuards,
+} from "@nestjs/common/decorators";
 import { WorkSpaceOwnerGuard } from "./WorkSpaceOwnerGuards";
 import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
 import { ExtendedRequest } from "src/shared/extended-request";
@@ -59,7 +65,8 @@ export class WorkspaceController {
     return this.workspaceService.findOne(req.userInfo.id, id);
   }
 
-  @UseGuards(WorkSpaceOwnerGuard)
+  @SetMetadata("roles", ["Owner"])
+  @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Update workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @ApiConsumes("multipart/form-data")
@@ -72,7 +79,8 @@ export class WorkspaceController {
     return this.workspaceService.update(id, updateWorkspaceDto);
   }
 
-  @UseGuards(WorkSpaceOwnerGuard)
+  @SetMetadata("roles", ["Owner"])
+  @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Delete workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @Delete("/:id")
@@ -80,7 +88,8 @@ export class WorkspaceController {
     return this.workspaceService.remove(id);
   }
 
-  @UseGuards(WorkSpaceOwnerGuard)
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Add member to workspace" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @Post("/:id/addMember")
@@ -91,7 +100,8 @@ export class WorkspaceController {
     return this.workspaceService.addMember(id, memberId);
   }
 
-  @UseGuards(WorkSpaceOwnerGuard)
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Remove member from workspace" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @Post("/:id/removeMember")
@@ -102,7 +112,7 @@ export class WorkspaceController {
     return this.workspaceService.removeMember(id, memberId);
   }
 
-  @SetMetadata('roles', ["Owner", "Manager"])
+  @SetMetadata("roles", ["Owner", "Manager"])
   @UseGuards(WorkspaceRoleGuard)
   @Patch("/:id/changeWorkspaceRole")
   async changeWorkspaceRole(
