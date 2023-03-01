@@ -82,6 +82,15 @@ export class WorkspaceService {
                 },
               },
             };
+      else {
+        ownedFilter = {
+          members: {
+            some: {
+              memberId: userId,
+            },
+          },
+        };
+      }
       const returnedData = await this.prisma.workSpace.findMany({
         where: {
           title: { contains: querry.title || "", mode: "insensitive" },
