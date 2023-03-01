@@ -193,24 +193,24 @@ export class UserService {
   async changePassword(
     id: number,
     changeUserPasswordDto: ChangeUserPasswordDto
-  ): Promise<UserDto> {
+  ) {
     const currentUser = (await this.getById(id, true)) as User;
     const passwordEquals = await this.authService.isPasswordCorrect(
       changeUserPasswordDto.currentPassword,
       currentUser.password
     );
+
     if (!passwordEquals) throw new BadRequestException("Password incorrect!");
+
     const hashPassword = await this.authService.hashPassword(
       changeUserPasswordDto.newPassword
     );
 
     try {
-      const returnedData = await this.prisma.user.update({
+      await this.prisma.user.update({
         where: { id },
         data: { password: hashPassword },
       });
-
-      return returnedData;
     } catch (e) {}
   }
 }

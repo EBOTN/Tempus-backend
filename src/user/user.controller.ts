@@ -50,7 +50,7 @@ export class UserController {
   }
 
   @ApiOperation({ summary: "Change password" })
-  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 200 })
   @Put("/changePassword")
   async changePassword(
     @Req() req: ExtendedRequest,
