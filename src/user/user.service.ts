@@ -18,6 +18,7 @@ import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
 import { FileService } from "src/file/file.service";
 import { TokenService } from "src/token/token.service";
 import { Response } from "express";
+import { EmailService } from "src/email/email.service";
 
 @Injectable()
 export class UserService {
@@ -28,13 +29,13 @@ export class UserService {
     private authService: AuthService,
     private fileService: FileService,
     @Inject(forwardRef(() => TokenService))
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private mailService: EmailService
   ) {}
 
-  changeMail(id: number, email: string) {
+  async changeMail(id: number, email: string) {
     const token = this.tokenService.generateChangeMailToken({email, accountId: id})
-
-
+    return await this.mailService.sendChangeMail(email, token)
   }
 
   async create(data: CreateUserDto): Promise<UserDto> {

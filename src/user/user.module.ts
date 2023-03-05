@@ -12,10 +12,11 @@ import { AuthMiddleware } from "src/auth/AuthMiddlWare";
 import { NestjsFormDataModule } from "nestjs-form-data";
 import { FileModule } from "src/file/file.module";
 import { TokenService } from "src/token/token.service";
+import { EmailService } from "src/email/email.service";
 
 @Module({
   controllers: [UserController],
-  providers: [UserService, TokenService],
+  providers: [UserService, TokenService, EmailService],
   exports: [UserService],
   imports: [
     forwardRef(() => AuthModule),

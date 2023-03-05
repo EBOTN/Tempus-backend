@@ -16,4 +16,16 @@ export class EmailService {
       },
     });
   }
+
+  async sendChangeMail(email: string, token: string) {
+    const url = `http://localhost:5173/api/user/confirmChangeMail/${token}`;
+    return await this.mailerService.sendMail({
+      to: email,
+      template: "./bebra",
+      context: {
+        url,
+        email,
+      },
+    });
+  }
 }
