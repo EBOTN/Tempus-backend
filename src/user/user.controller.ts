@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Put, Query, Req } from "@nestjs/common";
+import { Body, Controller, Get, Param, Put, Query, Req } from "@nestjs/common";
 import {
   ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Request } from "express";
+import { Request, Response } from "express";
 import { UserDto } from "src/user/dto/user-dto";
 import { TokenService } from "src/token/token.service";
 import { UserService } from "./user.service";
@@ -14,6 +14,8 @@ import { ExtendedRequest } from "src/shared/extended-request";
 import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { FormDataRequest, MemoryStoredFile } from "nestjs-form-data";
+import { Res } from "@nestjs/common/decorators";
+import { ChangeUserMailDto } from "./dto/change-user-mail.dto";
 
 @ApiTags("user")
 @Controller("user")
@@ -57,5 +59,23 @@ export class UserController {
     @Body() body: ChangeUserPasswordDto
   ) {
     return await this.userService.changePassword(req.userInfo.id, body);
+  }
+
+  @ApiOperation({ summary: "Check change mail token for validation" })
+  @ApiResponse({ status: 200 })
+  @Get("/checkMailToken/:token")
+  async checkChangeMailToken(@Param("token") token: string, @Res() res: Response) {
+    return await this.userService.checkMailToken(token, res);
+  }
+
+  @ApiOperation({ summary: "Change mail by token" })
+  @ApiResponse({ status: 200 })
+  @Get("/confirmChangeMail/:token")
+  async confirmChangeMail(@Param("token") token: string){
+    return await this.userService.confirmChangeMail(token)
+  }
+
+  async changeMail(@Req() req: ExtendedRequest, @Body() body: ChangeUserMailDto){
+    return await this.userService.changeMail(req.userInfo.id, body.email)
   }
 }

@@ -28,6 +28,17 @@ export class TokenService {
     }
   }
 
+  validateChangeMailToken(token: string): { email: string; accountId: number } {
+    try {
+      const { email, accountId } = this.jwtService.verify(token, {
+        secret: process.env.JWT_CHANGE_MAIL_SECRET,
+      });
+      return { email, accountId };
+    } catch (e) {
+      return null;
+    }
+  }
+
   generateTokens(payload: UserDto) {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
@@ -47,6 +58,14 @@ export class TokenService {
     const token = this.jwtService.sign(payload, {
       expiresIn: process.env.JWT_RECOVERY_PASS_EXPIRES_IN || "15m",
       secret: process.env.JWT_RECOVERY_PASS_SECRET,
+    });
+    return token;
+  }
+
+  generateChangeMailToken(payload: { email: string; accountId: number }) {
+    const token = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_CHANGE_MAIL_EXPIRES_IN || "15m",
+      secret: process.env.JWT_CHANGE_MAIL_SECRET,
     });
     return token;
   }

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   forwardRef,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
 } from "@nestjs/common";
@@ -14,15 +16,26 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthService } from "src/auth/auth.service";
 import { ChangeUserPasswordDto } from "./dto/change-user-password.dto";
 import { FileService } from "src/file/file.service";
+import { TokenService } from "src/token/token.service";
+import { Response } from "express";
 
 @Injectable()
 export class UserService {
+
   constructor(
     private prisma: PrismaService,
     @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
-    private fileService: FileService
+    private fileService: FileService,
+    @Inject(forwardRef(() => TokenService))
+    private tokenService: TokenService
   ) {}
+
+  changeMail(id: number, email: string) {
+    const token = this.tokenService.generateChangeMailToken({email, accountId: id})
+
+
+  }
 
   async create(data: CreateUserDto): Promise<UserDto> {
     try {
@@ -212,5 +225,30 @@ export class UserService {
         data: { password: hashPassword },
       });
     } catch (e) {}
+  }
+
+  async confirmChangeMail(token: string): Promise<UserDto> {
+    const { email, accountId } =
+      this.tokenService.validateChangeMailToken(token);
+    if (!email || !accountId)
+      throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+    const returnedData = await this.prisma.user.update({
+      where: {
+        id: accountId,
+      },
+      data: {
+        email,
+      },
+      select: new ConfigUserWithoutPassword(),
+    });
+    return returnedData;
+  }
+
+  async checkMailToken(token: string, res: Response) {
+    const { email, accountId } =
+      this.tokenService.validateChangeMailToken(token);
+    if (!email || !accountId)
+      throw new HttpException("Not found", HttpStatus.NOT_FOUND);
+    return res.status(200).send();
   }
 }
