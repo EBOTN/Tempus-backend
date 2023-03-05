@@ -71,8 +71,7 @@ export class AuthController {
   @Get("/checkRecoveryToken/:token")
   async checkRecoveryToken(
     @Param("token") token: string,
-    @Res() res: Response
   ) {
-    return this.authService.checkRecoveryToken(token, res);
+    return this.authService.checkRecoveryToken(token);
   }
 }

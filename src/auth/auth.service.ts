@@ -27,9 +27,9 @@ export class AuthService {
     private mailService: EmailService
   ) {}
 
-  checkRecoveryToken(token: string, res: Response): Response {
+  checkRecoveryToken(token: string): Promise<string> {
     const email = this.tokenService.validateRecoveryToken(token);
-    if (email) return res.status(200).send();
+    if (email) return email;
     throw new HttpException("Not found", HttpStatus.NOT_FOUND);
   }
 
