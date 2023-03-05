@@ -10,7 +10,10 @@ export class ChangeUserPasswordDto {
   @ApiProperty({ description: "New password" })
   @IsNotEmpty()
   @IsString()
-  @Matches(/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])/, { message: "Invalid password" })
+  @Matches(/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])/, {
+    message:
+      "Password must be at least 6 characters long and contain at least one lowercase and one uppercase letter",
+  })
   @Length(3, 15)
   readonly newPassword: string;
 }
