@@ -14,7 +14,6 @@ export class WorkspaceRoleGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     if (!isNumber(request.params.id)) throw new BadRequestException();
-    if (!isNumber(request.userInfo.id)) throw new BadRequestException();
 
     const member = await this.prisma.workSpaceMembers.findFirst({
       where: {
