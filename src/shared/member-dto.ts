@@ -4,6 +4,6 @@ import { UserDto } from "src/user/dto/user-dto";
 
 
 export class MemberDto extends UserDto {
-    @ApiProperty({description: "Member role"})
+    @ApiProperty({description: "Member role", enum: Roles})
     readonly role: Roles
 }
