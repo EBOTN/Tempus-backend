@@ -6,6 +6,8 @@ import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
 import { WorkspaceDto } from "./dto/workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 import { FileService } from "src/file/file.service";
+import { MemberDto } from "src/shared/member-dto";
+import { RawMemberData } from "src/shared/raw-member-data";
 
 @Injectable()
 export class WorkspaceService {
@@ -21,7 +23,7 @@ export class WorkspaceService {
       const coverUrl = await this.fileService.createFile(
         createWorkspaceDto.coverFile
       );
-      const returnedData = await this.prisma.workSpace.create({
+      const data = await this.prisma.workSpace.create({
         data: {
           title: createWorkspaceDto.title,
           cover: coverUrl || undefined,
@@ -40,6 +42,7 @@ export class WorkspaceService {
               email: true,
               firstName: true,
               lastName: true,
+              avatar: true,
             },
           },
           members: {
@@ -50,12 +53,17 @@ export class WorkspaceService {
                   email: true,
                   firstName: true,
                   lastName: true,
+                  avatar: true,
                 },
               },
+              role: true,
             },
           },
         },
       });
+
+      const members = this.ConvertToMemberDto(data.members);
+      const returnedData = { ...data, members };
 
       return returnedData;
     } catch (e) {
@@ -91,7 +99,7 @@ export class WorkspaceService {
           },
         };
       }
-      const returnedData = await this.prisma.workSpace.findMany({
+      const data = await this.prisma.workSpace.findMany({
         where: {
           title: { contains: querry.title || "", mode: "insensitive" },
           ...ownedFilter,
@@ -103,6 +111,7 @@ export class WorkspaceService {
               email: true,
               firstName: true,
               lastName: true,
+              avatar: true,
             },
           },
           members: {
@@ -113,6 +122,7 @@ export class WorkspaceService {
                   email: true,
                   firstName: true,
                   lastName: true,
+                  avatar: true,
                 },
               },
               role: true,
@@ -121,6 +131,11 @@ export class WorkspaceService {
         },
         skip: querry.offset || undefined,
         take: querry.limit || undefined,
+      });
+
+      const returnedData = data.map((obj) => {
+        const members = this.ConvertToMemberDto(obj.members);
+        return { ...obj, members };
       });
 
       return returnedData;
@@ -133,7 +148,7 @@ export class WorkspaceService {
 
   async findOne(userId: number, id: number): Promise<WorkspaceDto> {
     try {
-      const returnedData = await this.prisma.workSpace.findFirst({
+      const data = await this.prisma.workSpace.findFirst({
         where: {
           id,
           OR: [
@@ -148,6 +163,7 @@ export class WorkspaceService {
               email: true,
               firstName: true,
               lastName: true,
+              avatar: true,
             },
           },
           members: {
@@ -158,12 +174,17 @@ export class WorkspaceService {
                   email: true,
                   firstName: true,
                   lastName: true,
+                  avatar: true,
                 },
               },
+              role: true,
             },
           },
         },
       });
+
+      const members = this.ConvertToMemberDto(data.members);
+      const returnedData = { ...data, members };
 
       return returnedData;
     } catch (e) {
@@ -181,7 +202,7 @@ export class WorkspaceService {
       const coverUrl = await this.fileService.createFile(
         updateWorkspaceDto.coverFile
       );
-      const returnedData = await this.prisma.workSpace.update({
+      const data = await this.prisma.workSpace.update({
         where: { id },
         data: {
           title: updateWorkspaceDto.title,
@@ -195,6 +216,7 @@ export class WorkspaceService {
               email: true,
               firstName: true,
               lastName: true,
+              avatar: true,
             },
           },
           members: {
@@ -207,10 +229,15 @@ export class WorkspaceService {
                   lastName: true,
                 },
               },
+              role: true,
             },
           },
         },
       });
+
+      const members = this.ConvertToMemberDto(data.members);
+      const returnedData = { ...data, members };
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -221,7 +248,7 @@ export class WorkspaceService {
 
   async remove(id: number): Promise<WorkspaceDto> {
     try {
-      const returnedData = await this.prisma.workSpace.delete({
+      const data = await this.prisma.workSpace.delete({
         where: { id },
         include: {
           owner: {
@@ -230,6 +257,7 @@ export class WorkspaceService {
               email: true,
               firstName: true,
               lastName: true,
+              avatar: true,
             },
           },
           members: {
@@ -240,12 +268,18 @@ export class WorkspaceService {
                   email: true,
                   firstName: true,
                   lastName: true,
+                  avatar: true,
                 },
               },
+              role: true,
             },
           },
         },
       });
+
+      const members = this.ConvertToMemberDto(data.members);
+      const returnedData = { ...data, members };
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -259,7 +293,7 @@ export class WorkspaceService {
     memberId: number
   ): Promise<WorkspaceDto> {
     try {
-      const returnedData = await this.prisma.workSpace.update({
+      const data = await this.prisma.workSpace.update({
         where: { id: workspaceId },
         data: {
           members: {
@@ -275,6 +309,7 @@ export class WorkspaceService {
               email: true,
               firstName: true,
               lastName: true,
+              avatar: true,
             },
           },
           members: {
@@ -285,12 +320,17 @@ export class WorkspaceService {
                   email: true,
                   firstName: true,
                   lastName: true,
+                  avatar: true,
                 },
               },
+              role: true,
             },
           },
         },
       });
+
+      const members = this.ConvertToMemberDto(data.members);
+      const returnedData = { ...data, members };
 
       return returnedData;
     } catch (e) {
@@ -305,7 +345,7 @@ export class WorkspaceService {
     memberId: number
   ): Promise<WorkspaceDto> {
     try {
-      const returnedData = await this.prisma.workSpace.update({
+      const data = await this.prisma.workSpace.update({
         where: {
           id: workSpaceId,
         },
@@ -326,6 +366,7 @@ export class WorkspaceService {
               email: true,
               firstName: true,
               lastName: true,
+              avatar: true,
             },
           },
           members: {
@@ -336,13 +377,18 @@ export class WorkspaceService {
                   email: true,
                   firstName: true,
                   lastName: true,
+                  avatar: true,
                 },
               },
+              role: true,
             },
           },
         },
       });
 
+      const members = this.ConvertToMemberDto(data.members);
+      const returnedData = { ...data, members };
+      
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -368,5 +414,9 @@ export class WorkspaceService {
       },
     });
     return returnedData;
+  }
+
+  private ConvertToMemberDto(data: RawMemberData[]): MemberDto[] {
+    return data.map((item) => ({ ...item.member, role: item.role }));
   }
 }
