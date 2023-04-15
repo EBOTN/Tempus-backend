@@ -227,6 +227,7 @@ export class WorkspaceService {
                   email: true,
                   firstName: true,
                   lastName: true,
+                  avatar: true,
                 },
               },
               role: true,
