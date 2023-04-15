@@ -6,12 +6,15 @@ export class EmailService {
   constructor(private mailerService: MailerService) {}
 
   async sendPasswordRecovery(email: string, firstName: string, token: string) {
-    const url = `http://localhost:5173/api/recovery-password?token=${token}`;
+    const url = `http://localhost:5173/recovery-password?token=${token}`;
     return await this.mailerService.sendMail({
       to: email,
-      template: "./transactional",
+      subject: 'Tempus password reset request',
+      template: "./changePasswordTemplate",
       context: {
-        name: firstName,
+        title: 'test',
+        siteUrl: "http://localhost:5173",
+        firstName,
         url,
       },
     });
