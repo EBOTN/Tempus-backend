@@ -1,6 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
-import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class GetWorkspacesQuerry {
   @ApiProperty({
@@ -39,11 +45,8 @@ export class GetWorkspacesQuerry {
     required: false,
   })
   @IsOptional()
-  @IsIn(['true', 'false', true, false],{message: 'isOwned must be one of the following values: true, false'})
-  @Transform(({ value }) => {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return value;
+  @IsIn(["own", "others", "all"], {
+    message: "filter must be one of the following values: own, others, all",
   })
-  readonly isOwned?: boolean;
+  readonly filter?: string;
 }

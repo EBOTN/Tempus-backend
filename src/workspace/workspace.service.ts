@@ -78,31 +78,45 @@ export class WorkspaceService {
     querry: GetWorkspacesQuerry
   ): Promise<WorkspaceDto[]> {
     try {
-      let ownedFilter;
-      if (querry.isOwned !== undefined)
-        ownedFilter = querry.isOwned
-          ? { ownerId: userId }
-          : {
-              NOT: { ownerId: userId },
-              members: {
-                some: {
-                  memberId: userId,
-                },
+      let getFilter: {
+        ownerId?: number;
+        NOT?: { ownerId: number };
+        members?:
+          | { some: { memberId: number } }
+          | { some: { memberId: number } };
+      };
+      switch (querry.filter) {
+        case "own": {
+          getFilter = { ownerId: userId };
+          break;
+        }
+        case "others": {
+          getFilter = {
+            NOT: { ownerId: userId },
+            members: {
+              some: {
+                memberId: userId,
               },
-            };
-      else {
-        ownedFilter = {
-          members: {
-            some: {
-              memberId: userId,
             },
-          },
-        };
+          };
+          break;
+        }
+        default: {
+          getFilter = {
+            members: {
+              some: {
+                memberId: userId,
+              },
+            },
+          };
+          break;
+        }
       }
+
       const data = await this.prisma.workSpace.findMany({
         where: {
           title: { contains: querry.title || "", mode: "insensitive" },
-          ...ownedFilter,
+          ...getFilter,
         },
         include: {
           owner: {
@@ -132,7 +146,6 @@ export class WorkspaceService {
         skip: querry.offset || undefined,
         take: querry.limit || undefined,
       });
-
       const returnedData = data.map((obj) => {
         const members = this.ConvertToMemberDto(obj.members);
         return { ...obj, members };
@@ -389,7 +402,7 @@ export class WorkspaceService {
 
       const members = this.ConvertToMemberDto(data.members);
       const returnedData = { ...data, members };
-      
+
       return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
