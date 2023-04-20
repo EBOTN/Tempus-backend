@@ -3,7 +3,7 @@ import { CreateProjectDto } from "./create-project.dto";
 import { IsNotEmpty, IsBoolean, IsOptional } from "class-validator";
 
 export class UpdateProjectDto extends PartialType(
-  OmitType(CreateProjectDto, ["workspaceId"])
+  OmitType(CreateProjectDto, [])
 ) {
   @ApiProperty({
     example: true,

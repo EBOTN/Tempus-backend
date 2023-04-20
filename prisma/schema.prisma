@@ -79,7 +79,6 @@ model WorkSpaceMembers {
 model Project {
   id          Int              @id @default(autoincrement())
   title       String
-  description String
   workspaceId Int
   isHidden    Boolean          @default(false)
   tasks       Task[]
