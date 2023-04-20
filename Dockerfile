@@ -1,28 +1,15 @@
-FROM node:12.13-alpine As development
+FROM node:14 AS builder
 
-WORKDIR /usr/src/tempus-backend
+WORKDIR /app
 
 COPY package*.json ./
+COPY prisma ./prisma/
 
-RUN npm install --only=development
+RUN npm install
 
 COPY . .
 
-RUN start:migrate:dev
+RUN npm run build
 
-FROM node:12.13-alpine as production
-
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
-WORKDIR /usr/src/tempus-backend
-
-COPY package*.json ./
-
-RUN npm install --only=production
-
-COPY . .
-
-COPY --from=development /usr/src/tempus-backend/dist ./dist
-
-CMD ["node", "dist/main"]
+EXPOSE 5000
+CMD [ "npm", "run", "start" ]
