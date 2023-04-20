@@ -21,14 +21,6 @@ export class ProjectModel {
   readonly title: string;
 
   @ApiProperty({
-    example: "Description 1",
-    description: "Project description",
-  })
-  @IsNotEmpty()
-  @IsString()
-  readonly description: string;
-
-  @ApiProperty({
     example: true,
     description: "Whether to hide the project from visible",
   })

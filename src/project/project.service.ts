@@ -9,14 +9,19 @@ import { UpdateProjectDto } from "./dto/update-project.dto";
 @Injectable()
 export class ProjectService {
   constructor(private prisma: PrismaService) {}
-  async create(createProjectDto: CreateProjectDto): Promise<ProjectDto> {
+  async create(
+    createProjectDto: CreateProjectDto,
+    workspaceId: number
+  ): Promise<ProjectDto> {
     try {
       const returnedData = await this.prisma.project.create({
-        data: createProjectDto,
+        data: {
+          workspaceId,
+          ...createProjectDto,
+        },
         select: {
           id: true,
           title: true,
-          description: true,
           isHidden: true,
         },
       });
@@ -39,7 +44,6 @@ export class ProjectService {
       select: {
         id: true,
         title: true,
-        description: true,
         isHidden: true,
       },
       skip: query.offset || undefined,
@@ -67,7 +71,6 @@ export class ProjectService {
       select: {
         id: true,
         title: true,
-        description: true,
         isHidden: true,
       },
       skip: query.offset || undefined,
@@ -84,7 +87,6 @@ export class ProjectService {
       select: {
         id: true,
         title: true,
-        description: true,
         isHidden: true,
       },
     });
@@ -102,7 +104,6 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
-          description: true,
           isHidden: true,
         },
       });
@@ -119,7 +120,6 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
-          description: true,
           isHidden: true,
         },
       });
@@ -136,7 +136,6 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
-          description: true,
           isHidden: true,
         },
         data: {
@@ -160,7 +159,6 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
-          description: true,
           isHidden: true,
         },
         data: {

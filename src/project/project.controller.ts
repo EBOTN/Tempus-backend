@@ -22,17 +22,23 @@ import { GetProjectQuerry } from "./dto/get-project-querry.dto";
 import { UpdateRoleDto } from "src/shared/update-role.dto";
 import { ExtendedRequest } from "src/shared/extended-request";
 import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
+import { WorkspaceOrProjectRoleGuard } from "src/shared/WorkspaceOrProjectRoleGuard";
 
 @ApiTags("projects")
 @Controller("workspace/:id/projects")
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Create project" })
   @ApiResponse({ status: 200, type: ProjectDto })
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  create(
+    @Body() createProjectDto: CreateProjectDto,
+    @Param("id", ParseIntPipe) workspaceId: number
+  ) {
+    return this.projectService.create(createProjectDto, workspaceId);
   }
 
   @SetMetadata("roles", ["Owner", "Manager", "Member"])
@@ -66,6 +72,9 @@ export class ProjectController {
     return this.projectService.findAll(querry, workspaceId);
   }
 
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @SetMetadata("projectRoles", ["Owner", "Manager", "Member"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Get project by id" })
   @ApiResponse({ status: 200, type: ProjectDto })
   @Get("/:projectId")
@@ -73,6 +82,9 @@ export class ProjectController {
     return this.projectService.findOne(projectId);
   }
 
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Update project" })
   @ApiResponse({ status: 200, type: ProjectDto })
   @Put("/:projectId")
@@ -83,6 +95,9 @@ export class ProjectController {
     return this.projectService.update(projectId, updateProjectDto);
   }
 
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Delete project" })
   @ApiResponse({ status: 200, type: ProjectDto })
   @Delete("/:projectId")
@@ -90,6 +105,9 @@ export class ProjectController {
     return this.projectService.remove(projectId);
   }
 
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Add member to project" })
   @ApiResponse({ status: 200, type: ProjectDto })
   @Post("/:projectId/addMember")
@@ -100,6 +118,9 @@ export class ProjectController {
     return this.projectService.addMember(projectId, memberId);
   }
 
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Remove member from project" })
   @ApiResponse({ status: 200, type: ProjectDto })
   @Post("/:projectId/removeMember")
@@ -110,6 +131,9 @@ export class ProjectController {
     return this.projectService.removeMember(projectId, memberId);
   }
 
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @Patch("/:projectId/changeProjectRole")
   async changeProjectRole(
     @Param("projectId", ParseIntPipe) projectId: number,
