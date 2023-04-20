@@ -15,7 +15,7 @@ export class ProjectModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .forRoutes("projects");
+      .forRoutes(ProjectController);
   }
 }
 

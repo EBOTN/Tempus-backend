@@ -26,11 +26,43 @@ export class ProjectService {
     }
   }
 
-  async findAll(query: GetProjectQuerry): Promise<ProjectDto[]> {
+  async findAll(
+    query: GetProjectQuerry,
+    workspaceId: number
+  ): Promise<ProjectDto[]> {
     const returnedData = await this.prisma.project.findMany({
       where: {
         title: { contains: query.title || "", mode: "insensitive" },
         isHidden: query.isHidden || undefined,
+        workspaceId: workspaceId,
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        isHidden: true,
+      },
+      skip: query.offset || undefined,
+      take: query.limit || undefined,
+    });
+    return returnedData;
+  }
+
+  async findProjects(
+    query: GetProjectQuerry,
+    userId: number,
+    workspaceId: number
+  ): Promise<ProjectDto[]> {
+    const returnedData = await this.prisma.project.findMany({
+      where: {
+        title: { contains: query.title || "", mode: "insensitive" },
+        isHidden: query.isHidden || undefined,
+        workspaceId: workspaceId,
+        members: {
+          some: {
+            memberId: userId,
+          },
+        },
       },
       select: {
         id: true,
@@ -95,10 +127,7 @@ export class ProjectService {
     } catch (e) {}
   }
 
-  async addMember(
-    projectId: number,
-    memberId: number
-  ): Promise<ProjectDto> {
+  async addMember(projectId: number, memberId: number): Promise<ProjectDto> {
     try {
       const returnedData = await this.prisma.project.update({
         where: {
@@ -122,10 +151,7 @@ export class ProjectService {
     } catch (e) {}
   }
 
-  async removeMember(
-    projectId: number,
-    memberId: number
-  ): Promise<ProjectDto> {
+  async removeMember(projectId: number, memberId: number): Promise<ProjectDto> {
     try {
       const returnedData = await this.prisma.project.update({
         where: {
