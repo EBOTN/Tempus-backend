@@ -22,7 +22,6 @@ import { EmailService } from "src/email/email.service";
 
 @Injectable()
 export class UserService {
-
   constructor(
     private prisma: PrismaService,
     @Inject(forwardRef(() => AuthService))
@@ -34,8 +33,11 @@ export class UserService {
   ) {}
 
   async changeMail(id: number, email: string) {
-    const token = this.tokenService.generateChangeMailToken({email, accountId: id})
-    return await this.mailService.sendChangeMail(email, token)
+    const token = this.tokenService.generateChangeMailToken({
+      email,
+      accountId: id,
+    });
+    return await this.mailService.sendChangeMail(email, token);
   }
 
   async create(data: CreateUserDto): Promise<UserDto> {
@@ -188,7 +190,13 @@ export class UserService {
 
   async update(id: number, newData: UpdateUserDto): Promise<UserDto> {
     try {
-      const coverUrl = await this.fileService.createFile(newData.avatarFile);
+      const {avatar} = await this.prisma.user.findFirst({
+        where: { id },
+        select: {
+          avatar: true,
+        },
+      });
+      const coverUrl = await this.fileService.createFile(newData.avatarFile, avatar);
       const { avatarFile, ...data } = newData;
       return await this.prisma.user.update({
         where: { id },

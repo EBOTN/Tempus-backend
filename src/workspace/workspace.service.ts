@@ -212,8 +212,16 @@ export class WorkspaceService {
     updateWorkspaceDto: UpdateWorkspaceDto
   ): Promise<WorkspaceDto> {
     try {
+      const { cover } = await this.prisma.workSpace.findFirst({
+        where: { id },
+        select: {
+          cover: true,
+        },
+      });
+
       const coverUrl = await this.fileService.createFile(
-        updateWorkspaceDto.coverFile
+        updateWorkspaceDto.coverFile,
+        cover
       );
       const data = await this.prisma.workSpace.update({
         where: { id },

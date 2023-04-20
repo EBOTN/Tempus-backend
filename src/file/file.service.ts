@@ -6,15 +6,17 @@ import { MemoryStoredFile } from "nestjs-form-data";
 
 @Injectable()
 export class FileService {
-  async createFile(file: MemoryStoredFile): Promise<string> {
+  async createFile(file: MemoryStoredFile, existingFileName: string = ''): Promise<string> {
     if (!file) return null;
     try {
-      const fileName = uuid.v4() + ".jpg";
       const filePath = path.resolve(__dirname, "..", "..", "..", "static");
       
       if (!fs.existsSync(filePath)) {
         fs.mkdirSync(filePath, { recursive: true });
       }
+
+      let fileName = existingFileName || generateFileName()
+
       fs.writeFileSync(path.join(filePath, fileName), file.buffer);
       return fileName;
     } catch (e) {
@@ -25,3 +27,5 @@ export class FileService {
     }
   }
 }
+
+const generateFileName = () => uuid.v4() + ".jpg";
