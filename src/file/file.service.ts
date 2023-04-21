@@ -8,6 +8,7 @@ import { MemoryStoredFile } from 'nestjs-form-data';
 export class FileService {
   async createFile(file: MemoryStoredFile): Promise<string> {
     if (!file) return null;
+    
     try {
       const filePath = path.resolve(__dirname, '..', '..', '..', 'static');
 
@@ -29,6 +30,8 @@ export class FileService {
   }
 
   async deleteFile(fileName: string) {
+    if (!fileName) return
+
     try {
       const filePath = path.resolve(__dirname, '..', '..', '..', 'static', fileName);
 

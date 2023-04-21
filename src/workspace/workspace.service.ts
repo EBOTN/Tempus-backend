@@ -222,7 +222,9 @@ export class WorkspaceService {
       const coverUrl = await this.fileService.createFile(
         updateWorkspaceDto.coverFile
       );
+
       await this.fileService.deleteFile(cover);
+      
       const data = await this.prisma.workSpace.update({
         where: { id },
         data: {
