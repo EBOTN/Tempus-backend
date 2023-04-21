@@ -196,8 +196,12 @@ export class UserService {
           avatar: true,
         },
       });
-      const coverUrl = await this.fileService.createFile(newData.avatarFile, avatar);
+      
+      const coverUrl = await this.fileService.createFile(newData.avatarFile);
+      await this.fileService.deleteFile(avatar);
+
       const { avatarFile, ...data } = newData;
+
       return await this.prisma.user.update({
         where: { id },
         data: { ...data, avatar: coverUrl || undefined },
