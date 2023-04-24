@@ -33,6 +33,7 @@ import { FormDataRequest } from "nestjs-form-data/dist/decorators";
 import { MemoryStoredFile } from "nestjs-form-data";
 import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
 import { UpdateRoleDto } from "src/shared/update-role.dto";
+import { GetRoleDto } from "src/shared/get-role-dto";
 
 @ApiTags("Workspace")
 @Controller("workspace")
@@ -124,5 +125,17 @@ export class WorkspaceController {
       updateRole.memberId,
       updateRole.role
     );
+  }
+
+  @SetMetadata("roles", ["Owner", "Manager", "Member"])
+  @UseGuards(WorkspaceRoleGuard)
+  @ApiOperation({ summary: "Get user role in workspace" })
+  @ApiResponse({ status: 200, type: GetRoleDto })
+  @Get("/:id/getRole")
+  async getRole(
+    @Param("id", ParseIntPipe) workspaceId: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return await this.workspaceService.getRole(workspaceId, req.userInfo.id);
   }
 }

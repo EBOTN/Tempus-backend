@@ -1,13 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Roles } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateWorkspaceDto } from './dto/create-workspace.dto';
-import { GetWorkspacesQuerry } from './dto/get-workspaces-querry.dto';
-import { WorkspaceDto } from './dto/workspace.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { FileService } from 'src/file/file.service';
-import { MemberDto } from 'src/shared/member-dto';
-import { RawMemberData } from 'src/shared/raw-member-data';
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { Prisma, Roles } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
+import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
+import { WorkspaceDto } from "./dto/workspace.dto";
+import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
+import { FileService } from "src/file/file.service";
+import { MemberDto } from "src/shared/member-dto";
+import { RawMemberData } from "src/shared/raw-member-data";
+import { GetRoleDto } from "src/shared/get-role-dto";
 
 @Injectable()
 export class WorkspaceService {
@@ -86,11 +87,11 @@ export class WorkspaceService {
           | { some: { memberId: number } };
       };
       switch (querry.filter) {
-        case 'own': {
+        case "own": {
           getFilter = { ownerId: userId };
           break;
         }
-        case 'others': {
+        case "others": {
           getFilter = {
             NOT: { ownerId: userId },
             members: {
@@ -115,7 +116,7 @@ export class WorkspaceService {
 
       const data = await this.prisma.workSpace.findMany({
         where: {
-          title: { contains: querry.title || '', mode: 'insensitive' },
+          title: { contains: querry.title || "", mode: "insensitive" },
           ...getFilter,
         },
         include: {
@@ -146,7 +147,7 @@ export class WorkspaceService {
         skip: querry.offset || undefined,
         take: querry.limit || undefined,
       });
-      const returnedData = data.map(obj => {
+      const returnedData = data.map((obj) => {
         const members = this.ConvertToMemberDto(obj.members);
         return { ...obj, members };
       });
@@ -224,7 +225,7 @@ export class WorkspaceService {
       );
 
       await this.fileService.deleteFile(cover);
-      
+
       const data = await this.prisma.workSpace.update({
         where: { id },
         data: {
@@ -440,7 +441,22 @@ export class WorkspaceService {
     return returnedData;
   }
 
+  async getRole(workspaceId: number, id: number): Promise<GetRoleDto> {
+    const returnedData = await this.prisma.workSpaceMembers.findFirst({
+      where: {
+        workspaceId,
+        memberId: id,
+      },
+      select: {
+        role: true,
+      },
+    });
+    if (!returnedData)
+      throw new BadRequestException("Workspace or meber not found");
+    return returnedData;
+  }
+
   private ConvertToMemberDto(data: RawMemberData[]): MemberDto[] {
-    return data.map(item => ({ ...item.member, role: item.role }));
+    return data.map((item) => ({ ...item.member, role: item.role }));
   }
 }
