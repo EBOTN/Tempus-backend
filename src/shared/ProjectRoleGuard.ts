@@ -22,6 +22,7 @@ export class ProjectRoleGuard implements CanActivate {
         role: true,
       },
     });
+    if (!member) throw new BadRequestException("Project or member not found");
     const roles = this.reflector.get<string[]>("projectRoles", context.getHandler());
     if (!roles) {
       return true;

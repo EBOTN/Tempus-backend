@@ -24,6 +24,7 @@ export class WorkspaceRoleGuard implements CanActivate {
         role: true,
       },
     });
+    if (!member) throw new BadRequestException("Workspace or member not found");
     const roles = this.reflector.get<string[]>("roles", context.getHandler());
     if (!roles) {
       return true;
