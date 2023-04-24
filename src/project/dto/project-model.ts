@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsBoolean, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsBoolean, IsString, IsArray } from "class-validator";
+import { MemberDto } from "src/shared/member-dto";
 
 export class ProjectModel {
   @ApiProperty({
@@ -9,7 +10,7 @@ export class ProjectModel {
   })
   @IsNotEmpty()
   @IsNumber()
-  @Type(()=>Number)
+  @Type(() => Number)
   readonly id: number;
 
   @ApiProperty({
@@ -34,6 +35,13 @@ export class ProjectModel {
   })
   @IsNotEmpty()
   @IsNumber()
-  @Type(()=>Number)
+  @Type(() => Number)
   readonly workspaceId: number;
+
+  @ApiProperty({
+    type: [MemberDto],
+    description: "Members list of project",
+  })
+  @IsArray()
+  readonly members: MemberDto[];
 }

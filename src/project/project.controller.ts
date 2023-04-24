@@ -36,9 +36,14 @@ export class ProjectController {
   @Post()
   create(
     @Body() createProjectDto: CreateProjectDto,
-    @Param("id", ParseIntPipe) workspaceId: number
+    @Param("id", ParseIntPipe) workspaceId: number,
+    @Req() req: ExtendedRequest
   ) {
-    return this.projectService.create(createProjectDto, workspaceId);
+    return this.projectService.create(
+      createProjectDto,
+      workspaceId,
+      req.userInfo.id
+    );
   }
 
   @SetMetadata("roles", ["Owner", "Manager", "Member"])
