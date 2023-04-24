@@ -23,6 +23,8 @@ import { UpdateRoleDto } from "src/shared/update-role.dto";
 import { ExtendedRequest } from "src/shared/extended-request";
 import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
 import { WorkspaceOrProjectRoleGuard } from "src/shared/WorkspaceOrProjectRoleGuard";
+import { GetRoleDto } from "src/shared/get-role-dto";
+import { ProjectRoleGuard } from "src/shared/ProjectRoleGuard";
 
 @ApiTags("projects")
 @Controller("workspace/:id/projects")
@@ -149,5 +151,18 @@ export class ProjectController {
       updateRole.memberId,
       updateRole.role
     );
+  }
+
+  @SetMetadata("roles", ["Owner", "Manager", "Member"])
+  @SetMetadata("projectRoles", ["Owner", "Manager", "Member"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
+  @ApiOperation({ summary: "Get user role in project" })
+  @ApiResponse({ status: 200, type: GetRoleDto })
+  @Get("/:projectId/getRole")
+  async getRole(
+    @Param("projectId", ParseIntPipe) projectId: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return await this.projectService.getRole(projectId, req.userInfo.id)
   }
 }

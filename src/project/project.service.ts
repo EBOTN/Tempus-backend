@@ -7,6 +7,8 @@ import { ProjectDto } from "./dto/read-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { RawMemberData } from "src/shared/raw-member-data";
 import { MemberDto } from "src/shared/member-dto";
+import { Roles as PrismaRoles } from "@prisma/client";
+import { GetRoleDto } from "src/shared/get-role-dto";
 
 @Injectable()
 export class ProjectService {
@@ -343,6 +345,21 @@ export class ProjectService {
     });
     return returnedData;
   }
+
+  async getRole(projectId: number, userId: number): Promise<GetRoleDto>{
+    const returnedData = await this.prisma.projectMembers.findFirst({
+      where: {
+        memberId: userId,
+        projectId,
+      },
+      select: {
+        role: true,
+      }
+    })
+    if(!returnedData) throw new BadRequestException('Project or member not found')
+    return returnedData
+  }
+
   private ConvertToMemberDto(data: RawMemberData[]): MemberDto[] {
     return data.map((item) => ({ ...item.member, role: item.role }));
   }
