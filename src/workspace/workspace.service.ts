@@ -60,11 +60,19 @@ export class WorkspaceService {
               role: true,
             },
           },
+          _count: {
+            select: {
+              members: true,
+              projects: true,
+            }
+          },
         },
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const returnedData = { ...data, members };
+      const count = data._count;
+      delete data['_count']
+      const returnedData = { ...data, members, count };
 
       return returnedData;
     } catch (e) {
@@ -119,7 +127,10 @@ export class WorkspaceService {
           title: { contains: querry.title || "", mode: "insensitive" },
           ...getFilter,
         },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          cover: true,
           owner: {
             select: {
               id: true,
@@ -143,13 +154,21 @@ export class WorkspaceService {
               role: true,
             },
           },
+          _count: {
+            select: {
+              members: true,
+              projects: true,
+            }
+          },
         },
         skip: querry.offset || undefined,
         take: querry.limit || undefined,
       });
       const returnedData = data.map((obj) => {
         const members = this.ConvertToMemberDto(obj.members);
-        return { ...obj, members };
+        const count = obj._count
+        delete obj['_count']
+        return { ...obj, members, count };
       });
 
       return returnedData;
@@ -194,11 +213,19 @@ export class WorkspaceService {
               role: true,
             },
           },
+          _count: {
+            select: {
+              members: true,
+              projects: true,
+            }
+          },
         },
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const returnedData = { ...data, members };
+      const count = data._count;
+      delete data['_count']
+      const returnedData = { ...data, members, count };
 
       return returnedData;
     } catch (e) {
@@ -257,11 +284,19 @@ export class WorkspaceService {
               role: true,
             },
           },
+          _count: {
+            select: {
+              members: true,
+              projects: true,
+            }
+          },
         },
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const returnedData = { ...data, members };
+      const count = data._count;
+      delete data['_count']
+      const returnedData = { ...data, members, count };
 
       return returnedData;
     } catch (e) {
@@ -299,11 +334,19 @@ export class WorkspaceService {
               role: true,
             },
           },
+          _count: {
+            select: {
+              members: true,
+              projects: true,
+            }
+          },
         },
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const returnedData = { ...data, members };
+      const count = data._count;
+      delete data['_count']
+      const returnedData = { ...data, members, count };
 
       return returnedData;
     } catch (e) {
@@ -351,11 +394,19 @@ export class WorkspaceService {
               role: true,
             },
           },
+          _count: {
+            select: {
+              members: true,
+              projects: true,
+            }
+          },
         },
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const returnedData = { ...data, members };
+      const count = data._count;
+      delete data['_count']
+      const returnedData = { ...data, members, count };
 
       return returnedData;
     } catch (e) {
@@ -408,11 +459,19 @@ export class WorkspaceService {
               role: true,
             },
           },
+          _count: {
+            select: {
+              members: true,
+              projects: true,
+            }
+          },
         },
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const returnedData = { ...data, members };
+      const count = data._count;
+      delete data['_count']
+      const returnedData = { ...data, members, count };
 
       return returnedData;
     } catch (e) {
