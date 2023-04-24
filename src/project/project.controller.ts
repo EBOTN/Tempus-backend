@@ -16,7 +16,7 @@ import {
 import { ProjectService } from "./project.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ProjectDto } from "./dto/read-project.dto";
 import { GetProjectQuerry } from "./dto/get-project-querry.dto";
 import { UpdateRoleDto } from "src/shared/update-role.dto";
@@ -27,7 +27,7 @@ import { GetRoleDto } from "src/shared/get-role-dto";
 import { ProjectRoleGuard } from "src/shared/ProjectRoleGuard";
 
 @ApiTags("projects")
-@Controller("workspace/:id/projects")
+@Controller("workspace/:workspaceId/projects")
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -38,7 +38,7 @@ export class ProjectController {
   @Post()
   create(
     @Body() createProjectDto: CreateProjectDto,
-    @Param("id", ParseIntPipe) workspaceId: number,
+    @Param("workspaceId", ParseIntPipe) workspaceId: number,
     @Req() req: ExtendedRequest
   ) {
     return this.projectService.create(
@@ -56,7 +56,7 @@ export class ProjectController {
   getProjects(
     @Query() querry: GetProjectQuerry,
     @Req() req: ExtendedRequest,
-    @Param("id", ParseIntPipe) workspaceId: number
+    @Param("workspaceId", ParseIntPipe) workspaceId: number
   ) {
     return this.projectService.findProjects(
       querry,
@@ -74,7 +74,7 @@ export class ProjectController {
   @Get("getAllProjects")
   getAllProjects(
     @Query() querry: GetProjectQuerry,
-    @Param("id", ParseIntPipe) workspaceId: number
+    @Param("workspaceId", ParseIntPipe) workspaceId: number
   ) {
     return this.projectService.findAll(querry, workspaceId);
   }
@@ -84,8 +84,11 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Get project by id" })
   @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({name: "workspaceId", type: Number })
   @Get("/:projectId")
-  findOne(@Param("projectId", ParseIntPipe) projectId: number) {
+  findOne(
+    @Param("projectId", ParseIntPipe) projectId: number,
+  ) {
     return this.projectService.findOne(projectId);
   }
 
@@ -94,6 +97,7 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Update project" })
   @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({name: "workspaceId", type: Number })
   @Put("/:projectId")
   update(
     @Param("projectId", ParseIntPipe) projectId: number,
@@ -107,6 +111,7 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Delete project" })
   @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({name: "workspaceId", type: Number })
   @Delete("/:projectId")
   remove(@Param("projectId", ParseIntPipe) projectId: number) {
     return this.projectService.remove(projectId);
@@ -117,6 +122,7 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Add member to project" })
   @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({name: "workspaceId", type: Number })
   @Post("/:projectId/addMember")
   addMember(
     @Param("projectId", ParseIntPipe) projectId: number,
@@ -130,6 +136,7 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Remove member from project" })
   @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({name: "workspaceId", type: Number })
   @Post("/:projectId/removeMember")
   removeMember(
     @Param("projectId", ParseIntPipe) projectId: number,
@@ -141,6 +148,8 @@ export class ProjectController {
   @SetMetadata("roles", ["Owner"])
   @SetMetadata("projectRoles", ["Owner"])
   @UseGuards(WorkspaceOrProjectRoleGuard)
+  @ApiOperation({ summary: "Change member role" })
+  @ApiParam({name: "workspaceId", type: Number })
   @Patch("/:projectId/changeProjectRole")
   async changeProjectRole(
     @Param("projectId", ParseIntPipe) projectId: number,
@@ -158,11 +167,12 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Get user role in project" })
   @ApiResponse({ status: 200, type: GetRoleDto })
+  @ApiParam({name: "workspaceId", type: Number })
   @Get("/:projectId/getRole")
   async getRole(
     @Param("projectId", ParseIntPipe) projectId: number,
     @Req() req: ExtendedRequest
   ) {
-    return await this.projectService.getRole(projectId, req.userInfo.id)
+    return await this.projectService.getRole(projectId, req.userInfo.id);
   }
 }

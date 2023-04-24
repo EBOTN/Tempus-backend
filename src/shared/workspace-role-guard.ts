@@ -17,7 +17,7 @@ export class WorkspaceRoleGuard implements CanActivate {
 
     const member = await this.prisma.workSpaceMembers.findFirst({
       where: {
-        workspaceId: +request.params.id,
+        workspaceId: +request.params.workspaceId,
         memberId: +request.userInfo.id,
       },
       select: {

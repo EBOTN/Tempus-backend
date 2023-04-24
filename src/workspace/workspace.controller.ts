@@ -61,8 +61,8 @@ export class WorkspaceController {
 
   @ApiOperation({ summary: "Get workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
-  @Get("/:id")
-  findOne(@Param("id", ParseIntPipe) id: number, @Req() req: ExtendedRequest) {
+  @Get("/:workspaceId")
+  findOne(@Param("workspaceId", ParseIntPipe) id: number, @Req() req: ExtendedRequest) {
     return this.workspaceService.findOne(req.userInfo.id, id);
   }
 
@@ -71,10 +71,10 @@ export class WorkspaceController {
   @ApiOperation({ summary: "Update workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @ApiConsumes("multipart/form-data")
-  @Put("/:id")
+  @Put("/:workspaceId")
   @FormDataRequest({ storage: MemoryStoredFile })
   update(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("workspaceId", ParseIntPipe) id: number,
     @Body() updateWorkspaceDto: UpdateWorkspaceDto
   ) {
     return this.workspaceService.update(id, updateWorkspaceDto);
@@ -84,8 +84,8 @@ export class WorkspaceController {
   @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Delete workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
-  @Delete("/:id")
-  remove(@Param("id", ParseIntPipe) id: number) {
+  @Delete("/:workspaceId")
+  remove(@Param("workspaceId", ParseIntPipe) id: number) {
     return this.workspaceService.remove(id);
   }
 
@@ -93,9 +93,9 @@ export class WorkspaceController {
   @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Add member to workspace" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
-  @Post("/:id/addMember")
+  @Post("/:workspaceId/addMember")
   addMember(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("workspaceId", ParseIntPipe) id: number,
     @Body("memberId", ParseIntPipe) memberId: number
   ) {
     return this.workspaceService.addMember(id, memberId);
@@ -105,9 +105,9 @@ export class WorkspaceController {
   @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Remove member from workspace" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
-  @Post("/:id/removeMember")
+  @Post("/:workspaceId/removeMember")
   removeMember(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("workspaceId", ParseIntPipe) id: number,
     @Body("memberId", ParseIntPipe) memberId: number
   ) {
     return this.workspaceService.removeMember(id, memberId);
@@ -115,9 +115,9 @@ export class WorkspaceController {
 
   @SetMetadata("roles", ["Owner", "Manager"])
   @UseGuards(WorkspaceRoleGuard)
-  @Patch("/:id/changeWorkspaceRole")
+  @Patch("/:workspaceId/changeWorkspaceRole")
   async changeWorkspaceRole(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("workspaceId", ParseIntPipe) id: number,
     @Body() updateRole: UpdateRoleDto
   ) {
     return await this.workspaceService.changeWorkspaceMemberRole(
@@ -131,9 +131,9 @@ export class WorkspaceController {
   @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Get user role in workspace" })
   @ApiResponse({ status: 200, type: GetRoleDto })
-  @Get("/:id/getRole")
+  @Get("/:workspaceId/getRole")
   async getRole(
-    @Param("id", ParseIntPipe) workspaceId: number,
+    @Param("workspaceId", ParseIntPipe) workspaceId: number,
     @Req() req: ExtendedRequest
   ) {
     return await this.workspaceService.getRole(workspaceId, req.userInfo.id);
