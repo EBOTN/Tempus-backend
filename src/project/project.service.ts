@@ -16,7 +16,7 @@ export class ProjectService {
   async create(
     createProjectDto: CreateProjectDto,
     workspaceId: number,
-    userId: number,
+    userId: number
   ): Promise<ProjectDto> {
     try {
       const data = await this.prisma.project.create({
@@ -26,9 +26,9 @@ export class ProjectService {
           members: {
             create: {
               memberId: userId,
-              role: Roles.Owner
-            }
-          }
+              role: Roles.Owner,
+            },
+          },
         },
         select: {
           id: true,
@@ -66,7 +66,7 @@ export class ProjectService {
     const data = await this.prisma.project.findMany({
       where: {
         title: { contains: query.title || "", mode: "insensitive" },
-        isHidden: query.isHidden || undefined,
+        isHidden: query.filter === "showHidden" ? true : undefined,
         workspaceId: workspaceId,
       },
       select: {
@@ -91,7 +91,8 @@ export class ProjectService {
       skip: query.offset || undefined,
       take: query.limit || undefined,
     });
-    if(!data || data.length === 0) throw new BadRequestException('Projects not found')
+    if (!data || data.length === 0)
+      throw new BadRequestException("Projects not found");
     const returnedData = data.map((obj) => {
       const members = this.ConvertToMemberDto(obj.members);
       return { ...obj, members };
@@ -107,7 +108,7 @@ export class ProjectService {
     const data = await this.prisma.project.findMany({
       where: {
         title: { contains: query.title || "", mode: "insensitive" },
-        isHidden: query.isHidden || undefined,
+        isHidden: query.filter === "showHidden" ? true : undefined,
         workspaceId: workspaceId,
         members: {
           some: {
@@ -137,7 +138,8 @@ export class ProjectService {
       skip: query.offset || undefined,
       take: query.limit || undefined,
     });
-    if(!data || data.length === 0) throw new BadRequestException('Projects not found')
+    if (!data || data.length === 0)
+      throw new BadRequestException("Projects not found");
     const returnedData = data.map((obj) => {
       const members = this.ConvertToMemberDto(obj.members);
       return { ...obj, members };
@@ -170,7 +172,7 @@ export class ProjectService {
         },
       },
     });
-    if(!data) throw new BadRequestException('Project not found')
+    if (!data) throw new BadRequestException("Project not found");
     const members = this.ConvertToMemberDto(data.members);
     const returnedData = { ...data, members };
     return returnedData;
@@ -204,7 +206,7 @@ export class ProjectService {
           },
         },
       });
-      if(!data) throw new BadRequestException('Project not found')
+      if (!data) throw new BadRequestException("Project not found");
       const members = this.ConvertToMemberDto(data.members);
       const returnedData = { ...data, members };
       return returnedData;
@@ -237,7 +239,7 @@ export class ProjectService {
           },
         },
       });
-      if(!data) throw new BadRequestException('Project not found')
+      if (!data) throw new BadRequestException("Project not found");
       const members = this.ConvertToMemberDto(data.members);
       const returnedData = { ...data, members };
       return returnedData;
@@ -277,7 +279,7 @@ export class ProjectService {
           },
         },
       });
-      if(!data) throw new BadRequestException('Project not found')
+      if (!data) throw new BadRequestException("Project not found");
       const members = this.ConvertToMemberDto(data.members);
       const returnedData = { ...data, members };
       return returnedData;
@@ -320,7 +322,7 @@ export class ProjectService {
           },
         },
       });
-      if(!data) throw new BadRequestException('Project not found')
+      if (!data) throw new BadRequestException("Project not found");
       const members = this.ConvertToMemberDto(data.members);
       const returnedData = { ...data, members };
       return returnedData;
@@ -346,7 +348,7 @@ export class ProjectService {
     return returnedData;
   }
 
-  async getRole(projectId: number, userId: number): Promise<GetRoleDto>{
+  async getRole(projectId: number, userId: number): Promise<GetRoleDto> {
     const returnedData = await this.prisma.projectMembers.findFirst({
       where: {
         memberId: userId,
@@ -354,10 +356,11 @@ export class ProjectService {
       },
       select: {
         role: true,
-      }
-    })
-    if(!returnedData) throw new BadRequestException('Project or member not found')
-    return returnedData
+      },
+    });
+    if (!returnedData)
+      throw new BadRequestException("Project or member not found");
+    return returnedData;
   }
 
   private ConvertToMemberDto(data: RawMemberData[]): MemberDto[] {
