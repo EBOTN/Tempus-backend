@@ -9,6 +9,7 @@ import { FileService } from "src/file/file.service";
 import { MemberDto } from "src/shared/member-dto";
 import { RawMemberData } from "src/shared/raw-member-data";
 import { GetRoleDto } from "src/shared/get-role-dto";
+import { SelectWorkspaceDto } from "./dto/workspace.selector";
 
 @Injectable()
 export class WorkspaceService {
@@ -36,38 +37,9 @@ export class WorkspaceService {
             },
           },
         },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-          members: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
-                },
-              },
-              role: true,
-            },
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true,
-            }
-          },
+        select: new SelectWorkspaceDto()
         },
-      });
+      );
 
       const members = this.ConvertToMemberDto(data.members);
       const count = data._count;
@@ -127,40 +99,7 @@ export class WorkspaceService {
           title: { contains: querry.title || "", mode: "insensitive" },
           ...getFilter,
         },
-        select: {
-          id: true,
-          title: true,
-          cover: true,
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-          members: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
-                },
-              },
-              role: true,
-            },
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true,
-            }
-          },
-        },
+        select: new SelectWorkspaceDto(),
         skip: querry.offset || undefined,
         take: querry.limit || undefined,
       });
@@ -189,37 +128,7 @@ export class WorkspaceService {
             { members: { some: { memberId: userId } } },
           ],
         },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-          members: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
-                },
-              },
-              role: true,
-            },
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true,
-            }
-          },
-        },
+        select: new SelectWorkspaceDto(),
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -260,37 +169,7 @@ export class WorkspaceService {
           cover: coverUrl || undefined,
           ownerId: updateWorkspaceDto.ownerId,
         },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-          members: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
-                },
-              },
-              role: true,
-            },
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true,
-            }
-          },
-        },
+        select: new SelectWorkspaceDto(),
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -310,37 +189,7 @@ export class WorkspaceService {
     try {
       const data = await this.prisma.workSpace.delete({
         where: { id },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-          members: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
-                },
-              },
-              role: true,
-            },
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true,
-            }
-          },
-        },
+        select: new SelectWorkspaceDto(),
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -370,37 +219,7 @@ export class WorkspaceService {
             },
           },
         },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-          members: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
-                },
-              },
-              role: true,
-            },
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true,
-            }
-          },
-        },
+        select: new SelectWorkspaceDto(),
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -435,37 +254,7 @@ export class WorkspaceService {
             },
           },
         },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-          members: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
-                },
-              },
-              role: true,
-            },
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true,
-            }
-          },
-        },
+        select: new SelectWorkspaceDto(),
       });
 
       const members = this.ConvertToMemberDto(data.members);
