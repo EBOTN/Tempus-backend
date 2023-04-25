@@ -3,7 +3,7 @@ import { MemberDto } from "src/shared/member-dto";
 import { UserDto } from "src/user/dto/user-dto";
 import { WorkspaceModel } from "./workspace-model";
 
-class CountDto {
+export class CountDto {
   @ApiProperty({ description: "Members count", example: 5 })
   members: number;
   @ApiProperty({ description: "Project count", example: 12 })

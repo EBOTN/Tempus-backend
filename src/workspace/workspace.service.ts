@@ -3,13 +3,14 @@ import { Prisma, Roles } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
 import { GetWorkspacesQuerry } from "./dto/get-workspaces-querry.dto";
-import { WorkspaceDto } from "./dto/workspace.dto";
+import { CountDto, WorkspaceDto } from "./dto/workspace.dto";
 import { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
 import { FileService } from "src/file/file.service";
 import { MemberDto } from "src/shared/member-dto";
 import { RawMemberData } from "src/shared/raw-member-data";
 import { GetRoleDto } from "src/shared/get-role-dto";
 import { SelectWorkspaceDto } from "./dto/workspace.selector";
+import { RawCountDto } from "src/shared/raw-count-dto";
 
 @Injectable()
 export class WorkspaceService {
@@ -42,7 +43,7 @@ export class WorkspaceService {
       );
 
       const members = this.ConvertToMemberDto(data.members);
-      const count = data._count;
+      const count = this.ConvertToCountDto(data._count);
       delete data['_count']
       const returnedData = { ...data, members, count };
 
@@ -105,7 +106,7 @@ export class WorkspaceService {
       });
       const returnedData = data.map((obj) => {
         const members = this.ConvertToMemberDto(obj.members);
-        const count = obj._count
+        const count = this.ConvertToCountDto(obj._count);
         delete obj['_count']
         return { ...obj, members, count };
       });
@@ -132,7 +133,7 @@ export class WorkspaceService {
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const count = data._count;
+      const count = this.ConvertToCountDto(data._count);
       delete data['_count']
       const returnedData = { ...data, members, count };
 
@@ -173,7 +174,7 @@ export class WorkspaceService {
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const count = data._count;
+      const count = this.ConvertToCountDto(data._count);
       delete data['_count']
       const returnedData = { ...data, members, count };
 
@@ -193,7 +194,7 @@ export class WorkspaceService {
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const count = data._count;
+      const count = this.ConvertToCountDto(data._count);
       delete data['_count']
       const returnedData = { ...data, members, count };
 
@@ -223,7 +224,7 @@ export class WorkspaceService {
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const count = data._count;
+      const count = this.ConvertToCountDto(data._count);
       delete data['_count']
       const returnedData = { ...data, members, count };
 
@@ -258,7 +259,7 @@ export class WorkspaceService {
       });
 
       const members = this.ConvertToMemberDto(data.members);
-      const count = data._count;
+      const count = this.ConvertToCountDto(data._count);
       delete data['_count']
       const returnedData = { ...data, members, count };
 
@@ -306,5 +307,10 @@ export class WorkspaceService {
 
   private ConvertToMemberDto(data: RawMemberData[]): MemberDto[] {
     return data.map((item) => ({ ...item.member, role: item.role }));
+  }
+
+  private ConvertToCountDto(data: RawCountDto): CountDto {
+    const count = data;
+    return count
   }
 }
