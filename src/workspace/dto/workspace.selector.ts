@@ -1,34 +1,34 @@
 export class SelectWorkspaceDto {
-  id: boolean = true;
-  title: boolean = true;
-  cover: boolean = true;
-  owner = {
+  id: true;
+  title: true;
+  cover: true;
+  owner: {
     select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      avatar: true,
-    },
+      id: true;
+      email: true;
+      firstName: true;
+      lastName: true;
+      avatar: true;
+    };
   };
-  members = {
+  members: {
     select: {
       member: {
         select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          avatar: true,
-        },
-      },
-      role: true,
-    },
+          id: true;
+          email: true;
+          firstName: true;
+          lastName: true;
+          avatar: true;
+        };
+      };
+      role: true;
+    };
   };
-  _count = {
+  _count: {
     select: {
-      members: true,
-      projects: true,
-    },
+      members: true;
+      projects: true;
+    };
   };
 }
