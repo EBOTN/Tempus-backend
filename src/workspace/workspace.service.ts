@@ -38,7 +38,7 @@ export class WorkspaceService {
             },
           },
         },
-        select: new SelectWorkspaceDto()
+        select: SelectWorkspaceDto,
         },
       );
 
@@ -100,7 +100,7 @@ export class WorkspaceService {
           title: { contains: querry.title || "", mode: "insensitive" },
           ...getFilter,
         },
-        select: new SelectWorkspaceDto(),
+        select: SelectWorkspaceDto,
         skip: querry.offset || undefined,
         take: querry.limit || undefined,
       });
@@ -129,7 +129,7 @@ export class WorkspaceService {
             { members: { some: { memberId: userId } } },
           ],
         },
-        select: new SelectWorkspaceDto(),
+        select: SelectWorkspaceDto,
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -170,7 +170,7 @@ export class WorkspaceService {
           cover: coverUrl || undefined,
           ownerId: updateWorkspaceDto.ownerId,
         },
-        select: new SelectWorkspaceDto(),
+        select: SelectWorkspaceDto,
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -190,7 +190,7 @@ export class WorkspaceService {
     try {
       const data = await this.prisma.workSpace.delete({
         where: { id },
-        select: new SelectWorkspaceDto(),
+        select: SelectWorkspaceDto,
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -220,7 +220,7 @@ export class WorkspaceService {
             },
           },
         },
-        select: new SelectWorkspaceDto(),
+        select: SelectWorkspaceDto,
       });
 
       const members = this.ConvertToMemberDto(data.members);
@@ -255,7 +255,7 @@ export class WorkspaceService {
             },
           },
         },
-        select: new SelectWorkspaceDto(),
+        select: SelectWorkspaceDto,
       });
 
       const members = this.ConvertToMemberDto(data.members);
