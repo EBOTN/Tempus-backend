@@ -34,6 +34,7 @@ export class ProjectService {
           id: true,
           title: true,
           isHidden: true,
+          workspaceId: true,
           members: {
             select: {
               member: {
@@ -73,6 +74,7 @@ export class ProjectService {
         id: true,
         title: true,
         isHidden: true,
+        workspaceId: true,
         members: {
           select: {
             member: {
@@ -119,6 +121,7 @@ export class ProjectService {
       select: {
         id: true,
         title: true,
+        workspaceId: true,
         isHidden: true,
         members: {
           select: {
@@ -155,6 +158,7 @@ export class ProjectService {
       select: {
         id: true,
         title: true,
+        workspaceId: true,
         isHidden: true,
         members: {
           select: {
@@ -189,6 +193,7 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
+          workspaceId: true,
           isHidden: true,
           members: {
             select: {
@@ -222,6 +227,7 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
+          workspaceId: true,
           isHidden: true,
           members: {
             select: {
@@ -255,6 +261,7 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
+          workspaceId: true,
           isHidden: true,
           members: {
             select: {
@@ -295,6 +302,7 @@ export class ProjectService {
         select: {
           id: true,
           title: true,
+          workspaceId: true,
           isHidden: true,
           members: {
             select: {
