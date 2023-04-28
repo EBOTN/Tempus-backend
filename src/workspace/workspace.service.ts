@@ -39,12 +39,11 @@ export class WorkspaceService {
           },
         },
         select: SelectWorkspaceDto,
-        },
-      );
+      });
 
       const members = this.ConvertToMemberDto(data.members);
       const count = this.ConvertToCountDto(data._count);
-      delete data['_count']
+      delete data["_count"];
       const returnedData = { ...data, members, count };
 
       return returnedData;
@@ -107,7 +106,7 @@ export class WorkspaceService {
       const returnedData = data.map((obj) => {
         const members = this.ConvertToMemberDto(obj.members);
         const count = this.ConvertToCountDto(obj._count);
-        delete obj['_count']
+        delete obj["_count"];
         return { ...obj, members, count };
       });
 
@@ -134,7 +133,7 @@ export class WorkspaceService {
 
       const members = this.ConvertToMemberDto(data.members);
       const count = this.ConvertToCountDto(data._count);
-      delete data['_count']
+      delete data["_count"];
       const returnedData = { ...data, members, count };
 
       return returnedData;
@@ -150,18 +149,22 @@ export class WorkspaceService {
     updateWorkspaceDto: UpdateWorkspaceDto
   ): Promise<WorkspaceDto> {
     try {
-      const { cover } = await this.prisma.workSpace.findFirst({
-        where: { id },
-        select: {
-          cover: true,
-        },
-      });
+      let coverUrl: string;
 
-      const coverUrl = await this.fileService.createFile(
-        updateWorkspaceDto.coverFile
-      );
-
-      await this.fileService.deleteFile(cover);
+      if (updateWorkspaceDto.coverFile) {
+        coverUrl = await this.fileService.createFile(
+          updateWorkspaceDto.coverFile
+        );
+      }
+      if (coverUrl) {
+        const { cover } = await this.prisma.workSpace.findFirst({
+          where: { id },
+          select: {
+            cover: true,
+          },
+        });
+        if (cover) await this.fileService.deleteFile(cover);
+      }
 
       const data = await this.prisma.workSpace.update({
         where: { id },
@@ -175,7 +178,7 @@ export class WorkspaceService {
 
       const members = this.ConvertToMemberDto(data.members);
       const count = this.ConvertToCountDto(data._count);
-      delete data['_count']
+      delete data["_count"];
       const returnedData = { ...data, members, count };
 
       return returnedData;
@@ -195,7 +198,7 @@ export class WorkspaceService {
 
       const members = this.ConvertToMemberDto(data.members);
       const count = this.ConvertToCountDto(data._count);
-      delete data['_count']
+      delete data["_count"];
       const returnedData = { ...data, members, count };
 
       return returnedData;
@@ -225,7 +228,7 @@ export class WorkspaceService {
 
       const members = this.ConvertToMemberDto(data.members);
       const count = this.ConvertToCountDto(data._count);
-      delete data['_count']
+      delete data["_count"];
       const returnedData = { ...data, members, count };
 
       return returnedData;
@@ -260,7 +263,7 @@ export class WorkspaceService {
 
       const members = this.ConvertToMemberDto(data.members);
       const count = this.ConvertToCountDto(data._count);
-      delete data['_count']
+      delete data["_count"];
       const returnedData = { ...data, members, count };
 
       return returnedData;
@@ -311,6 +314,6 @@ export class WorkspaceService {
 
   private ConvertToCountDto(data: RawCountDto): CountDto {
     const count = data;
-    return count
+    return count;
   }
 }
