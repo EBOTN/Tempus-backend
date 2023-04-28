@@ -93,8 +93,8 @@ export class ProjectService {
       skip: query.offset || undefined,
       take: query.limit || undefined,
     });
-    if (!data || data.length === 0)
-      throw new BadRequestException("Projects not found");
+    // if (!data || data.length === 0)
+    //   throw new BadRequestException("Projects not found");
     const returnedData = data.map((obj) => {
       const members = this.ConvertToMemberDto(obj.members);
       return { ...obj, members };
@@ -141,8 +141,9 @@ export class ProjectService {
       skip: query.offset || undefined,
       take: query.limit || undefined,
     });
-    if (!data || data.length === 0)
-      throw new BadRequestException("Projects not found");
+    // if (!data || data.length === 0)
+    //   throw new BadRequestException("Projects not found");
+
     const returnedData = data.map((obj) => {
       const members = this.ConvertToMemberDto(obj.members);
       return { ...obj, members };
