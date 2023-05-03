@@ -32,7 +32,7 @@ export class GetProjectQuerry {
 
   @ApiProperty({
     example: "all",
-    description: "own|others|all",
+    description: "Send showHidden or null",
     required: false,
   })
   @IsOptional()
