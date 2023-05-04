@@ -1,28 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from "class-validator";
+import { PickType } from "@nestjs/swagger";
+import { TaskModel } from "./task-model-dto";
 
-export class CreateTaskDto {
-  @ApiProperty({ example: "Title", description: "Task title" })
-  @IsString()
-  @IsNotEmpty()
-  readonly title: string;
-
-  @ApiProperty({
-    example: "Description",
-    description: "Task description (Optional)",
-    required: false
-  })
-  @IsOptional()
-  @IsString()
-  readonly description: string;
-
-  @ApiProperty({ example: "2", description: "Creator id" })
-  @IsNotEmpty()
-  @IsNumber()
-  readonly creatorId: number;
-}
+export class CreateTaskDto extends PickType(TaskModel, [
+  "title",
+  "description",
+]) {}

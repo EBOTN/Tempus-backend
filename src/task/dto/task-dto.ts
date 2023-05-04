@@ -1,26 +1,16 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, OmitType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import {  IsDate, IsNotEmpty } from "class-validator";
-import { AssignedTaskDto } from "./assigned-task-dto";
+import { IsDate, IsNotEmpty } from "class-validator";
+import { TaskModel } from "./task-model-dto";
+import { MemberDto } from "src/shared/member-dto";
 
-export class TaskDto {
-  @ApiProperty({ example: "1", description: "Unique identificator" })
-  readonly id: number;
-
-  @ApiProperty({ example: "Title", description: "Task title" })
-  readonly title: string;
-
-  @ApiProperty({ example: "Description", description: "Task description" })
-  readonly description: string;
-
-  @ApiProperty({ example: "1", description: "Creator id" })
-  readonly creatorId: number;
-
-  @ApiProperty({
-    type: [AssignedTaskDto],
-    description: "Array workers are assigned to task",
-  })
-  readonly workers: AssignedTaskDto[];
+export class TaskDto extends OmitType(TaskModel, ["workers"]) {
+  @ApiProperty({ description: "Members assigned to task" })
+  readonly members: {
+    member: MemberDto;
+    isComplete: boolean;
+    workTime: number;
+  }[];
 }
 export class ReportQuerryDto {
   @IsDate()
