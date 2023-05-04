@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native"]
 }
 
@@ -16,7 +16,6 @@ model User {
   firstName          String
   lastName           String
   avatar             String?
-  assignedTasks      AssignedTask[]
   createdTasks       Task[]             @relation("createdTasks")
   ownedWorkSpace     WorkSpace[]
   memberedWorkSpaces WorkSpaceMembers[]
@@ -35,17 +34,17 @@ model Task {
 }
 
 model AssignedTask {
-  id         Int         @id @default(autoincrement())
+  id         Int            @id @default(autoincrement())
   taskId     Int
-  workerId   Int?
-  isActive   Boolean?    @default(false)
-  isComplete Boolean?    @default(false)
-  task       Task        @relation(fields: [taskId], references: [id], onDelete: Cascade, map: "task_fkey")
-  user       User?       @relation(fields: [workerId], references: [id], onDelete: Cascade, map: "user_fkey")
-  workTime   Int         @default(0)
+  memberId   Int
+  isActive   Boolean?       @default(false)
+  isComplete Boolean?       @default(false)
+  task       Task           @relation(fields: [taskId], references: [id], onDelete: Cascade, map: "task_fkey")
+  member     ProjectMembers @relation("assignedTasks", fields: [memberId], references: [id], onDelete: Cascade, map: "member_fkey")
+  workTime   Int            @default(0)
   TimeLines  TimeLines[]
 
-  @@unique([taskId, workerId], name: "taskid")
+  @@unique([taskId, memberId], name: "taskid")
 }
 
 model TimeLines {
@@ -88,12 +87,13 @@ model Project {
 }
 
 model ProjectMembers {
-  id        Int     @id @default(autoincrement())
-  projectId Int
-  memberId  Int
-  role      Roles   @default(Member)
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "project_fkey")
-  member    User    @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_fkey")
+  id           Int            @id @default(autoincrement())
+  projectId    Int
+  memberId     Int
+  role         Roles          @default(Member)
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "project_fkey")
+  member       User           @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "member_fkey")
+  AssignedTask AssignedTask[] @relation("assignedTasks")
 
   @@unique([projectId, memberId])
 }
