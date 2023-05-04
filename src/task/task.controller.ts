@@ -11,7 +11,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ReportService } from "src/report/report.service";
 import { TimeLineService } from "src/time-line/time-line.service";
 import { BadRequestAssignedTaskDto } from "./dto/assigned_task-info-dto";
@@ -43,6 +43,8 @@ export class TaskController {
 
   @ApiOperation({ summary: "Get report about work for user" })
   @ApiResponse({ status: 200, type: [ReportDto] })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   @Get("/getReport")
   getReport(@Query() query: ReportQuerryDto) {
     return this.reportService.getReportForWorker(
@@ -55,6 +57,8 @@ export class TaskController {
   @Get("getCreatedTasks")
   @ApiOperation({ summary: "Get all created tasks by user" })
   @ApiResponse({ status: 200, type: [TaskDto] })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   getByCreatorId(
     @Query() query: GetTaskQuery,
     @Req() req: ExtendedRequest,
@@ -66,6 +70,7 @@ export class TaskController {
   @Get()
   @ApiOperation({ summary: "Get tasks by project" })
   @ApiResponse({ status: 200, type: [TaskDto] })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
   getAll(@Param("projectId", ParseIntPipe) projectId: number) {
     return this.taskService.getByProject(projectId);
   }
@@ -73,12 +78,15 @@ export class TaskController {
   @Get("/:id")
   @ApiOperation({ summary: "Get first task" })
   @ApiResponse({ status: 200, type: [TaskDto] })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   getFirst(@Param("id", ParseIntPipe) id: number) {
     return this.taskService.getFirst(id);
   }
 
   @ApiOperation({ summary: "Create task" })
   @ApiResponse({ status: 200, type: TaskDto })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
   @Post()
   create(
     @Body() body: CreateTaskDto,
@@ -97,6 +105,8 @@ export class TaskController {
 
   @ApiOperation({ summary: "Delete task" })
   @ApiResponse({ status: 200, type: TaskDto })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   @Delete("/:id")
   remove(@Param("id", ParseIntPipe) id: number) {
     return this.taskService.remove(id);
@@ -104,6 +114,8 @@ export class TaskController {
 
   @ApiOperation({ summary: "Update task" })
   @ApiResponse({ status: 200, type: TaskDto })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   @Put("/:id")
   update(@Param("id", ParseIntPipe) id: number, @Body() body: UpdateTaskDto) {
     return this.taskService.update(id, body);
@@ -111,6 +123,8 @@ export class TaskController {
 
   @ApiOperation({ summary: "Assign worker to task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   @Post("/:id/assignWorker")
   assignUser(
     @Param("id", ParseIntPipe) id: number,
@@ -121,6 +135,8 @@ export class TaskController {
 
   @ApiOperation({ summary: "Unassign user from task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   @Post("/:id/unassignWorker")
   removeUser(
     @Param("id", ParseIntPipe) id: number,
@@ -132,6 +148,8 @@ export class TaskController {
   @Post("/:id/startTimeLine")
   @ApiOperation({ summary: "Start track task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   starTimeLine(
     @Param("id", ParseIntPipe) id: number,
     @Req() req: ExtendedRequest,
@@ -142,12 +160,16 @@ export class TaskController {
   @Post("/:id/endTimeLine")
   @ApiOperation({ summary: "Finish track task" })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   endTimeLine(@Param("id", ParseIntPipe) id: number) {
     return this.timeLineService.endTimeLine(id);
   }
 
   @Post("/:id/completeTask")
   @ApiOperation({ summary: "Complete task" })
+  @ApiParam({name: "workspaceId", type: Number,required: true })
+  @ApiParam({name: "projectId", type: Number, required: true })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   completeTask(@Param("id", ParseIntPipe) id: number) {
     return this.taskService.completeTask(id);
