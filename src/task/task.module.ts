@@ -16,7 +16,7 @@ export class TaskModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .forRoutes("tasks");
+      .forRoutes(TaskController);
   }
 }
 

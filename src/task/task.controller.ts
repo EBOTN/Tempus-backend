@@ -124,9 +124,9 @@ export class TaskController {
   @Post("/:id/unassignWorker")
   removeUser(
     @Param("id", ParseIntPipe) id: number,
-    @Body() body: ValidationUserId
+    @Req() req: ExtendedRequest,
   ) {
-    return this.taskService.removeUserFromTask(id, body.userId);
+    return this.taskService.removeUserFromTask(id, req.userInfo.id);
   }
 
   @Post("/:id/startTimeLine")
@@ -134,9 +134,9 @@ export class TaskController {
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   starTimeLine(
     @Param("id", ParseIntPipe) id: number,
-    @Body() body: ValidationUserId
+    @Req() req: ExtendedRequest,
   ) {
-    return this.timeLineService.startTimeLine(id, body.userId);
+    return this.timeLineService.startTimeLine(id, req.userInfo.id);
   }
 
   @Post("/:id/endTimeLine")
