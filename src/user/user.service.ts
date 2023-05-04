@@ -106,9 +106,6 @@ export class UserService {
           },
           lastName: { contains: searchText || "", mode: "insensitive" },
         },
-        assignedTasks: {
-          some: { taskId: taskId },
-        },
       },
       skip: skip,
       take: take,

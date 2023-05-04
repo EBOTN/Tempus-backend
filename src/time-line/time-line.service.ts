@@ -18,7 +18,7 @@ export class TimeLineService {
 
     timelines.shift();
 
-    return await this.prisma.assignedTask.update({
+    const data = await this.prisma.assignedTask.update({
       where: {
         id: assTaskId,
       },
@@ -41,8 +41,27 @@ export class TimeLineService {
       },
       include: {
         TimeLines: true,
+        member: {
+          select: {
+            member: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+            role: true,
+          },
+        },
       },
     });
+
+    const member = { ...data.member.member, role: data.member.role };
+    delete data["member"];
+    const returnedData = { ...data, member };
+    return returnedData;
   }
 
   async getAllTimeLinesByWorkerBetweenDates(
@@ -50,9 +69,9 @@ export class TimeLineService {
     startDate: Date,
     endDate: Date
   ): Promise<AssignedTaskDto[]> {
-    return await this.prisma.assignedTask.findMany({
+    const data = await this.prisma.assignedTask.findMany({
       where: {
-        workerId: workerId,
+        memberId: workerId,
         TimeLines: {
           some: {
             startTime: { gte: startDate },
@@ -62,8 +81,30 @@ export class TimeLineService {
       },
       include: {
         TimeLines: true,
+        member: {
+          select: {
+            member: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+            role: true,
+          },
+        },
       },
     });
+
+    const returnedData = data.map((obj) => {
+      const member = { ...obj.member.member, role: obj.member.role };
+      delete obj["member"];
+      const returnedData = { ...obj, member };
+      return returnedData;
+    });
+    return returnedData;
   }
 
   async startTimeLine(
@@ -76,7 +117,7 @@ export class TimeLineService {
       where: {
         OR: [
           {
-            workerId: userId,
+            memberId: userId,
             isActive: true,
           },
           {
@@ -95,7 +136,7 @@ export class TimeLineService {
     if (await this.checkWeekWorkHours(userId))
       throw new BadRequestException("You already work 40 hours");
     try {
-      return await this.prisma.assignedTask.update({
+      const data = await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
         },
@@ -109,8 +150,26 @@ export class TimeLineService {
         },
         include: {
           TimeLines: true,
+          member: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  avatar: true,
+                },
+              },
+              role: true,
+            },
+          },
         },
       });
+      const member = {...data.member.member, role: data.member.role}
+      delete data['member'];
+      const returnedData = {...data, member}
+      return returnedData
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -162,7 +221,7 @@ export class TimeLineService {
       );
 
     try {
-      return await this.prisma.assignedTask.update({
+      const data = await this.prisma.assignedTask.update({
         where: {
           id: assTaskId,
         },
@@ -182,8 +241,27 @@ export class TimeLineService {
         },
         include: {
           TimeLines: true,
+          member: {
+            select: {
+              member: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  avatar: true,
+                },
+              },
+              role: true,
+            },
+          },
         },
       });
+      
+      const member = {...data.member.member, role: data.member.role}
+      delete data['member'];
+      const returnedData = {...data, member}
+      return returnedData
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")

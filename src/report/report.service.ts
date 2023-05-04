@@ -36,7 +36,7 @@ export class ReportService {
       where: {
         workers: {
           some: {
-            workerId: workerId,
+            memberId: workerId,
             TimeLines: {
               some: {
                 startTime: { gte: startTimeLine },
@@ -50,7 +50,7 @@ export class ReportService {
         workers: {
           include: { TimeLines: true },
           where: {
-            workerId: workerId,
+            memberId: workerId,
             TimeLines: {
               some: {
                 startTime: { gte: startTimeLine },
