@@ -165,8 +165,8 @@ export class TaskController {
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
-  endTimeLine(@Param("id", ParseIntPipe) id: number) {
-    return this.timeLineService.endTimeLine(id);
+  endTimeLine(@Param("id", ParseIntPipe) id: number, @Req() req: ExtendedRequest) {
+    return this.timeLineService.endTimeLine(id, req.userInfo.id);
   }
 
   @Post("/:id/completeTask")
@@ -174,7 +174,18 @@ export class TaskController {
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
   @ApiResponse({ status: 200, type: AssignedTaskDto })
-  completeTask(@Param("id", ParseIntPipe) id: number, @Req() req: ExtendedRequest) {
+  completeTask(
+    @Param("id", ParseIntPipe) id: number,
+    @Req() req: ExtendedRequest
+  ) {
     return this.taskService.completeTask(id, req.userInfo.id);
+  }
+
+  @Get("/:id/getMemberProgress")
+  getMemberProgress(
+    @Param("id", ParseIntPipe) id: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return this.taskService.getMemberProgress(id, req.userInfo.id);
   }
 }

@@ -15,6 +15,40 @@ export class TaskService {
     private timeLineService: TimeLineService
   ) {}
 
+  async getMemberProgress(taskId: number, userId: number) {
+    const data = await this.prisma.assignedTask.findFirst({
+      where: {
+        taskId,
+        member: {
+          member: {
+            id: userId,
+          },
+        },
+      },
+      select: {
+        isActive: true,
+        workTime: true,
+        TimeLines: {
+          orderBy: { startTime: "desc" },
+          take: 1,
+        },
+      },
+    });
+    if (!data) throw new BadRequestException("PROGRESS NOT FOUND");
+    const returnedData = {
+      isRunning: false,
+      trackedTime: 0,
+      lastTimeLineStartTime: null,
+    };
+    if (data.TimeLines.length !== 0) {
+      const start = new Date(data.TimeLines[0].startTime);
+      returnedData.isRunning = data.isActive;
+      returnedData.trackedTime = data.workTime;
+      returnedData.lastTimeLineStartTime = data.isActive ? start : null;
+    }
+    return returnedData;
+  }
+
   async getFirst(taskId: number): Promise<TaskDto> {
     const data = await this.prisma.task.findFirst({
       where: {
@@ -267,7 +301,7 @@ export class TaskService {
     if (progressTask.isComplete)
       throw new BadRequestException("Task already complete");
     if (progressTask.TimeLines.length > 0)
-      await this.timeLineService.endTimeLine(progressTask.id);
+      await this.timeLineService.endTimeLine(progressTask.id, userId);
 
     try {
       return await this.prisma.assignedTask.update({
