@@ -167,17 +167,23 @@ export class TaskService {
 
   async removeUserFromTask(taskId: number, userId: number) {
     try {
-      await this.prisma.assignedTask.delete({
+      const returnedData = await this.prisma.task.update({
         where: {
-          taskid: {
-            memberId: userId,
-            taskId: taskId,
+          id: taskId,
+        },
+        data: {
+          workers: {
+            delete: {
+              taskid: {
+                taskId,
+                memberId: userId,
+              },
+            },
           },
         },
-        include: {
-          TimeLines: true,
-        },
       });
+
+      return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -189,15 +195,38 @@ export class TaskService {
 
   async assignUserToTask(taskId: number, userId: number) {
     try {
-      return await this.prisma.assignedTask.create({
-        data: {
-          taskId: taskId,
-          memberId: userId,
+      const { project } = await this.prisma.task.findFirst({
+        where: {
+          id: taskId,
         },
-        include: {
-          TimeLines: true,
+        select: {
+          project: true,
         },
       });
+
+      if (!project) throw new BadRequestException("Project not found");
+
+      const returnedData = await this.prisma.task.update({
+        where: {
+          id: taskId,
+        },
+        data: {
+          workers: {
+            create: {
+              member: {
+                connect: {
+                  projectId_memberId: {
+                    memberId: userId,
+                    projectId: project.id,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -209,28 +238,41 @@ export class TaskService {
     }
   }
 
-  async completeTask(assTaskId: number) {
-    const completedTask = await this.prisma.assignedTask.findFirst({
+  async completeTask(taskId: number, userId: number) {
+    const completedTask = await this.prisma.task.findFirst({
       where: {
-        id: assTaskId,
+        id: taskId,
       },
       include: {
-        TimeLines: {
-          where: { startTime: { not: null }, endTime: null, taskId: assTaskId },
+        workers: {
+          where: {
+            member: {
+              memberId: userId,
+            },
+          },
+          include: {
+            TimeLines: {
+              where: {
+                startTime: { not: null },
+                endTime: null,
+                taskId: taskId,
+              },
+            },
+          },
         },
       },
     });
-
     if (!completedTask) throw new BadRequestException("Task not found");
-    if (completedTask.isComplete)
+    const progressTask = completedTask.workers[0];
+    if (progressTask.isComplete)
       throw new BadRequestException("Task already complete");
-    if (completedTask.TimeLines.length > 0)
-      await this.timeLineService.endTimeLine(assTaskId);
+    if (progressTask.TimeLines.length > 0)
+      await this.timeLineService.endTimeLine(progressTask.id);
 
     try {
       return await this.prisma.assignedTask.update({
         where: {
-          id: assTaskId,
+          id: progressTask.id,
         },
         data: {
           isActive: false,
