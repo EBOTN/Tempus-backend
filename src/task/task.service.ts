@@ -49,7 +49,7 @@ export class TaskService {
     return returnedData;
   }
 
-  async getFirst(taskId: number): Promise<TaskDto> {
+  async getById(taskId: number): Promise<TaskDto> {
     const data = await this.prisma.task.findFirst({
       where: {
         id: taskId,
@@ -67,47 +67,54 @@ export class TaskService {
     return { ...data, members };
   }
 
-  async getCreatedTasksByUserId(
-    query: GetTaskQuery,
-    userId: number,
-    projectId: number
-  ): Promise<TaskDto[]> {
-    try {
-      const data = await this.prisma.task.findMany({
-        where: {
-          title: {
-            contains: query.title || "",
-            mode: "insensitive",
+  async getByFilter(query: GetTaskQuery, projectId: number, userId: number) {
+    let filter: {
+      workers?: { some: { member: { memberId: number } } };
+      NOT?: { workers: { some: { member: { memberId: number } } } };
+    };
+    switch (query.filter) {
+      case "own": {
+        filter = {
+          workers: {
+            some: {
+              member: {
+                memberId: userId,
+              },
+            },
           },
-          creatorId: userId,
-          projectId,
-        },
-        select: SelectorTaskDto,
-      });
-
-      const returnedData = data.map((obj) => {
-        const members = obj.workers.map((worker) => ({
-          member: { ...worker.member.member, role: worker.member.role },
-          isComplete: worker.isComplete,
-          workTime: worker.workTime,
-        }));
-        delete obj["workers"];
-        return { ...obj, members };
-      });
-      return returnedData;
-    } catch (e) {
-      throw new BadRequestException(e);
+        };
+        break;
+      }
+      case "others": {
+        filter = {
+          NOT: {
+            workers: {
+              some: {
+                member: {
+                  memberId: userId,
+                },
+              },
+            },
+          },
+        };
+        break;
+      }
+      case "all": {
+        break;
+      }
     }
-  }
 
-  async getByProject(projectId: number): Promise<TaskDto[]> {
     const data = await this.prisma.task.findMany({
-      where: { projectId },
-      select: SelectorTaskDto,
-      orderBy: {
-        id: "asc",
+      where: {
+        projectId,
+        title: { contains: query.title || "", mode: "insensitive" },
+        ...filter,
       },
+      select: SelectorTaskDto,
+      skip: query.offset || undefined,
+      take: query.limit || undefined,
     });
+
     const returnedData = data.map((obj) => {
       const members = obj.workers.map((worker) => ({
         member: { ...worker.member.member, role: worker.member.role },
@@ -117,6 +124,7 @@ export class TaskService {
       delete obj["workers"];
       return { ...obj, members };
     });
+
     return returnedData;
   }
 
@@ -201,6 +209,24 @@ export class TaskService {
 
   async removeUserFromTask(taskId: number, userId: number) {
     try {
+      const task = await this.prisma.task.findFirst({
+        where: {
+          id: taskId,
+          workers: {
+            some: {
+              member: {
+                memberId: userId,
+              },
+            },
+          },
+        },
+        include: {
+          workers: true,
+        },
+      });
+      if (!task) throw new BadRequestException("Task not found");
+
+      const taskMemberProgress = task.workers[0];
       const returnedData = await this.prisma.task.update({
         where: {
           id: taskId,
@@ -208,10 +234,7 @@ export class TaskService {
         data: {
           workers: {
             delete: {
-              taskid: {
-                taskId,
-                memberId: userId,
-              },
+              id: taskMemberProgress.id,
             },
           },
         },
@@ -239,7 +262,6 @@ export class TaskService {
       });
 
       if (!project) throw new BadRequestException("Project not found");
-
       const returnedData = await this.prisma.task.update({
         where: {
           id: taskId,
@@ -298,8 +320,13 @@ export class TaskService {
     });
     if (!completedTask) throw new BadRequestException("Task not found");
     const progressTask = completedTask.workers[0];
+
+    if (!progressTask)
+      throw new BadRequestException("You are not assign to task");
+
     if (progressTask.isComplete)
       throw new BadRequestException("Task already complete");
+
     if (progressTask.TimeLines.length > 0)
       await this.timeLineService.endTimeLine(progressTask.id, userId);
 
@@ -316,6 +343,11 @@ export class TaskService {
           TimeLines: true,
         },
       });
-    } catch (e) {}
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025")
+          throw new BadRequestException("Record not found");
+      }
+    }
   }
 }

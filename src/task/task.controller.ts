@@ -53,38 +53,25 @@ export class TaskController {
     );
   }
 
-  @Get("getCreatedTasks")
-  @ApiOperation({ summary: "Get all created tasks by user" })
-  @ApiResponse({ status: 200, type: [TaskDto] })
-  @ApiParam({ name: "workspaceId", type: Number, required: true })
-  @ApiParam({ name: "projectId", type: Number, required: true })
-  getByCreatorId(
-    @Query() query: GetTaskQuery,
-    @Req() req: ExtendedRequest,
-    @Param("projectId", ParseIntPipe) projectId: number
-  ) {
-    return this.taskService.getCreatedTasksByUserId(
-      query,
-      req.userInfo.id,
-      projectId
-    );
-  }
-
   @Get()
-  @ApiOperation({ summary: "Get tasks by project" })
+  @ApiOperation({ summary: "Get tasks by filter" })
   @ApiResponse({ status: 200, type: [TaskDto] })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
-  getAll(@Param("projectId", ParseIntPipe) projectId: number) {
-    return this.taskService.getByProject(projectId);
+  getAll(
+    @Param("projectId", ParseIntPipe) projectId: number,
+    @Query() query: GetTaskQuery,
+    @Req() req: ExtendedRequest
+  ) {
+    return this.taskService.getByFilter(query, projectId, req.userInfo.id);
   }
 
   @Get("/:id")
-  @ApiOperation({ summary: "Get first task" })
+  @ApiOperation({ summary: "Get task by id" })
   @ApiResponse({ status: 200, type: [TaskDto] })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
-  getFirst(@Param("id", ParseIntPipe) id: number) {
-    return this.taskService.getFirst(id);
+  getById(@Param("id", ParseIntPipe) id: number) {
+    return this.taskService.getById(id);
   }
 
   @ApiOperation({ summary: "Create task" })
@@ -98,13 +85,6 @@ export class TaskController {
   ) {
     return this.taskService.create(body, req.userInfo.id, projectId);
   }
-
-  // @ApiOperation({ summary: "Create task for one user" })
-  // @ApiResponse({ status: 200, type: BadRequestAssignedTaskDto })
-  // @Post("createUserTask")
-  // createForCreator(@Body() body: CreateTaskDto) {
-  //   return this.taskService.createTaskForCreator(body);
-  // }
 
   @ApiOperation({ summary: "Delete task" })
   @ApiResponse({ status: 200, type: TaskDto })
@@ -165,7 +145,10 @@ export class TaskController {
   @ApiResponse({ status: 200, type: AssignedTaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
-  endTimeLine(@Param("id", ParseIntPipe) id: number, @Req() req: ExtendedRequest) {
+  endTimeLine(
+    @Param("id", ParseIntPipe) id: number,
+    @Req() req: ExtendedRequest
+  ) {
     return this.timeLineService.endTimeLine(id, req.userInfo.id);
   }
 
