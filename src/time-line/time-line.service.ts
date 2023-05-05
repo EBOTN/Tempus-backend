@@ -117,7 +117,7 @@ export class TimeLineService {
   ): Promise<AssignedTaskDto> {
     const date = new Date();
     date.setMilliseconds(0);
-    const { member, ...activeTask } = await this.prisma.assignedTask.findFirst({
+    const activeTask = await this.prisma.assignedTask.findFirst({
       where: {
         OR: [
           {
@@ -143,13 +143,18 @@ export class TimeLineService {
       },
     });
     if (!activeTask) throw new BadRequestException("Record not found");
+    const { member } = activeTask;
+
     if (activeTask.isActive && activeTask.taskId === taskId)
       throw new BadRequestException("Task already started");
+
     if (activeTask.isComplete && activeTask.taskId === taskId)
       throw new BadRequestException("Task already closed");
+
     if (activeTask.isActive) await this.endTimeLine(activeTask.taskId, userId);
     if (await this.checkWeekWorkHours(userId))
       throw new BadRequestException("You already work 40 hours");
+
     try {
       const data = await this.prisma.assignedTask.update({
         where: {
@@ -233,13 +238,13 @@ export class TimeLineService {
       throw new BadRequestException("Task already closed");
 
     const timeLineWorkTime =
-      (date.getTime() - activeTimeLine.startTime.getTime()); // Time line work time
-    console.log('asssssssssss',timeLineWorkTime)
+      date.getTime() - activeTimeLine.startTime.getTime(); // Time line work time
+    console.log("asssssssssss", timeLineWorkTime);
     let newWorkTime: number;
 
     // if user work > 60s then track time
     if (timeLineWorkTime > 60000) {
-      newWorkTime = (timeLineWorkTime + activeTask.workTime*1000)/1000;
+      newWorkTime = (timeLineWorkTime + activeTask.workTime * 1000) / 1000;
     } else {
       throw new BadRequestException("Time less than a minute is not tracked.");
     } // else time not track
