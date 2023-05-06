@@ -33,13 +33,6 @@ export class TaskController {
     private timeLineService: TimeLineService
   ) {}
 
-  // @ApiOperation({ summary: "Get all assigned tasks by user" })
-  // @ApiResponse({ status: 200, type: [BadRequestAssignedTaskDto] })
-  // @Get("getAssignedTasks")
-  // getAssignedTasks(@Query() query: GetTaskQuery) {
-  //   return this.taskService.getAssignedTasksByUserId(query);
-  // }
-
   @ApiOperation({ summary: "Get report about work for user" })
   @ApiResponse({ status: 200, type: [ReportDto] })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
@@ -67,7 +60,7 @@ export class TaskController {
 
   @Get("/:id")
   @ApiOperation({ summary: "Get task by id" })
-  @ApiResponse({ status: 200, type: [TaskDto] })
+  @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
   getById(@Param("id", ParseIntPipe) id: number) {
@@ -105,25 +98,25 @@ export class TaskController {
   }
 
   @ApiOperation({ summary: "Assign worker to task" })
-  @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
   @Post("/:id/assignWorker")
   assignUser(
     @Param("id", ParseIntPipe) id: number,
-    @Query("userId", ParseIntPipe) userId: number
+    @Body("userId", ParseIntPipe) userId: number
   ) {
     return this.taskService.assignUserToTask(id, userId);
   }
 
   @ApiOperation({ summary: "Unassign user from task" })
-  @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
   @Post("/:id/unassignWorker")
   removeUser(
     @Param("id", ParseIntPipe) id: number,
-    @Query("userId", ParseIntPipe) userId: number
+    @Body("userId", ParseIntPipe) userId: number
   ) {
     return this.taskService.removeUserFromTask(id, userId);
   }
