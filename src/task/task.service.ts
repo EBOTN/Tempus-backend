@@ -20,7 +20,10 @@ export class TaskService {
     private timeLineService: TimeLineService
   ) {}
 
-  async getMemberProgress(taskId: number, userId: number): Promise<MemberProgressDto> {
+  async getMemberProgress(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
     const data = await this.prisma.assignedTask.findFirst({
       where: {
         taskId,
@@ -315,7 +318,7 @@ export class TaskService {
     }
   }
 
-  async completeTask(taskId: number, userId: number): Promise<AssignedTaskDto> {
+  async completeTask(taskId: number, userId: number): Promise<TaskDto> {
     const completedTask = await this.prisma.task.findFirst({
       where: {
         id: taskId,
@@ -352,36 +355,29 @@ export class TaskService {
       await this.timeLineService.endTimeLine(progressTask.id, userId);
 
     try {
-      const data = await this.prisma.assignedTask.update({
+      const rawData = await this.prisma.task.update({
         where: {
-          id: progressTask.id,
+          id: taskId,
         },
         data: {
-          isActive: false,
-          isComplete: true,
-        },
-        select: {
-          id: true,
-          taskId: true,
-          memberId: true,
-          isActive: true,
-          isComplete: true,
-          workTime: true,
-          TimeLines: {
-            select: {
-              startTime: true,
-              endTime: true,
-            },
-          },
-          member: {
-            include: {
-              member: true,
+          workers: {
+            update: {
+              where: {
+                id: progressTask.id,
+              },
+              data: { isActive: false, isComplete: true },
             },
           },
         },
+        select: SelectorTaskDto
       });
-      const member = { role: data.member.role, ...data.member.member };
-      return { ...data, member };
+      const members = rawData.workers.map((obj) => ({
+        member: { ...obj.member.member, role: obj.member.role },
+        isComplete: obj.isComplete,
+        workTime: obj.workTime,
+      }));
+      delete rawData["workers"];
+      return { ...rawData, members };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")

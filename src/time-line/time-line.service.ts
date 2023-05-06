@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AssignedTaskDto } from "src/task/dto/assigned-task-dto";
 import { TimeLineDto } from "./dto/time-line-dto";
+import { SelectorTaskDto } from "src/task/dto/selector-task-dto";
+import { TaskDto } from "src/task/dto/task-dto";
 
 @Injectable()
 export class TimeLineService {
@@ -14,56 +16,52 @@ export class TimeLineService {
     userId: number,
     activeTimeLineId: number,
     newWorkTime: number
-  ): Promise<AssignedTaskDto> {
+  ): Promise<TaskDto> {
     const updatedTimeLine = timelines[0];
     timelines.shift();
-    const data = await this.prisma.assignedTask.update({
+    const rawData = await this.prisma.task.update({
       where: {
-        taskid: {
-          taskId,
-          memberId: userId,
-        },
+        id: taskId,
       },
+      select: SelectorTaskDto,
       data: {
-        isActive: false,
-        workTime: newWorkTime,
-        TimeLines: {
+        workers: {
           update: {
             where: {
-              id: activeTimeLineId,
-            },
-            data: {
-              endTime: updatedTimeLine.endTime,
-            },
-          },
-          createMany: {
-            data: timelines,
-          },
-        },
-      },
-      include: {
-        TimeLines: true,
-        member: {
-          select: {
-            member: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                avatar: true,
+              taskid: {
+                taskId,
+                memberId: userId,
               },
             },
-            role: true,
+            data: {
+              isActive: false,
+              workTime: newWorkTime,
+              TimeLines: {
+                update: {
+                  where: {
+                    id: activeTimeLineId,
+                  },
+                  data: {
+                    endTime: updatedTimeLine.endTime,
+                  },
+                },
+                createMany: {
+                  data: timelines,
+                },
+              },
+            },
           },
         },
       },
     });
 
-    const member = { ...data.member.member, role: data.member.role };
-    delete data["member"];
-    const returnedData = { ...data, member };
-    return returnedData;
+    const members = rawData.workers.map((obj) => ({
+      member: { ...obj.member.member, role: obj.member.role },
+      isComplete: obj.isComplete,
+      workTime: obj.workTime,
+    }));
+    delete rawData["workers"];
+    return { ...rawData, members };
   }
 
   async getAllTimeLinesByWorkerBetweenDates(
@@ -111,10 +109,7 @@ export class TimeLineService {
     return returnedData;
   }
 
-  async startTimeLine(
-    taskId: number,
-    userId: number
-  ): Promise<AssignedTaskDto> {
+  async startTimeLine(taskId: number, userId: number): Promise<TaskDto> {
     const date = new Date();
     date.setMilliseconds(0);
     const activeTask = await this.prisma.assignedTask.findFirst({
@@ -156,43 +151,39 @@ export class TimeLineService {
       throw new BadRequestException("You already work 40 hours");
 
     try {
-      const data = await this.prisma.assignedTask.update({
+      const rawData = await this.prisma.task.update({
         where: {
-          taskid: {
-            taskId,
-            memberId: member.id,
-          },
+          id: taskId,
         },
         data: {
-          isActive: true,
-          TimeLines: {
-            create: {
-              startTime: date,
-            },
-          },
-        },
-        include: {
-          TimeLines: true,
-          member: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
+          workers: {
+            update: {
+              where: {
+                taskid: {
+                  taskId,
+                  memberId: member.id,
                 },
               },
-              role: true,
+              data: {
+                isActive: true,
+                TimeLines: {
+                  create: {
+                    startTime: date,
+                  },
+                },
+              },
             },
           },
         },
+        select: SelectorTaskDto,
       });
-      const memberInfo = { ...data.member.member, role: data.member.role };
-      delete data["member"];
-      const returnedData = { ...data, member: memberInfo };
-      return returnedData;
+      const members = rawData.workers.map((obj) => ({
+        member: { ...obj.member.member, role: obj.member.role },
+        isComplete: obj.isComplete,
+        workTime: obj.workTime,
+      }));
+      delete rawData["workers"];
+      return { ...rawData, members };
     } catch (e) {
       console.log(e);
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -202,7 +193,7 @@ export class TimeLineService {
     }
   }
 
-  async endTimeLine(taskId: number, userId: number): Promise<AssignedTaskDto> {
+  async endTimeLine(taskId: number, userId: number): Promise<TaskDto> {
     const date = new Date();
     date.setMilliseconds(0);
 
@@ -262,50 +253,45 @@ export class TimeLineService {
       );
 
     try {
-      const data = await this.prisma.assignedTask.update({
+      const rawData = await this.prisma.task.update({
         where: {
-          taskid: {
-            taskId,
-            memberId: activeTask.member.id,
-          },
+          id: taskId,
         },
         data: {
-          isActive: false,
-          workTime: newWorkTime,
-          TimeLines: {
+          workers: {
             update: {
               where: {
-                id: activeTimeLine.id,
-              },
-              data: {
-                endTime: date,
-              },
-            },
-          },
-        },
-        include: {
-          TimeLines: true,
-          member: {
-            select: {
-              member: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  avatar: true,
+                taskid: {
+                  taskId,
+                  memberId: activeTask.member.id,
                 },
               },
-              role: true,
+              data: {
+                isActive: false,
+                workTime: newWorkTime,
+                TimeLines: {
+                  update: {
+                    where: {
+                      id: activeTimeLine.id,
+                    },
+                    data: {
+                      endTime: date,
+                    },
+                  },
+                },
+              },
             },
           },
         },
+        select: SelectorTaskDto,
       });
-
-      const memberInfo = { ...data.member.member, role: data.member.role };
-      delete data["member"];
-      const returnedData = { ...data, member: memberInfo };
-      return returnedData;
+      const members = rawData.workers.map((obj) => ({
+        member: { ...obj.member.member, role: obj.member.role },
+        isComplete: obj.isComplete,
+        workTime: obj.workTime,
+      }));
+      delete rawData["workers"];
+      return { ...rawData, members };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")

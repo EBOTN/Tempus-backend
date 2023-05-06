@@ -124,7 +124,7 @@ export class TaskController {
 
   @Post("/:taskId/startTimeLine")
   @ApiOperation({ summary: "Start track task" })
-  @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
   starTimeLine(
@@ -136,7 +136,7 @@ export class TaskController {
 
   @Post("/:taskId/endTimeLine")
   @ApiOperation({ summary: "Finish track task" })
-  @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
   endTimeLine(
@@ -150,7 +150,7 @@ export class TaskController {
   @ApiOperation({ summary: "Complete task" })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
-  @ApiResponse({ status: 200, type: AssignedTaskDto })
+  @ApiResponse({ status: 200, type: TaskDto })
   completeTask(
     @Param("taskId", ParseIntPipe) id: number,
     @Req() req: ExtendedRequest
