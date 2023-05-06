@@ -11,7 +11,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ReportService } from "src/report/report.service";
 import { TimeLineService } from "src/time-line/time-line.service";
 import { BadRequestAssignedTaskDto } from "./dto/assigned_task-info-dto";
@@ -24,6 +24,7 @@ import { ReportDto } from "src/report/dto/report-dto";
 import { AssignedTaskDto } from "./dto/assigned-task-dto";
 import { ExtendedRequest } from "src/shared/extended-request";
 import { MemberProgressDto } from "./dto/member-progress-dto";
+import { ValidationUserIdDto } from "./dto/validation-user-id-dto";
 
 @ApiTags("tasks")
 @Controller("workspace/:workspaceId/project/:projectId/task")
@@ -105,9 +106,9 @@ export class TaskController {
   @Post("/:taskId/assignWorker")
   assignUser(
     @Param("taskId", ParseIntPipe) id: number,
-    @Body("userId", ParseIntPipe) userId: number
+    @Body() data: ValidationUserIdDto
   ) {
-    return this.taskService.assignUserToTask(id, userId);
+    return this.taskService.assignUserToTask(id, data.userId);
   }
 
   @ApiOperation({ summary: "Unassign user from task" })
@@ -117,9 +118,9 @@ export class TaskController {
   @Post("/:taskId/unassignWorker")
   removeUser(
     @Param("taskId", ParseIntPipe) id: number,
-    @Body("userId", ParseIntPipe) userId: number
+    @Body() data: ValidationUserIdDto
   ) {
-    return this.taskService.removeUserFromTask(id, userId);
+    return this.taskService.removeUserFromTask(id, data.userId);
   }
 
   @Post("/:taskId/startTimeLine")
