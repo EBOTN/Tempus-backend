@@ -32,11 +32,11 @@ export class GetProjectQuerry {
 
   @ApiProperty({
     example: "all",
-    description: "Send showHidden or null",
+    description: "Send showHidden or all",
     required: false,
   })
   @IsOptional()
-  @Equals("showHidden")
+  @IsIn(["showHidden", "all"])
   readonly filter?: string;
 
   @ApiProperty({ example: 1, description: "Project title", required: false })

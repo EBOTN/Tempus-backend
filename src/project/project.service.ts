@@ -107,10 +107,23 @@ export class ProjectService {
     userId: number,
     workspaceId: number
   ): Promise<ProjectDto[]> {
+    let filter;
+    switch (query.filter) {
+      case "showHidden": {
+        filter = { isHidden: true };
+        break;
+      }
+      case "all": {
+        filter = null;
+      }
+      default: {
+        filter = { isHidden: false };
+      }
+    }
     const data = await this.prisma.project.findMany({
       where: {
         title: { contains: query.title || "", mode: "insensitive" },
-        isHidden: query.filter === "showHidden" ? true : undefined,
+        ...filter,
         workspaceId: workspaceId,
         members: {
           some: {
