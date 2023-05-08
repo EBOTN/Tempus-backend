@@ -4,13 +4,20 @@ import { IsDate, IsNotEmpty } from "class-validator";
 import { TaskModel } from "./task-model-dto";
 import { MemberDto } from "src/shared/member-dto";
 
+export class MembersInfo {
+  @ApiProperty({ description: "User info", type: MemberDto })
+  readonly member: MemberDto;
+
+  @ApiProperty({ description: "Task isComplete by user?", example: true })
+  readonly isComplete: boolean;
+
+  @ApiProperty({ description: "How much user track time", example: 1000 })
+  readonly workTime: number;
+}
+
 export class TaskDto extends OmitType(TaskModel, ["workers"]) {
-  @ApiProperty({ description: "Members assigned to task" })
-  readonly members: {
-    member: MemberDto;
-    isComplete: boolean;
-    workTime: number;
-  }[];
+  @ApiProperty({ description: "Members assigned to task", type: [MembersInfo] })
+  readonly members: MembersInfo[];
 }
 export class ReportQuerryDto {
   @IsDate()
