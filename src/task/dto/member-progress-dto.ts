@@ -8,5 +8,5 @@ export class MemberProgressDto{
     readonly trackedTime: number;
 
     @ApiProperty({description: 'osas'})
-    readonly lastTimeLineStartTime: Date
+    readonly lastTimeLineStartTime: Date | null
 }
