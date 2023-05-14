@@ -25,6 +25,7 @@ import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
 import { WorkspaceOrProjectRoleGuard } from "src/shared/WorkspaceOrProjectRoleGuard";
 import { GetRoleDto } from "src/shared/get-role-dto";
 import { ProjectRoleGuard } from "src/shared/ProjectRoleGuard";
+import { ValidationUserIdDto } from "./dto/validation-user-id-dto";
 
 @ApiTags("projects")
 @Controller("workspace/:workspaceId/projects")
@@ -126,9 +127,9 @@ export class ProjectController {
   @Post("/:projectId/addMember")
   addMember(
     @Param("projectId", ParseIntPipe) projectId: number,
-    @Body("memberId", ParseIntPipe) memberId: number
+    @Body() data: ValidationUserIdDto,
   ) {
-    return this.projectService.addMember(projectId, memberId);
+    return this.projectService.addMember(projectId, data.userId);
   }
 
   @SetMetadata("roles", ["Owner"])
@@ -140,9 +141,9 @@ export class ProjectController {
   @Post("/:projectId/removeMember")
   removeMember(
     @Param("projectId", ParseIntPipe) projectId: number,
-    @Body("memberId", ParseIntPipe) memberId: number
+    @Body() data: ValidationUserIdDto,
   ) {
-    return this.projectService.removeMember(projectId, memberId);
+    return this.projectService.removeMember(projectId, data.userId);
   }
 
   @SetMetadata("roles", ["Owner"])
