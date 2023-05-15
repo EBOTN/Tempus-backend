@@ -266,7 +266,7 @@ export class ProjectService {
     } catch (e) {}
   }
 
-  async addMember(projectId: number, memberId: number): Promise<ProjectDto> {
+  async addMember(projectId: number, userId: number): Promise<ProjectDto> {
     try {
       const data = await this.prisma.project.update({
         where: {
@@ -295,7 +295,11 @@ export class ProjectService {
         data: {
           members: {
             create: {
-              memberId,
+              member: {
+                connect: {
+                  id: userId,
+                },
+              },
             },
           },
         },
@@ -307,8 +311,16 @@ export class ProjectService {
     } catch (e) {}
   }
 
-  async removeMember(projectId: number, memberId: number): Promise<ProjectDto> {
+  async removeMember(projectId: number, userId: number): Promise<ProjectDto> {
     try {
+      const memberInfo = await this.prisma.projectMembers.findFirst({
+        where: {
+          projectId,
+          member: {
+            id: userId,
+          },
+        },
+      });
       const data = await this.prisma.project.update({
         where: {
           id: projectId,
@@ -336,10 +348,7 @@ export class ProjectService {
         data: {
           members: {
             delete: {
-              projectId_memberId: {
-                projectId,
-                memberId,
-              },
+              id: memberInfo.id,
             },
           },
         },

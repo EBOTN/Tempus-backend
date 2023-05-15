@@ -25,7 +25,7 @@ import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
 import { WorkspaceOrProjectRoleGuard } from "src/shared/WorkspaceOrProjectRoleGuard";
 import { GetRoleDto } from "src/shared/get-role-dto";
 import { ProjectRoleGuard } from "src/shared/ProjectRoleGuard";
-import { ValidationUserIdDto } from "./dto/validation-user-id-dto";
+import { ValidationUserIdDto } from "src/task/dto/validation-user-id-dto";
 
 @ApiTags("projects")
 @Controller("workspace/:workspaceId/projects")
