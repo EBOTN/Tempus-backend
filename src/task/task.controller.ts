@@ -11,7 +11,13 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { ReportService } from "src/report/report.service";
 import { TimeLineService } from "src/time-line/time-line.service";
 import { BadRequestAssignedTaskDto } from "./dto/assigned_task-info-dto";
@@ -95,7 +101,10 @@ export class TaskController {
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
   @Put("/:taskId")
-  update(@Param("taskId", ParseIntPipe) id: number, @Body() body: UpdateTaskDto) {
+  update(
+    @Param("taskId", ParseIntPipe) id: number,
+    @Body() body: UpdateTaskDto
+  ) {
     return this.taskService.update(id, body);
   }
 
@@ -159,11 +168,23 @@ export class TaskController {
     return this.taskService.completeTask(id, req.userInfo.id);
   }
 
+  @Post("/:taskId/unCompleteTask")
+  @ApiOperation({ summary: "Uncomplete task" })
+  @ApiParam({ name: "workspaceId", type: Number, required: true })
+  @ApiParam({ name: "projectId", type: Number, required: true })
+  @ApiResponse({ status: 200, type: MemberProgressDto })
+  unCompleteTask(
+    @Param("taskId", ParseIntPipe) id: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return this.taskService.unCompleteTask(id, req.userInfo.id);
+  }
+
   @Get("/:taskId/getMemberProgress")
   @ApiOperation({ summary: "Get member progress" })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
-  @ApiResponse({status: 200, type: MemberProgressDto})
+  @ApiResponse({ status: 200, type: MemberProgressDto })
   getMemberProgress(
     @Param("taskId", ParseIntPipe) id: number,
     @Req() req: ExtendedRequest

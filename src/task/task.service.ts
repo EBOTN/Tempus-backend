@@ -36,6 +36,7 @@ export class TaskService {
       select: {
         isActive: true,
         workTime: true,
+        isComplete: true,
         TimeLines: {
           orderBy: { startTime: "desc" },
           take: 1,
@@ -47,6 +48,7 @@ export class TaskService {
       isRunning: false,
       trackedTime: 0,
       lastTimeLineStartTime: null,
+      isComplete: data.isComplete,
     };
     if (data.TimeLines.length !== 0) {
       const start = new Date(data.TimeLines[0].startTime);
@@ -318,66 +320,127 @@ export class TaskService {
     }
   }
 
-  async completeTask(taskId: number, userId: number): Promise<TaskDto> {
-    const completedTask = await this.prisma.task.findFirst({
+  async unCompleteTask(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
+    const data = await this.prisma.assignedTask.findFirst({
       where: {
-        id: taskId,
+        taskId,
+        member: {
+          memberId: userId,
+        },
       },
       include: {
-        workers: {
+        TimeLines: {
           where: {
-            member: {
-              memberId: userId,
-            },
-          },
-          include: {
-            TimeLines: {
-              where: {
-                startTime: { not: null },
-                endTime: null,
-                taskId: taskId,
-              },
-            },
+            startTime: { not: null },
+            endTime: null,
+            taskId: taskId,
           },
         },
       },
     });
-    if (!completedTask) throw new BadRequestException("Task not found");
-    const progressTask = completedTask.workers[0];
 
-    if (!progressTask)
+    if (!data)
       throw new BadRequestException("You are not assign to task");
 
-    if (progressTask.isComplete)
-      throw new BadRequestException("Task already complete");
-
-    if (progressTask.TimeLines.length > 0)
-      await this.timeLineService.endTimeLine(progressTask.id, userId);
+    if (!data.isComplete)
+      throw new BadRequestException("Task not complete");
 
     try {
-      const rawData = await this.prisma.task.update({
+      const updatedRecord = await this.prisma.assignedTask.update({
         where: {
-          id: taskId,
+          id: data.id,
         },
         data: {
-          workers: {
-            update: {
-              where: {
-                id: progressTask.id,
-              },
-              data: { isActive: false, isComplete: true },
-            },
+          isComplete: true,
+        },
+        select: {
+          isActive: true,
+          workTime: true,
+          isComplete: true,
+          TimeLines: {
+            orderBy: { startTime: "desc" },
+            take: 1,
           },
         },
-        select: SelectorTaskDto
       });
-      const members = rawData.workers.map((obj) => ({
-        member: { ...obj.member.member, role: obj.member.role },
-        isComplete: obj.isComplete,
-        workTime: obj.workTime,
-      }));
-      delete rawData["workers"];
-      return { ...rawData, members };
+
+      const returnedData = {
+        isRunning: updatedRecord.isActive,
+        trackedTime: updatedRecord.workTime,
+        lastTimeLineStartTime: null,
+        isComplete: updatedRecord.isComplete,
+      };
+
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025")
+          throw new BadRequestException("Record not found");
+      }
+    }
+  }
+
+  async completeTask(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
+    const data = await this.prisma.assignedTask.findFirst({
+      where: {
+        taskId,
+        member: {
+          memberId: userId,
+        },
+      },
+      include: {
+        TimeLines: {
+          where: {
+            startTime: { not: null },
+            endTime: null,
+            taskId: taskId,
+          },
+        },
+      },
+    });
+
+    if (!data)
+      throw new BadRequestException("You are not assign to task");
+
+    if (data.isComplete)
+      throw new BadRequestException("Task already complete");
+
+    if (data.TimeLines.length > 0)
+      await this.timeLineService.endTimeLine(data.id, userId);
+
+    try {
+      const updatedRecord = await this.prisma.assignedTask.update({
+        where: {
+          id: data.id,
+        },
+        data: {
+          isComplete: true,
+        },
+        select: {
+          isActive: true,
+          workTime: true,
+          isComplete: true,
+          TimeLines: {
+            orderBy: { startTime: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      const returnedData = {
+        isRunning: updatedRecord.isActive,
+        trackedTime: updatedRecord.workTime,
+        lastTimeLineStartTime: null,
+        isComplete: updatedRecord.isComplete,
+      };
+
+      return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")

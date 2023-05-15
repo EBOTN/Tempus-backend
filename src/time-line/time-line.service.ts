@@ -45,6 +45,7 @@ export class TimeLineService {
       select: {
         isActive: true,
         workTime: true,
+        isComplete: true,
         TimeLines: {
           orderBy: { startTime: "desc" },
           take: 1,
@@ -56,6 +57,7 @@ export class TimeLineService {
       isRunning: false,
       trackedTime: 0,
       lastTimeLineStartTime: null,
+      isComplete: data.isComplete,
     };
     if (data.TimeLines.length !== 0) {
       const start = new Date(data.TimeLines[0].startTime);
@@ -174,6 +176,7 @@ export class TimeLineService {
         select: {
           isActive: true,
           workTime: true,
+          isComplete: true,
           TimeLines: {
             orderBy: { startTime: "desc" },
             take: 1,
@@ -185,6 +188,7 @@ export class TimeLineService {
         isRunning: false,
         trackedTime: 0,
         lastTimeLineStartTime: null,
+        isComplete: data.isComplete,
       };
       if (data.TimeLines.length !== 0) {
         const start = new Date(data.TimeLines[0].startTime);
@@ -193,7 +197,6 @@ export class TimeLineService {
         returnedData.lastTimeLineStartTime = data.isActive ? start : null;
       }
       return returnedData;
-  
     } catch (e) {
       console.log(e);
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -203,7 +206,10 @@ export class TimeLineService {
     }
   }
 
-  async endTimeLine(taskId: number, userId: number): Promise<MemberProgressDto> {
+  async endTimeLine(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
     const date = new Date();
     date.setMilliseconds(0);
 
@@ -287,6 +293,7 @@ export class TimeLineService {
         select: {
           isActive: true,
           workTime: true,
+          isComplete: true,
           TimeLines: {
             orderBy: { startTime: "desc" },
             take: 1,
@@ -298,6 +305,7 @@ export class TimeLineService {
         isRunning: false,
         trackedTime: 0,
         lastTimeLineStartTime: null,
+        isComplete: data.isComplete,
       };
       if (data.TimeLines.length !== 0) {
         const start = new Date(data.TimeLines[0].startTime);
