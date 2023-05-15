@@ -83,11 +83,18 @@ export class TaskService {
     userId: number
   ): Promise<TaskDto[]> {
     let filter: {
-      workers?: { some: { member: { memberId: number } } };
-      NOT?: { workers: { some: { member: { memberId: number } } } };
+      workers?: {
+        some: { member: { memberId: number }; isComplete?: boolean };
+      };
+      NOT?: {
+        workers: {
+          some: { member: { memberId: number }; isComplete?: boolean };
+        };
+      };
     };
+
     switch (query.filter) {
-      case "own": {
+      case "assigned": {
         filter = {
           workers: {
             some: {
@@ -99,7 +106,7 @@ export class TaskService {
         };
         break;
       }
-      case "others": {
+      case "unassigned": {
         filter = {
           NOT: {
             workers: {
@@ -117,6 +124,17 @@ export class TaskService {
         break;
       }
     }
+    const isComplete = !query.completedFilter
+      ? undefined
+      : query.completedFilter === "complete"
+      ? true
+      : false;
+
+    filter.workers === null
+      ? filter.NOT === null
+        ? null
+        : (filter.NOT.workers.some.isComplete = isComplete)
+      : (filter.workers.some.isComplete = isComplete);
 
     const data = await this.prisma.task.findMany({
       where: {
@@ -342,11 +360,9 @@ export class TaskService {
       },
     });
 
-    if (!data)
-      throw new BadRequestException("You are not assign to task");
+    if (!data) throw new BadRequestException("You are not assign to task");
 
-    if (!data.isComplete)
-      throw new BadRequestException("Task not complete");
+    if (!data.isComplete) throw new BadRequestException("Task not complete");
 
     try {
       const updatedRecord = await this.prisma.assignedTask.update({
@@ -405,11 +421,9 @@ export class TaskService {
       },
     });
 
-    if (!data)
-      throw new BadRequestException("You are not assign to task");
+    if (!data) throw new BadRequestException("You are not assign to task");
 
-    if (data.isComplete)
-      throw new BadRequestException("Task already complete");
+    if (data.isComplete) throw new BadRequestException("Task already complete");
 
     if (data.TimeLines.length > 0)
       await this.timeLineService.endTimeLine(data.id, userId);

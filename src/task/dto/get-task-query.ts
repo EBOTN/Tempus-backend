@@ -1,6 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  Equals,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class GetTaskQuery {
   @ApiProperty({ example: "Title", description: "Task title", required: false })
@@ -30,13 +37,23 @@ export class GetTaskQuery {
   readonly limit?: number;
 
   @ApiProperty({
-    example: "workspace",
-    description: "Workspace title",
+    example: "all",
+    description: "Assigned filter",
     required: false,
   })
   @IsOptional()
-  @IsIn(["own", "others", "all"], {
-    message: "filter must be one of the following values: own, others, all",
+  @IsIn(["assigned", "unassigned", "all"], {
+    message:
+      "filter must be one of the following values: assigned, unassigned, all",
   })
   readonly filter?: string;
+
+  @ApiProperty({
+    example: "workspace",
+    description: "Completed filter",
+    required: false,
+  })
+  @IsOptional()
+  @Equals("Completed")
+  readonly completedFilter?: string;
 }
