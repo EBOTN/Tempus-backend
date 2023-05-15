@@ -153,10 +153,11 @@ export class TimeLineService {
     if (activeTask.isComplete && activeTask.taskId === taskId)
       throw new BadRequestException("Task already closed");
 
-    if (activeTask.isActive) await this.endTimeLine(activeTask.taskId, userId);
+    if (activeTask.isActive)
+      throw new BadRequestException("You have a running task");
+
     if (await this.checkWeekWorkHours(userId))
       throw new BadRequestException("You already work 40 hours");
-
     try {
       const data = await this.prisma.assignedTask.update({
         where: {
