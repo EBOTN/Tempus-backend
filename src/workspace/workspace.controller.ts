@@ -62,7 +62,10 @@ export class WorkspaceController {
   @ApiOperation({ summary: "Get workspace by id" })
   @ApiResponse({ status: 200, type: WorkspaceDto })
   @Get("/:workspaceId")
-  findOne(@Param("workspaceId", ParseIntPipe) id: number, @Req() req: ExtendedRequest) {
+  findOne(
+    @Param("workspaceId", ParseIntPipe) id: number,
+    @Req() req: ExtendedRequest
+  ) {
     return this.workspaceService.findOne(req.userInfo.id, id);
   }
 
@@ -87,18 +90,6 @@ export class WorkspaceController {
   @Delete("/:workspaceId")
   remove(@Param("workspaceId", ParseIntPipe) id: number) {
     return this.workspaceService.remove(id);
-  }
-
-  @SetMetadata("roles", ["Owner", "Manager"])
-  @UseGuards(WorkspaceRoleGuard)
-  @ApiOperation({ summary: "Add member to workspace" })
-  @ApiResponse({ status: 200, type: WorkspaceDto })
-  @Post("/:workspaceId/addMember")
-  addMember(
-    @Param("workspaceId", ParseIntPipe) id: number,
-    @Body("memberId", ParseIntPipe) memberId: number
-  ) {
-    return this.workspaceService.addMember(id, memberId);
   }
 
   @SetMetadata("roles", ["Owner", "Manager"])
@@ -137,5 +128,37 @@ export class WorkspaceController {
     @Req() req: ExtendedRequest
   ) {
     return await this.workspaceService.getRole(workspaceId, req.userInfo.id);
+  }
+
+  @SetMetadata("roles", ["Owner"])
+  @UseGuards(WorkspaceRoleGuard)
+  @ApiOperation({ summary: "Generate invite url for workspace" })
+  @ApiResponse({ status: 200, type: String })
+  @Post("/:workspaceId/generateInviteUrl")
+  generateInviteUrl(@Param("workspaceId", ParseIntPipe) workspaceId: number) {
+    return this.workspaceService.generateInviteUrl(workspaceId);
+  }
+
+  @SetMetadata("roles", ["Owner"])
+  @UseGuards(WorkspaceRoleGuard)
+  @ApiOperation({ summary: "Remove invite url from workspace" })
+  @ApiResponse({ status: 200, type: String })
+  @Delete("/:workspaceId/removeInviteUrl")
+  removeInviteUrl(@Param("workspaceId", ParseIntPipe) workspaceId: number) {
+    return this.workspaceService.removeInviteUrl(workspaceId);
+  }
+
+  @ApiOperation({ summary: "Check invite url valid" })
+  @ApiResponse({ status: 200, type: String })
+  @Get("/checkInviteUrl/:code")
+  checkInviteUrl(@Param("code") code: string) {
+    return this.workspaceService.checkInviteUrl(code);
+  }
+
+  @ApiOperation({ summary: "Accept invite from url" })
+  @ApiResponse({ status: 200, type: WorkspaceDto })
+  @Post("/acceptInvite/:code")
+  acceptInvite(@Param("code") code: string, @Req() req: ExtendedRequest) {
+    return this.workspaceService.acceptInvite(code, req.userInfo.id);
   }
 }

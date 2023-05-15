@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma, Roles } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto";
@@ -11,6 +15,7 @@ import { RawMemberData } from "src/shared/raw-member-data";
 import { GetRoleDto } from "src/shared/get-role-dto";
 import { SelectWorkspaceDto } from "./dto/workspace.selector";
 import { RawCountDto } from "src/shared/raw-count-dto";
+import { env } from "process";
 
 @Injectable()
 export class WorkspaceService {
@@ -26,7 +31,7 @@ export class WorkspaceService {
       const coverUrl = await this.fileService.createFile(
         createWorkspaceDto.coverFile
       );
-      const data = await this.prisma.workSpace.create({
+      const workspace = await this.prisma.workSpace.create({
         data: {
           title: createWorkspaceDto.title,
           cover: coverUrl || undefined,
@@ -41,10 +46,7 @@ export class WorkspaceService {
         select: SelectWorkspaceDto,
       });
 
-      const members = this.ConvertToMemberDto(data.members);
-      const count = this.ConvertToCountDto(data._count);
-      delete data["_count"];
-      const returnedData = { ...data, members, count };
+      const returnedData = this.ConvertToWorkspaceDto(workspace);
 
       return returnedData;
     } catch (e) {
@@ -104,10 +106,7 @@ export class WorkspaceService {
         take: querry.limit || undefined,
       });
       const returnedData = data.map((obj) => {
-        const members = this.ConvertToMemberDto(obj.members);
-        const count = this.ConvertToCountDto(obj._count);
-        delete obj["_count"];
-        return { ...obj, members, count };
+        return this.ConvertToWorkspaceDto(obj);
       });
 
       return returnedData;
@@ -120,7 +119,7 @@ export class WorkspaceService {
 
   async findOne(userId: number, id: number): Promise<WorkspaceDto> {
     try {
-      const data = await this.prisma.workSpace.findFirst({
+      const workspace = await this.prisma.workSpace.findFirst({
         where: {
           id,
           OR: [
@@ -130,11 +129,7 @@ export class WorkspaceService {
         },
         select: SelectWorkspaceDto,
       });
-
-      const members = this.ConvertToMemberDto(data.members);
-      const count = this.ConvertToCountDto(data._count);
-      delete data["_count"];
-      const returnedData = { ...data, members, count };
+      const returnedData = this.ConvertToWorkspaceDto(workspace);
 
       return returnedData;
     } catch (e) {
@@ -166,7 +161,7 @@ export class WorkspaceService {
         if (cover) await this.fileService.deleteFile(cover);
       }
 
-      const data = await this.prisma.workSpace.update({
+      const updatedWorkspace = await this.prisma.workSpace.update({
         where: { id },
         data: {
           title: updateWorkspaceDto.title,
@@ -175,11 +170,7 @@ export class WorkspaceService {
         },
         select: SelectWorkspaceDto,
       });
-
-      const members = this.ConvertToMemberDto(data.members);
-      const count = this.ConvertToCountDto(data._count);
-      delete data["_count"];
-      const returnedData = { ...data, members, count };
+      const returnedData = this.ConvertToWorkspaceDto(updatedWorkspace);
 
       return returnedData;
     } catch (e) {
@@ -191,15 +182,12 @@ export class WorkspaceService {
 
   async remove(id: number): Promise<WorkspaceDto> {
     try {
-      const data = await this.prisma.workSpace.delete({
+      const updatedWorkspace = await this.prisma.workSpace.delete({
         where: { id },
         select: SelectWorkspaceDto,
       });
 
-      const members = this.ConvertToMemberDto(data.members);
-      const count = this.ConvertToCountDto(data._count);
-      delete data["_count"];
-      const returnedData = { ...data, members, count };
+      const returnedData = this.ConvertToWorkspaceDto(updatedWorkspace);
 
       return returnedData;
     } catch (e) {
@@ -214,7 +202,7 @@ export class WorkspaceService {
     memberId: number
   ): Promise<WorkspaceDto> {
     try {
-      const data = await this.prisma.workSpace.update({
+      const updatedWorkspace = await this.prisma.workSpace.update({
         where: { id: workspaceId },
         data: {
           members: {
@@ -225,11 +213,7 @@ export class WorkspaceService {
         },
         select: SelectWorkspaceDto,
       });
-
-      const members = this.ConvertToMemberDto(data.members);
-      const count = this.ConvertToCountDto(data._count);
-      delete data["_count"];
-      const returnedData = { ...data, members, count };
+      const returnedData = this.ConvertToWorkspaceDto(updatedWorkspace);
 
       return returnedData;
     } catch (e) {
@@ -244,7 +228,7 @@ export class WorkspaceService {
     memberId: number
   ): Promise<WorkspaceDto> {
     try {
-      const data = await this.prisma.workSpace.update({
+      const updatedWorkspace = await this.prisma.workSpace.update({
         where: {
           id: workSpaceId,
         },
@@ -261,10 +245,7 @@ export class WorkspaceService {
         select: SelectWorkspaceDto,
       });
 
-      const members = this.ConvertToMemberDto(data.members);
-      const count = this.ConvertToCountDto(data._count);
-      delete data["_count"];
-      const returnedData = { ...data, members, count };
+      const returnedData = this.ConvertToWorkspaceDto(updatedWorkspace);
 
       return returnedData;
     } catch (e) {
@@ -308,6 +289,99 @@ export class WorkspaceService {
     return returnedData;
   }
 
+  async generateInviteUrl(workspaceId: number): Promise<string> {
+    const code = Math.random().toString(36).substring(7);
+    try {
+      const updatedWorkspace = await this.prisma.workSpace.update({
+        where: {
+          id: workspaceId,
+        },
+        data: {
+          WorkspaceInviteUrl: {
+            upsert: {
+              create: { code },
+              update: {
+                code,
+              },
+            },
+          },
+        },
+        select: SelectWorkspaceDto,
+      });
+      const returnedData = `${env.FRONT_URL}/invite/${code}`;
+      return returnedData;
+    } catch (e) {}
+  }
+
+  async removeInviteUrl(workspaceId: number) {
+    try {
+      const updatedWorkspace = await this.prisma.workSpace.update({
+        where: {
+          id: workspaceId,
+        },
+        data: {
+          WorkspaceInviteUrl: {
+            delete: true,
+          },
+        },
+        select: SelectWorkspaceDto,
+      });
+      return "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError)
+        throw new BadRequestException("Invite url not found");
+    }
+  }
+
+  async checkInviteUrl(code: string): Promise<WorkspaceDto> {
+    const workspace = await this.prisma.workSpace.findFirst({
+      where: {
+        WorkspaceInviteUrl: {
+          code,
+        },
+      },
+      select: SelectWorkspaceDto,
+    });
+    if (!workspace) throw new NotFoundException();
+    const returnedData = this.ConvertToWorkspaceDto(workspace);
+    return returnedData;
+  }
+
+  async acceptInvite(code: string, userId: number): Promise<WorkspaceDto> {
+    const workspace = await this.prisma.workSpace.findFirst({
+      where: {
+        WorkspaceInviteUrl: {
+          code,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (!workspace) throw new BadRequestException("Workspace not found");
+    try {
+      const updatedWorkspace = await this.prisma.workSpace.update({
+        where: { id: workspace.id },
+        data: {
+          members: {
+            create: {
+              memberId: userId,
+            },
+          },
+        },
+        select: SelectWorkspaceDto,
+      });
+
+      const returnedData = this.ConvertToWorkspaceDto(updatedWorkspace);
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2002")
+        throw new BadRequestException("You are already a member of this workspace");
+      };
+    }
+  }
+
   private ConvertToMemberDto(data: RawMemberData[]): MemberDto[] {
     return data.map((item) => ({ ...item.member, role: item.role }));
   }
@@ -315,5 +389,14 @@ export class WorkspaceService {
   private ConvertToCountDto(data: RawCountDto): CountDto {
     const count = data;
     return count;
+  }
+
+  private ConvertToWorkspaceDto(data): WorkspaceDto {
+    const members = this.ConvertToMemberDto(data.members);
+    const count = this.ConvertToCountDto(data._count);
+    delete data["_count"];
+    const returnedData = { ...data, members, count };
+
+    return returnedData;
   }
 }
