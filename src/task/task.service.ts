@@ -7,10 +7,6 @@ import { GetTaskQuery } from "./dto/get-task-query";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { TaskDto } from "./dto/task-dto";
 import { SelectorTaskDto } from "./dto/selector-task-dto";
-import { AssignedTaskDto } from "./dto/assigned-task-dto";
-import { SelectAssignedTask } from "./dto/selector-assigned-task-dto";
-import { RawMemberData } from "src/shared/raw-member-data";
-import { MemberDto } from "src/shared/member-dto";
 import { MemberProgressDto } from "./dto/member-progress-dto";
 
 @Injectable()
