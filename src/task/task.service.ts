@@ -92,23 +92,10 @@ export class TaskService {
         };
       };
     };
-
-    switch (query.filter) {
-      case "assigned": {
-        filter = {
-          workers: {
-            some: {
-              member: {
-                memberId: userId,
-              },
-            },
-          },
-        };
-        break;
-      }
-      case "unassigned": {
-        filter = {
-          NOT: {
+    if (query.filter)
+      switch (query.filter) {
+        case "assigned": {
+          filter = {
             workers: {
               some: {
                 member: {
@@ -116,25 +103,41 @@ export class TaskService {
                 },
               },
             },
-          },
-        };
-        break;
+          };
+          break;
+        }
+        case "unassigned": {
+          filter = {
+            NOT: {
+              workers: {
+                some: {
+                  member: {
+                    memberId: userId,
+                  },
+                },
+              },
+            },
+          };
+          break;
+        }
+        case "all": {
+          break;
+        }
       }
-      case "all": {
-        break;
-      }
-    }
-    const isComplete = !query.completedFilter
-      ? undefined
-      : query.completedFilter === "complete"
-      ? true
-      : false;
 
-    filter.workers === null
-      ? filter.NOT === null
-        ? null
-        : (filter.NOT.workers.some.isComplete = isComplete)
-      : (filter.workers.some.isComplete = isComplete);
+    if (query.completedFilter) {
+      const isComplete = !query.completedFilter
+        ? undefined
+        : query.completedFilter === "complete"
+        ? true
+        : false;
+
+      filter.workers === null
+        ? filter.NOT === null
+          ? null
+          : (filter.NOT.workers.some.isComplete = isComplete)
+        : (filter.workers.some.isComplete = isComplete);
+    }
 
     const data = await this.prisma.task.findMany({
       where: {
