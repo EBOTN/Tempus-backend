@@ -369,7 +369,7 @@ export class TaskService {
           id: data.id,
         },
         data: {
-          isComplete: true,
+          isComplete: false,
         },
         select: {
           isActive: true,
@@ -414,7 +414,6 @@ export class TaskService {
           where: {
             startTime: { not: null },
             endTime: null,
-            taskId: taskId,
           },
         },
       },
@@ -425,7 +424,7 @@ export class TaskService {
     if (data.isComplete) throw new BadRequestException("Task already complete");
 
     if (data.TimeLines.length > 0)
-      await this.timeLineService.endTimeLine(data.id, userId);
+      await this.timeLineService.endTimeLine(taskId, userId);
 
     try {
       const updatedRecord = await this.prisma.assignedTask.update({
