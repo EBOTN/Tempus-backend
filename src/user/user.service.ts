@@ -32,12 +32,14 @@ export class UserService {
     private mailService: EmailService
   ) {}
 
-  async changeMail(id: number, email: string) {
+  async changeMail(userId: number, email: string) {
     const token = this.tokenService.generateChangeMailToken({
       email,
-      accountId: id,
+      accountId: userId,
     });
-    return await this.mailService.sendChangeMail(email, token);
+    const user = await this.getById(userId)
+
+    return await this.mailService.sendChangeMail(email, token, user.firstName);
   }
 
   async create(data: CreateUserDto): Promise<UserDto> {

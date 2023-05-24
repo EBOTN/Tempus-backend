@@ -21,14 +21,16 @@ export class EmailService {
     });
   }
 
-  async sendChangeMail(email: string, token: string) {
-    const url = `${env.FRONT_URL}/user/confirmChangeMail/${token}`;
+  async sendChangeMail(email: string, token: string, firstName: string) {
+    const url = `${env.FRONT_URL}/confirm-change-mail/${token}`;
     return await this.mailerService.sendMail({
       to: email,
-      template: "./bebra",
+      template: "./confirmMailChangeTemplate",
       context: {
         url,
         email,
+        siteUrl: env.FRONT_URL,
+        firstName,
       },
     });
   }
