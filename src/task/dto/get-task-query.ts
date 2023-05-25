@@ -49,11 +49,13 @@ export class GetTaskQuery {
   readonly filter?: string;
 
   @ApiProperty({
-    example: "workspace",
+    example: "completed",
     description: "Completed filter",
     required: false,
   })
   @IsOptional()
-  @Equals("Completed")
+  @IsIn(["completed", "uncompleted"], {
+    message: "completed filter must be one of the following values: completed, uncompleted"
+  })
   readonly completedFilter?: string;
 }

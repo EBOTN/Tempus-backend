@@ -78,20 +78,32 @@ export class TaskService {
     projectId: number,
     userId: number
   ): Promise<TaskDto[]> {
-    let filter: {
+    const filter: {
       workers?: {
-        some: { member: { memberId: number }; isComplete?: boolean };
+        some: { member: { memberId: number } };
       };
       NOT?: {
         workers: {
-          some: { member: { memberId: number }; isComplete?: boolean };
+          some: { member: { memberId: number } };
         };
       };
-    };
+      isComplete?: boolean;
+    } = {};
+
     if (query.filter)
       switch (query.filter) {
         case "assigned": {
-          filter = {
+          filter.workers = {
+            some: {
+              member: {
+                memberId: userId,
+              },
+            },
+          };
+          break;
+        }
+        case "unassigned": {
+          filter.NOT = {
             workers: {
               some: {
                 member: {
@@ -102,37 +114,23 @@ export class TaskService {
           };
           break;
         }
-        case "unassigned": {
-          filter = {
-            NOT: {
-              workers: {
-                some: {
-                  member: {
-                    memberId: userId,
-                  },
-                },
-              },
-            },
-          };
-          break;
-        }
-        case "all": {
+        default: {
           break;
         }
       }
 
     if (query.completedFilter) {
-      const isComplete = !query.completedFilter
-        ? undefined
-        : query.completedFilter === "complete"
-        ? true
-        : false;
-
-      filter.workers === null
-        ? filter.NOT === null
-          ? null
-          : (filter.NOT.workers.some.isComplete = isComplete)
-        : (filter.workers.some.isComplete = isComplete);
+      switch (query.completedFilter) {
+        case "completed":
+          filter.isComplete = true;
+          break;
+        case "uncompleted":
+          filter.isComplete = false;
+          break;
+        default: {
+          break;
+        }
+      }
     }
 
     const data = await this.prisma.task.findMany({
