@@ -26,6 +26,7 @@ model Task {
   id          Int            @id @default(autoincrement())
   title       String
   description String?
+  isComplete  Boolean        @default(false)
   creatorId   Int
   projectId   Int            @default(0)
   creator     User           @relation("createdTasks", fields: [creatorId], references: [id], onDelete: Cascade, map: "creator_fkey")
