@@ -90,48 +90,31 @@ export class TaskService {
       isComplete?: boolean;
     } = {};
 
-    if (query.filter)
-      switch (query.filter) {
-        case "assigned": {
-          filter.workers = {
+    query.filter === null
+      ? null
+      : query.filter === "assigned"
+      ? (filter.workers = {
+          some: {
+            member: {
+              memberId: userId,
+            },
+          },
+        })
+      : (filter.NOT = {
+          workers: {
             some: {
               member: {
                 memberId: userId,
               },
             },
-          };
-          break;
-        }
-        case "unassigned": {
-          filter.NOT = {
-            workers: {
-              some: {
-                member: {
-                  memberId: userId,
-                },
-              },
-            },
-          };
-          break;
-        }
-        default: {
-          break;
-        }
-      }
+          },
+        });
 
-    if (query.completedFilter) {
-      switch (query.completedFilter) {
-        case "completed":
-          filter.isComplete = true;
-          break;
-        case "uncompleted":
-          filter.isComplete = false;
-          break;
-        default: {
-          break;
-        }
-      }
-    }
+    query.completedFilter === null
+      ? null
+      : query.completedFilter === "completed"
+      ? (filter.isComplete = true)
+      : (filter.isComplete = false);
 
     const data = await this.prisma.task.findMany({
       where: {
@@ -335,7 +318,7 @@ export class TaskService {
     }
   }
 
-  async unCompleteTask(
+  async unCompleteWork(
     taskId: number,
     userId: number
   ): Promise<MemberProgressDto> {
@@ -396,7 +379,7 @@ export class TaskService {
     }
   }
 
-  async completeTask(
+  async completeWork(
     taskId: number,
     userId: number
   ): Promise<MemberProgressDto> {
@@ -406,6 +389,7 @@ export class TaskService {
         member: {
           memberId: userId,
         },
+        isComplete: false,
       },
       include: {
         TimeLines: {
@@ -457,5 +441,74 @@ export class TaskService {
           throw new BadRequestException("Record not found");
       }
     }
+  }
+
+  async completeTask(taskId: number): Promise<TaskDto> {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+      },
+      include: {
+        workers: true,
+      },
+    });
+    if (!task) throw new BadRequestException("Task not found");
+
+    task.workers.map((worker) => {
+      if (!worker.isComplete)
+        throw new BadRequestException(
+          "To complete a task, all employees must mark it as completed."
+        );
+    });
+
+    const rawData = await this.prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        isComplete: true,
+      },
+      select: SelectorTaskDto,
+    });
+    const members = rawData.workers.map((obj) => ({
+      member: { ...obj.member.member, role: obj.member.role },
+      isComplete: obj.isComplete,
+      workTime: obj.workTime,
+    }));
+    delete rawData["workers"];
+
+    return { ...rawData, members };
+  }
+
+  async unCompleteTask(taskId: number): Promise<TaskDto> {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+      },
+      include: {
+        workers: true,
+      },
+    });
+    if (!task) throw new BadRequestException("Task not found");
+
+    if(!task.isComplete) throw new BadRequestException('Task not completed')
+
+    const rawData = await this.prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        isComplete: false,
+      },
+      select: SelectorTaskDto,
+    });
+    const members = rawData.workers.map((obj) => ({
+      member: { ...obj.member.member, role: obj.member.role },
+      isComplete: obj.isComplete,
+      workTime: obj.workTime,
+    }));
+    delete rawData["workers"];
+
+    return { ...rawData, members };
   }
 }

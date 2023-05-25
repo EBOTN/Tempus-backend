@@ -29,6 +29,7 @@ import { ReportDto } from "src/report/dto/report-dto";
 import { ExtendedRequest } from "src/shared/extended-request";
 import { MemberProgressDto } from "./dto/member-progress-dto";
 import { ValidationUserIdDto } from "./dto/validation-user-id-dto";
+import { TaskIsNotCompleteGuard } from "./task-isComplete-guard";
 
 @ApiTags("tasks")
 @Controller("workspace/:workspaceId/project/:projectId/task")
@@ -106,6 +107,7 @@ export class TaskController {
     return this.taskService.update(id, body);
   }
 
+  @UseGuards(TaskIsNotCompleteGuard)
   @ApiOperation({ summary: "Assign worker to task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
@@ -118,6 +120,7 @@ export class TaskController {
     return this.taskService.assignUserToTask(id, data.userId);
   }
 
+  @UseGuards(TaskIsNotCompleteGuard)
   @ApiOperation({ summary: "Unassign user from task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
@@ -130,6 +133,7 @@ export class TaskController {
     return this.taskService.removeUserFromTask(id, data.userId);
   }
 
+  @UseGuards(TaskIsNotCompleteGuard)
   @Post("/:taskId/startTimeLine")
   @ApiOperation({ summary: "Start track task" })
   @ApiResponse({ status: 200, type: MemberProgressDto })
@@ -142,6 +146,7 @@ export class TaskController {
     return this.timeLineService.startTimeLine(id, req.userInfo.id);
   }
 
+  @UseGuards(TaskIsNotCompleteGuard)
   @Post("/:taskId/endTimeLine")
   @ApiOperation({ summary: "Finish track task" })
   @ApiResponse({ status: 200, type: MemberProgressDto })
@@ -154,28 +159,49 @@ export class TaskController {
     return this.timeLineService.endTimeLine(id, req.userInfo.id);
   }
 
+  @UseGuards(TaskIsNotCompleteGuard)
+  @Post("/:taskId/completeWork")
+  @ApiOperation({ summary: "Complete work" })
+  @ApiParam({ name: "workspaceId", type: Number, required: true })
+  @ApiParam({ name: "projectId", type: Number, required: true })
+  @ApiResponse({ status: 200, type: MemberProgressDto })
+  completeWork(
+    @Param("taskId", ParseIntPipe) id: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return this.taskService.completeWork(id, req.userInfo.id);
+  }
+
+  @UseGuards(TaskIsNotCompleteGuard)
+  @Post("/:taskId/unCompleteWork")
+  @ApiOperation({ summary: "Uncomplete work" })
+  @ApiParam({ name: "workspaceId", type: Number, required: true })
+  @ApiParam({ name: "projectId", type: Number, required: true })
+  @ApiResponse({ status: 200, type: MemberProgressDto })
+  unCompleteWork(
+    @Param("taskId", ParseIntPipe) id: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return this.taskService.unCompleteWork(id, req.userInfo.id);
+  }
+
+  @UseGuards(TaskIsNotCompleteGuard)
   @Post("/:taskId/completeTask")
   @ApiOperation({ summary: "Complete task" })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
-  @ApiResponse({ status: 200, type: MemberProgressDto })
-  completeTask(
-    @Param("taskId", ParseIntPipe) id: number,
-    @Req() req: ExtendedRequest
-  ) {
-    return this.taskService.completeTask(id, req.userInfo.id);
+  @ApiResponse({ status: 200, type: TaskDto })
+  completeTask(@Param("taskId", ParseIntPipe) id: number) {
+    return this.taskService.completeTask(id);
   }
 
   @Post("/:taskId/unCompleteTask")
   @ApiOperation({ summary: "Uncomplete task" })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
   @ApiParam({ name: "projectId", type: Number, required: true })
-  @ApiResponse({ status: 200, type: MemberProgressDto })
-  unCompleteTask(
-    @Param("taskId", ParseIntPipe) id: number,
-    @Req() req: ExtendedRequest
-  ) {
-    return this.taskService.unCompleteTask(id, req.userInfo.id);
+  @ApiResponse({ status: 200, type: TaskDto })
+  unCompleteTask(@Param("taskId", ParseIntPipe) id: number) {
+    return this.taskService.unCompleteTask(id);
   }
 
   @Get("/:taskId/getMemberProgress")
