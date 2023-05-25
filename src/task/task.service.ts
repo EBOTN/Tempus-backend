@@ -89,26 +89,31 @@ export class TaskService {
       };
       isComplete?: boolean;
     } = {};
-
-    query.filter === null
-      ? null
-      : query.filter === "assigned"
-      ? (filter.workers = {
-          some: {
-            member: {
-              memberId: userId,
-            },
-          },
-        })
-      : (filter.NOT = {
-          workers: {
+    if (query.filter !== null)
+      switch (query.filter) {
+        case "assigned":
+          filter.workers = {
             some: {
               member: {
                 memberId: userId,
               },
             },
-          },
-        });
+          };
+          break;
+
+        case "unassigned":
+          filter.NOT = {
+            workers: {
+              some: {
+                member: {
+                  memberId: userId,
+                },
+              },
+            },
+          };
+        case "all":
+          break;
+      }
 
     query.completedFilter === null
       ? null
@@ -491,7 +496,7 @@ export class TaskService {
     });
     if (!task) throw new BadRequestException("Task not found");
 
-    if(!task.isComplete) throw new BadRequestException('Task not completed')
+    if (!task.isComplete) throw new BadRequestException("Task not completed");
 
     const rawData = await this.prisma.task.update({
       where: {
