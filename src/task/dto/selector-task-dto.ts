@@ -4,6 +4,7 @@ export const SelectorTaskDto = {
   id: true,
   title: true,
   description: true,
+  isComplete: true,
   creator: {
     select: {
       id: true,

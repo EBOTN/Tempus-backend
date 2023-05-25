@@ -12,6 +12,9 @@ export class TaskModel {
   @IsNotEmpty()
   readonly title: string;
 
+  @ApiProperty({example: true, type: Boolean, description: "Task is complete?"})
+  readonly isComplete: boolean;
+
   @ApiProperty({ example: "Description", description: "Task description", required: false })
   @IsOptional()
   @IsString()
