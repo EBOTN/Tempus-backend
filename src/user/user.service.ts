@@ -37,9 +37,9 @@ export class UserService {
       email,
       accountId: userId,
     });
-    const user = await this.getById(userId)
+    const user = await this.getById(userId);
 
-    return await this.mailService.sendChangeMail(email, token, user.firstName);
+    await this.mailService.sendChangeMail(email, token, user.firstName);
   }
 
   async create(data: CreateUserDto): Promise<UserDto> {
@@ -189,13 +189,13 @@ export class UserService {
 
   async update(id: number, newData: UpdateUserDto): Promise<UserDto> {
     try {
-      const {avatar} = await this.prisma.user.findFirst({
+      const { avatar } = await this.prisma.user.findFirst({
         where: { id },
         select: {
           avatar: true,
         },
       });
-      
+
       const coverUrl = await this.fileService.createFile(newData.avatarFile);
       await this.fileService.deleteFile(avatar);
 
@@ -239,12 +239,12 @@ export class UserService {
     } catch (e) {}
   }
 
-  async confirmChangeMail(token: string): Promise<UserDto> {
+  async confirmChangeMail(token: string) {
     const { email, accountId } =
       this.tokenService.validateChangeMailToken(token);
     if (!email || !accountId)
       throw new HttpException("Not found", HttpStatus.NOT_FOUND);
-    const returnedData = await this.prisma.user.update({
+    await this.prisma.user.update({
       where: {
         id: accountId,
       },
@@ -253,7 +253,6 @@ export class UserService {
       },
       select: new ConfigUserWithoutPassword(),
     });
-    return returnedData;
   }
 
   async checkMailToken(token: string, res: Response) {

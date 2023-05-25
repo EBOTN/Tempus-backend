@@ -69,14 +69,19 @@ export class UserController {
   // }
 
   @ApiOperation({ summary: "Change mail by token" })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 204 })
   @Get("/confirmChangeMail/:token")
-  async confirmChangeMail(@Param("token") token: string){
-    return await this.userService.confirmChangeMail(token)
+  async confirmChangeMail(@Param("token") token: string) {
+    return await this.userService.confirmChangeMail(token);
   }
 
+  @ApiOperation({ summary: "Send change mail message" })
+  @ApiResponse({ status: 204 })
   @Post("/changeMail")
-  async changeMail(@Req() req: ExtendedRequest, @Body() body: ChangeUserMailDto){
-    return await this.userService.changeMail(req.userInfo.id, body.email)
+  async changeMail(
+    @Req() req: ExtendedRequest,
+    @Body() body: ChangeUserMailDto
+  ) {
+    return await this.userService.changeMail(req.userInfo.id, body.email);
   }
 }
