@@ -115,8 +115,8 @@ export class TaskService {
           break;
       }
 
-    if (query?.completedFilter === "completed") filter.isComplete === true;
-    if (query?.completedFilter === "uncompleted") filter.isComplete === false;
+    if (query?.completedFilter === "completed") filter.isComplete = true;
+    if (query?.completedFilter === "uncompleted") filter.isComplete = false;
 
     const data = await this.prisma.task.findMany({
       where: {
