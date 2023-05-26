@@ -89,8 +89,8 @@ export class TaskService {
       };
       isComplete?: boolean;
     } = {};
-    if (query.filter !== null)
-      switch (query.filter) {
+    if (query.assignedFilter !== null)
+      switch (query.assignedFilter) {
         case "assigned":
           filter.workers = {
             some: {
@@ -115,11 +115,8 @@ export class TaskService {
           break;
       }
 
-    query.completedFilter === null
-      ? null
-      : query.completedFilter === "completed"
-      ? (filter.isComplete = true)
-      : (filter.isComplete = false);
+    if (query?.completedFilter === "completed") filter.isComplete === true;
+    if (query?.completedFilter === "uncompleted") filter.isComplete === false;
 
     const data = await this.prisma.task.findMany({
       where: {

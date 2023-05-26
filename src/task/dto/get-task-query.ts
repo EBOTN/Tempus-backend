@@ -46,7 +46,7 @@ export class GetTaskQuery {
     message:
       "filter must be one of the following values: assigned, unassigned, all",
   })
-  readonly filter?: string;
+  readonly assignedFilter?: string;
 
   @ApiProperty({
     example: "completed",
