@@ -22,7 +22,7 @@ export class EmailService {
   }
 
   async sendChangeMail(email: string, token: string, firstName: string) {
-    const url = `${env.FRONT_URL}/confirm-change-mail/${token}`;
+    const url = `${env.FRONT_URL}/confirm-change-mail/?token=${token}`;
     return await this.mailerService.sendMail({
       to: email,
       template: "./confirmMailChangeTemplate",
