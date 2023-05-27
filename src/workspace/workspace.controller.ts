@@ -34,6 +34,7 @@ import { MemoryStoredFile } from "nestjs-form-data";
 import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
 import { UpdateRoleDto } from "src/shared/update-role.dto";
 import { GetRoleDto } from "src/shared/get-role-dto";
+import { ValidationUserIdDto } from "src/task/dto/validation-user-id-dto";
 
 @ApiTags("Workspace")
 @Controller("workspace")
@@ -99,9 +100,9 @@ export class WorkspaceController {
   @Post("/:workspaceId/removeMember")
   removeMember(
     @Param("workspaceId", ParseIntPipe) id: number,
-    @Body("memberId", ParseIntPipe) memberId: number
+    @Body("memberId", ParseIntPipe) data: ValidationUserIdDto
   ) {
-    return this.workspaceService.removeMember(id, memberId);
+    return this.workspaceService.removeMember(id, data.userId);
   }
 
   @SetMetadata("roles", ["Owner", "Manager"])
