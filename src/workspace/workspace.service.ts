@@ -335,7 +335,7 @@ export class WorkspaceService {
       },
     });
     if (!workspace) throw new BadRequestException("Workspace not found");
-    if (workspace.WorkspaceInviteUrl.code)
+    if (workspace.WorkspaceInviteUrl)
       return `${env.FRONT_URL}/invite/${workspace.WorkspaceInviteUrl.code}`;
     return "";
   }
