@@ -158,7 +158,7 @@ export class WorkspaceController {
   }
 
   @ApiOperation({ summary: "Check invite url valid" })
-  @ApiResponse({ status: 200, type: String })
+  @ApiResponse({ status: 200, type: WorkspaceDto })
   @Get("/checkInviteUrl/:code")
   checkInviteUrl(@Param("code") code: string) {
     return this.workspaceService.checkInviteUrl(code);
