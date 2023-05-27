@@ -335,7 +335,9 @@ export class WorkspaceService {
       },
     });
     if (!workspace) throw new BadRequestException("Workspace not found");
-    return `${env.FRONT_URL}/invite/${workspace.WorkspaceInviteUrl.code}`;
+    if (workspace.WorkspaceInviteUrl.code)
+      return `${env.FRONT_URL}/invite/${workspace.WorkspaceInviteUrl.code}`;
+    return "";
   }
 
   async removeInviteUrl(workspaceId: number) {
