@@ -259,8 +259,8 @@ export class WorkspaceService {
     workspaceId: number,
     userId: number,
     role: Roles
-  ) {
-    const returnedData = await this.prisma.workSpaceMembers.update({
+  ): Promise<WorkspaceDto> {
+    const members = await this.prisma.workSpaceMembers.update({
       where: {
         workspaceId_memberId: {
           workspaceId,
@@ -271,6 +271,14 @@ export class WorkspaceService {
         role,
       },
     });
+    const workspace = await this.prisma.workSpace.findFirst({
+      where: {
+        id: workspaceId,
+      },
+      select: SelectWorkspaceDto,
+    });
+    if (!workspace) throw new NotFoundException();
+    const returnedData = this.ConvertToWorkspaceDto(workspace);
     return returnedData;
   }
 

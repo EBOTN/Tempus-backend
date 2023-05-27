@@ -107,6 +107,8 @@ export class WorkspaceController {
 
   @SetMetadata("roles", ["Owner", "Manager"])
   @UseGuards(WorkspaceRoleGuard)
+  @ApiOperation({ summary: "Change workspace member role" })
+  @ApiResponse({ status: 200, type: WorkspaceDto })
   @Patch("/:workspaceId/changeWorkspaceRole")
   async changeWorkspaceRole(
     @Param("workspaceId", ParseIntPipe) id: number,
