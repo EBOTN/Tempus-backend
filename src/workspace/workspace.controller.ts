@@ -139,6 +139,15 @@ export class WorkspaceController {
     return this.workspaceService.generateInviteUrl(workspaceId);
   }
 
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceRoleGuard)
+  @ApiOperation({ summary: "Get invite url for workspace" })
+  @ApiResponse({ status: 200, type: String })
+  @Get("/:workspaceId/getInviteUrl")
+  getInviteUrl(@Param("workspaceId", ParseIntPipe) workspaceId: number) {
+    return this.workspaceService.getInviteUrl(workspaceId);
+  }
+
   @SetMetadata("roles", ["Owner"])
   @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Remove invite url from workspace" })

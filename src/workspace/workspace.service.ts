@@ -313,6 +313,23 @@ export class WorkspaceService {
     } catch (e) {}
   }
 
+  async getInviteUrl(workspaceId: number): Promise<String> {
+    const workspace = await this.prisma.workSpace.findFirst({
+      where: {
+        id: workspaceId,
+      },
+      select: {
+        WorkspaceInviteUrl: {
+          select: {
+            code: true,
+          },
+        },
+      },
+    });
+    if (!workspace) throw new BadRequestException("Workspace not found");
+    return `${env.FRONT_URL}/invite/${workspace.WorkspaceInviteUrl.code}`;
+  }
+
   async removeInviteUrl(workspaceId: number) {
     try {
       const updatedWorkspace = await this.prisma.workSpace.update({
@@ -377,8 +394,10 @@ export class WorkspaceService {
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2002")
-        throw new BadRequestException("You are already a member of this workspace");
-      };
+          throw new BadRequestException(
+            "You are already a member of this workspace"
+          );
+      }
     }
   }
 
