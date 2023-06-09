@@ -100,7 +100,7 @@ export class WorkspaceController {
   @Post("/:workspaceId/removeMember")
   removeMember(
     @Param("workspaceId", ParseIntPipe) id: number,
-    @Body("memberId", ParseIntPipe) data: ValidationUserIdDto
+    @Body() data: ValidationUserIdDto
   ) {
     return this.workspaceService.removeMember(id, data.userId);
   }
