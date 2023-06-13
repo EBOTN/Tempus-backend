@@ -83,7 +83,7 @@ export class ReportService {
         rawMemberInfo.TimeLines.map((timeLine) => {
           const trackedTime =
             timeLine.endTime.getTime() - timeLine.startTime.getTime();
-          const day = timeLine.startTime;
+          const day = new Date(timeLine.startTime);
           day.setHours(0);
           day.setMinutes(0);
           day.setSeconds(0);
