@@ -19,6 +19,9 @@ export class ReportService {
     });
     createReportDto.dateFrom.setUTCHours(0, 0, 0, 0);
     createReportDto.dateTo.setUTCHours(0, 0, 0, 0);
+    if (createReportDto.dateFrom.getTime() === createReportDto.dateTo.getTime())
+      createReportDto.dateTo.setUTCHours(23, 59, 59, 999);
+
     const rawTasks = await this.prisma.task.findMany({
       where: {
         id: createReportDto?.taskId,
