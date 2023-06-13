@@ -300,6 +300,7 @@ export class ProjectService {
                   id: userId,
                 },
               },
+              role: Roles.Member,
             },
           },
         },
