@@ -38,7 +38,7 @@ export class AuthService {
     if (!email) throw new BadRequestException("Token not valid");
     const hashPassword = await this.hashPassword(newPassword);
     const user = await this.userService.getByEmail(email);
-    await this.userService.update(user.id, { password: hashPassword });
+    await this.userService.restorePassword(user.id, hashPassword);
   }
 
   async signIn({ email, password }, res: Response): Promise<Response> {

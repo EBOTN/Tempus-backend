@@ -166,7 +166,6 @@ export class WorkspaceService {
         data: {
           title: updateWorkspaceDto.title,
           cover: coverUrl || undefined,
-          ownerId: updateWorkspaceDto.ownerId,
         },
         select: SelectWorkspaceDto,
       });
