@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { MemberDto } from "src/shared/member-dto";
 import { TimeLineDto } from "src/time-line/dto/time-line-dto";
+import { UserDto } from "src/user/dto/user-dto";
 
 export class AssignedTaskDto {
   @ApiProperty({ example: "1", description: "Assigned task id" })
@@ -28,8 +29,8 @@ export class AssignedTaskDto {
   readonly TimeLines: TimeLineDto[];
 
   @ApiProperty({
-    type: [MemberDto],
+    type: UserDto,
     description: "Member info"
   })
-  readonly member: MemberDto;
+  readonly member: UserDto;
 }

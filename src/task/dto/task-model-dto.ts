@@ -12,20 +12,22 @@ export class TaskModel {
   @IsNotEmpty()
   readonly title: string;
 
-  @ApiProperty({example: true, type: Boolean, description: "Task is complete?"})
+  @ApiProperty({
+    example: true,
+    type: Boolean,
+    description: "Task is complete?",
+  })
   readonly isComplete: boolean;
 
-  @ApiProperty({ example: "Description", description: "Task description", required: false })
+  @ApiProperty({
+    example: "Description",
+    description: "Task description",
+    required: false,
+  })
   @IsOptional()
   @IsString()
   readonly description?: string;
 
   @ApiProperty({ description: "Creator" })
   readonly creator: UserDto;
-
-  @ApiProperty({
-    type: [AssignedTaskDto],
-    description: "Array workers are assigned to task",
-  })
-  readonly workers: AssignedTaskDto[];
 }
