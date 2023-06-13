@@ -4,7 +4,6 @@ import { AuthModule } from "./auth/auth.module";
 import { TaskModule } from "./task/task.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { TimeLineModule } from "./time-line/time-line.module";
-import { ReportModule } from "./report/report.module";
 import { ProjectModule } from "./project/project.module";
 import { WorkspaceModule } from "./workspace/workspace.module";
 import { FileModule } from "./file/file.module";
@@ -21,7 +20,6 @@ import { EmailModule } from './email/email.module';
     TaskModule,
     TimeLineModule,
     PrismaModule,
-    ReportModule,
     ProjectModule,
     WorkspaceModule,
     NestjsFormDataModule,

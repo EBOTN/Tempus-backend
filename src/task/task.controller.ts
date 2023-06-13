@@ -18,14 +18,12 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { ReportService } from "src/report/report.service";
 import { TimeLineService } from "src/time-line/time-line.service";
 import { CreateTaskDto } from "./dto/create-task-dto";
 import { GetTaskQuery } from "./dto/get-task-query";
 import { TaskDto, ReportQuerryDto } from "./dto/task-dto";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { TaskService } from "./task.service";
-import { ReportDto } from "src/report/dto/report-dto";
 import { ExtendedRequest } from "src/shared/extended-request";
 import { MemberProgressDto } from "./dto/member-progress-dto";
 import { ValidationUserIdDto } from "./dto/validation-user-id-dto";
@@ -36,22 +34,21 @@ import { TaskIsNotCompleteGuard } from "./task-isComplete-guard";
 export class TaskController {
   constructor(
     private taskService: TaskService,
-    private reportService: ReportService,
     private timeLineService: TimeLineService
   ) {}
 
-  @ApiOperation({ summary: "Get report about work for user" })
-  @ApiResponse({ status: 200, type: [ReportDto] })
-  @ApiParam({ name: "workspaceId", type: Number, required: true })
-  @ApiParam({ name: "projectId", type: Number, required: true })
-  @Get("/getReport")
-  getReport(@Query() query: ReportQuerryDto) {
-    return this.reportService.getReportForWorker(
-      query.startTime,
-      query.endTime,
-      query.workerId
-    );
-  }
+  // @ApiOperation({ summary: "Get report about work for user" })
+  // @ApiResponse({ status: 200, type: [ReportDto] })
+  // @ApiParam({ name: "workspaceId", type: Number, required: true })
+  // @ApiParam({ name: "projectId", type: Number, required: true })
+  // @Get("/getReport")
+  // getReport(@Query() query: ReportQuerryDto) {
+  //   return this.reportService.getReportForWorker(
+  //     query.startTime,
+  //     query.endTime,
+  //     query.workerId
+  //   );
+  // }
 
   @Get()
   @ApiOperation({ summary: "Get tasks by filter" })
