@@ -40,8 +40,9 @@ export class GetWorkspacesQuerry {
   readonly title?: string;
 
   @ApiProperty({
-    example: "workspace",
-    description: "Workspace title",
+    example: "own",
+    description:
+      "The filter can take the following values: own, others and all. Shows the user's belonging to the workspace.",
     required: false,
   })
   @IsOptional()
