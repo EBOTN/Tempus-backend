@@ -164,6 +164,46 @@ export class ProjectService {
     return returnedData;
   }
 
+  async getProjectsByMember(memberId: number): Promise<ProjectDto[]> {
+    const data = await this.prisma.project.findMany({
+      where: {
+        members: {
+          some: {
+            memberId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        workspaceId: true,
+        isHidden: true,
+        members: {
+          select: {
+            member: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+            role: true,
+          },
+        },
+      },
+    });
+    // if (!data || data.length === 0)
+    //   throw new BadRequestException("Projects not found");
+
+    const returnedData = data.map((obj) => {
+      const members = this.ConvertToMemberDto(obj.members);
+      return { ...obj, members };
+    });
+    return returnedData;
+  }
+
   async findOne(id: number): Promise<ProjectDto> {
     const data = await this.prisma.project.findFirst({
       where: {

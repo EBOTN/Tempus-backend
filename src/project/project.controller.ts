@@ -66,6 +66,16 @@ export class ProjectController {
     );
   }
 
+  @ApiOperation({ summary: "Get projects by member" })
+  @ApiResponse({ status: 200, type: [ProjectDto] })
+  @Get("getProjectsByMember")
+  getProjectsByMember(
+    @Query() query: ValidationUserIdDto,
+    @Param("workspaceId", ParseIntPipe) workspaceId: number
+  ) {
+    return this.projectService.getProjectsByMember(query.userId);
+  }
+
   @SetMetadata("roles", ["Owner", "Manager"])
   @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({
