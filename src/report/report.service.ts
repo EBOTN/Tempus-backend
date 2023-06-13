@@ -82,7 +82,7 @@ export class ReportService {
       rawTask.workers.map((rawMemberInfo) => {
         rawMemberInfo.TimeLines.map((timeLine) => {
           const trackedTime =
-            timeLine.endTime.getTime() - timeLine.startTime.getTime();
+            Math.round((timeLine.endTime.getTime() - timeLine.startTime.getTime())/1000);
           const day = new Date(timeLine.startTime);
           day.setHours(0);
           day.setMinutes(0);
@@ -102,7 +102,7 @@ export class ReportService {
     });
     let totalTime = 0;
     rows.map((row) => {
-      totalTime += Math.round(row.trackedTime / 1000);
+      totalTime += row.trackedTime;
     });
     const returnedData: ReportDto = { totalTime, rows };
     return returnedData;
