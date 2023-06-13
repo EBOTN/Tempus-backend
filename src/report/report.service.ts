@@ -62,6 +62,10 @@ export class ReportService {
                 startTime: true,
                 endTime: true,
               },
+              where: {
+                startTime: { gte: createReportDto.dateFrom },
+                endTime: { lte: createReportDto.dateTo },
+              },
             },
             member: true,
           },
