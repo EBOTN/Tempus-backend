@@ -27,9 +27,11 @@ export class ReportService {
             },
             TimeLines: {
               some: {
-                NOT: { endTime: null },
-                startTime: { gte: createReportDto.dateFrom },
-                endTime: { lte: createReportDto.dateTo },
+                AND: {
+                  NOT: { endTime: null },
+                  startTime: { gte: createReportDto.dateFrom },
+                  endTime: { lte: createReportDto.dateTo },
+                },
               },
             },
           },
@@ -81,8 +83,9 @@ export class ReportService {
       const member: UserDto = userInfo;
       rawTask.workers.map((rawMemberInfo) => {
         rawMemberInfo.TimeLines.map((timeLine) => {
-          const trackedTime =
-            Math.round((timeLine.endTime.getTime() - timeLine.startTime.getTime())/1000);
+          const trackedTime = Math.round(
+            (timeLine.endTime.getTime() - timeLine.startTime.getTime()) / 1000
+          );
           const day = new Date(timeLine.startTime);
           day.setHours(0);
           day.setMinutes(0);
