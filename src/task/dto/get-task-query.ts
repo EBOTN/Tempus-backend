@@ -38,7 +38,7 @@ export class GetTaskQuery {
 
   @ApiProperty({
     example: "all",
-    description: "Assigned filter",
+    description: "Assigned filter (assigned/unassigned/all)",
     required: false,
   })
   @IsOptional()
@@ -50,7 +50,7 @@ export class GetTaskQuery {
 
   @ApiProperty({
     example: "completed",
-    description: "Completed filter",
+    description: "Completed filter (completed/uncompleted)",
     required: false,
   })
   @IsOptional()
