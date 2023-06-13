@@ -365,18 +365,50 @@ export class ProjectService {
     projectId: number,
     userId: number,
     role: Roles
-  ) {
-    const returnedData = await this.prisma.projectMembers.update({
+  ): Promise<ProjectDto> {
+    const data = await this.prisma.project.update({
       where: {
-        projectId_memberId: {
-          projectId,
-          memberId: userId,
-        },
+        id: projectId,
       },
       data: {
-        role,
+        members: {
+          update: {
+            where: {
+              projectId_memberId: {
+                projectId,
+                memberId: userId,
+              },
+            },
+            data: {
+              role,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        isHidden: true,
+        workspaceId: true,
+        members: {
+          select: {
+            member: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+            role: true,
+          },
+        },
       },
     });
+    if (!data) throw new BadRequestException("Project not found");
+    const members = this.ConvertToMemberDto(data.members);
+    const returnedData = { ...data, members };
     return returnedData;
   }
 

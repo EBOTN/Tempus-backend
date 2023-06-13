@@ -85,11 +85,9 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Get project by id" })
   @ApiResponse({ status: 200, type: ProjectDto })
-  @ApiParam({name: "workspaceId", type: Number })
+  @ApiParam({ name: "workspaceId", type: Number })
   @Get("/:projectId")
-  findOne(
-    @Param("projectId", ParseIntPipe) projectId: number,
-  ) {
+  findOne(@Param("projectId", ParseIntPipe) projectId: number) {
     return this.projectService.findOne(projectId);
   }
 
@@ -98,7 +96,7 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Update project" })
   @ApiResponse({ status: 200, type: ProjectDto })
-  @ApiParam({name: "workspaceId", type: Number })
+  @ApiParam({ name: "workspaceId", type: Number })
   @Put("/:projectId")
   update(
     @Param("projectId", ParseIntPipe) projectId: number,
@@ -112,7 +110,7 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Delete project" })
   @ApiResponse({ status: 200, type: ProjectDto })
-  @ApiParam({name: "workspaceId", type: Number })
+  @ApiParam({ name: "workspaceId", type: Number })
   @Delete("/:projectId")
   remove(@Param("projectId", ParseIntPipe) projectId: number) {
     return this.projectService.remove(projectId);
@@ -123,11 +121,11 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Add member to project" })
   @ApiResponse({ status: 200, type: ProjectDto })
-  @ApiParam({name: "workspaceId", type: Number })
+  @ApiParam({ name: "workspaceId", type: Number })
   @Post("/:projectId/addMember")
   addMember(
     @Param("projectId", ParseIntPipe) projectId: number,
-    @Body() data: ValidationUserIdDto,
+    @Body() data: ValidationUserIdDto
   ) {
     return this.projectService.addMember(projectId, data.userId);
   }
@@ -137,11 +135,11 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Remove member from project" })
   @ApiResponse({ status: 200, type: ProjectDto })
-  @ApiParam({name: "workspaceId", type: Number })
+  @ApiParam({ name: "workspaceId", type: Number })
   @Post("/:projectId/removeMember")
   removeMember(
     @Param("projectId", ParseIntPipe) projectId: number,
-    @Body() data: ValidationUserIdDto,
+    @Body() data: ValidationUserIdDto
   ) {
     return this.projectService.removeMember(projectId, data.userId);
   }
@@ -150,7 +148,8 @@ export class ProjectController {
   @SetMetadata("projectRoles", ["Owner"])
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Change member role" })
-  @ApiParam({name: "workspaceId", type: Number })
+  @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({ name: "workspaceId", type: Number })
   @Patch("/:projectId/changeProjectRole")
   async changeProjectRole(
     @Param("projectId", ParseIntPipe) projectId: number,
@@ -168,7 +167,7 @@ export class ProjectController {
   @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Get user role in project" })
   @ApiResponse({ status: 200, type: GetRoleDto })
-  @ApiParam({name: "workspaceId", type: Number })
+  @ApiParam({ name: "workspaceId", type: Number })
   @Get("/:projectId/getRole")
   async getRole(
     @Param("projectId", ParseIntPipe) projectId: number,
