@@ -22,15 +22,17 @@ export class ReportService {
         id: createReportDto?.taskId,
         workers: {
           some: {
-            member: {
-              memberId: createReportDto.userId,
-            },
-            TimeLines: {
-              some: {
-                AND: {
-                  NOT: { endTime: null },
-                  startTime: { gte: createReportDto.dateFrom },
-                  endTime: { lte: createReportDto.dateTo },
+            AND: {
+              member: {
+                memberId: createReportDto.userId,
+              },
+              TimeLines: {
+                some: {
+                  AND: {
+                    NOT: { endTime: null },
+                    startTime: { gte: createReportDto.dateFrom },
+                    endTime: { lte: createReportDto.dateTo },
+                  },
                 },
               },
             },
