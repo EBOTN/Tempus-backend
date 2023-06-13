@@ -98,15 +98,13 @@ export class TimeLineService {
                 avatar: true,
               },
             },
-            role: true,
           },
         },
       },
     });
 
     const returnedData = data.map((obj) => {
-      const member = { ...obj.member.member, role: obj.member.role };
-      delete obj["member"];
+      const member = { ...obj.member.member };
       const returnedData = { ...obj, member };
       return returnedData;
     });

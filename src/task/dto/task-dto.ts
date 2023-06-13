@@ -15,7 +15,7 @@ export class MembersInfo {
   readonly workTime: number;
 }
 
-export class TaskDto extends OmitType(TaskModel, ["workers"]) {
+export class TaskDto extends TaskModel {
   @ApiProperty({ description: "Members assigned to task", type: [MembersInfo] })
   readonly members: MembersInfo[];
 }

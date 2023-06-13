@@ -14,5 +14,5 @@ export const SelectorTaskDto = {
       avatar: true,
     },
   },
-  workers: {select: SelectAssignedTask}
+  workers: { select: SelectAssignedTask },
 };
