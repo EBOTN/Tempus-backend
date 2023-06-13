@@ -11,6 +11,7 @@ import { NestjsFormDataModule } from "nestjs-form-data";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 import { EmailModule } from './email/email.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { EmailModule } from './email/email.module';
       exclude: ["/api/*"],
     }),
     EmailModule,
+    ReportModule,
   ],
   controllers: [],
   providers: [],
