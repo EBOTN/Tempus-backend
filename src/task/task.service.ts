@@ -16,6 +16,37 @@ export class TaskService {
     private timeLineService: TimeLineService
   ) {}
 
+  async getMemberTasksByProject(
+    userId: number,
+    projectId: number
+  ): Promise<TaskDto[]> {
+    const data = await this.prisma.task.findMany({
+      where: {
+        projectId,
+        workers: {
+          some: {
+            member: {
+              memberId: userId,
+            },
+          },
+        },
+      },
+      select: SelectorTaskDto,
+    });
+
+    const returnedData = data.map((obj) => {
+      const members = obj.workers.map((worker) => ({
+        member: { ...worker.member.member, role: worker.member.role },
+        isComplete: worker.isComplete,
+        workTime: worker.workTime,
+      }));
+      delete obj["workers"];
+      return { ...obj, members };
+    });
+
+    return returnedData;
+  }
+
   async getMemberProgress(
     taskId: number,
     userId: number

@@ -71,6 +71,18 @@ export class TaskController {
     return this.taskService.getById(id);
   }
 
+  @Get("getMemberTasksByProject")
+  @ApiOperation({ summary: "Get member tasks by project" })
+  @ApiResponse({ status: 200, type: [TaskDto] })
+  @ApiParam({ name: "workspaceId", type: Number, required: true })
+  @ApiParam({ name: "projectId", type: Number, required: true })
+  getMemberTasksByProject(
+    @Query() query: ValidationUserIdDto,
+    @Param("projectId", ParseIntPipe) projectId: number
+  ) {
+    return this.taskService.getMemberTasksByProject(query.userId, projectId)
+  }
+
   @ApiOperation({ summary: "Create task" })
   @ApiResponse({ status: 200, type: TaskDto })
   @ApiParam({ name: "workspaceId", type: Number, required: true })
