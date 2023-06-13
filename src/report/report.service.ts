@@ -17,24 +17,15 @@ export class ReportService {
       },
       select: new ConfigUserWithoutPassword(),
     });
+    createReportDto.dateFrom.setUTCHours(0, 0, 0, 0);
+    createReportDto.dateTo.setUTCHours(0, 0, 0, 0);
     const rawTasks = await this.prisma.task.findMany({
       where: {
         id: createReportDto?.taskId,
         workers: {
           some: {
-            AND: {
-              member: {
-                memberId: createReportDto.userId,
-              },
-              TimeLines: {
-                some: {
-                  AND: {
-                    NOT: { endTime: null },
-                    startTime: { gte: createReportDto.dateFrom },
-                    endTime: { lte: createReportDto.dateTo },
-                  },
-                },
-              },
+            member: {
+              memberId: createReportDto.userId,
             },
           },
         },
@@ -65,6 +56,7 @@ export class ReportService {
               where: {
                 startTime: { gte: createReportDto.dateFrom },
                 endTime: { lte: createReportDto.dateTo },
+                NOT: { endTime: null },
               },
             },
             member: true,
@@ -93,10 +85,7 @@ export class ReportService {
             (timeLine.endTime.getTime() - timeLine.startTime.getTime()) / 1000
           );
           const day = new Date(timeLine.startTime);
-          day.setHours(0);
-          day.setMinutes(0);
-          day.setSeconds(0);
-          day.setMilliseconds(0);
+          day.setUTCHours(0, 0, 0, 0);
           const row: ReportRowDto = {
             task,
             member,
