@@ -187,6 +187,17 @@ export class UserService {
     return returnedData;
   }
 
+  async restorePassword(userId: number, password: string) {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password,
+      },
+    });
+  }
+
   async update(id: number, newData: UpdateUserDto): Promise<UserDto> {
     try {
       const { avatar } = await this.prisma.user.findFirst({

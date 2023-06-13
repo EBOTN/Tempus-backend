@@ -70,7 +70,7 @@ export class UserController {
 
   @ApiOperation({ summary: "Change mail by token" })
   @ApiResponse({ status: 204 })
-  @Get("/confirmChangeMail/:token")
+  @Post("/confirmChangeMail/:token")
   async confirmChangeMail(@Param("token") token: string) {
     return await this.userService.confirmChangeMail(token);
   }
