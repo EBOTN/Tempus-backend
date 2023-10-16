@@ -9,82 +9,180 @@ import {
   UseGuards,
   ParseIntPipe,
   Query,
+  Patch,
+  Req,
+  SetMetadata,
 } from "@nestjs/common";
 import { ProjectService } from "./project.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
-import { JwtAuthGuard } from "src/auth/jwt-auth-guard";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { ReadProjectDto } from "./dto/read-project.dto";
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ProjectDto } from "./dto/read-project.dto";
 import { GetProjectQuerry } from "./dto/get-project-querry.dto";
+import { UpdateRoleDto } from "src/shared/update-role.dto";
+import { ExtendedRequest } from "src/shared/extended-request";
+import { WorkspaceRoleGuard } from "src/shared/workspace-role-guard";
+import { WorkspaceOrProjectRoleGuard } from "src/shared/WorkspaceOrProjectRoleGuard";
+import { GetRoleDto } from "src/shared/get-role-dto";
+import { ProjectRoleGuard } from "src/shared/ProjectRoleGuard";
+import { ValidationUserIdDto } from "src/task/dto/validation-user-id-dto";
 
 @ApiTags("projects")
-@Controller("projects")
+@Controller("workspace/:workspaceId/projects")
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Create project" })
-  @ApiResponse({ status: 200, type: ReadProjectDto })
+  @ApiResponse({ status: 200, type: ProjectDto })
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  create(
+    @Body() createProjectDto: CreateProjectDto,
+    @Param("workspaceId", ParseIntPipe) workspaceId: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return this.projectService.create(
+      createProjectDto,
+      workspaceId,
+      req.userInfo.id
+    );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata("roles", ["Owner", "Manager", "Member"])
+  @UseGuards(WorkspaceRoleGuard)
   @ApiOperation({ summary: "Get projects by filter" })
-  @ApiResponse({ status: 200, type: [ReadProjectDto] })
-  @Get()
-  findAll(@Query() querry: GetProjectQuerry) {
-    return this.projectService.findAll(querry);
+  @ApiResponse({ status: 200, type: [ProjectDto] })
+  @Get("getProjects")
+  getProjects(
+    @Query() querry: GetProjectQuerry,
+    @Req() req: ExtendedRequest,
+    @Param("workspaceId", ParseIntPipe) workspaceId: number
+  ) {
+    return this.projectService.findProjects(
+      querry,
+      req.userInfo.id,
+      workspaceId
+    );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Get projects by member" })
+  @ApiResponse({ status: 200, type: [ProjectDto] })
+  @Get("getProjectsByMember")
+  getProjectsByMember(
+    @Query() query: ValidationUserIdDto,
+    @Param("workspaceId", ParseIntPipe) workspaceId: number
+  ) {
+    return this.projectService.getProjectsByMember(query.userId);
+  }
+
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceRoleGuard)
+  @ApiOperation({
+    summary: "Get all projects by filter (for workspace owner|manager)",
+  })
+  @ApiResponse({ status: 200, type: [ProjectDto] })
+  @Get("getAllProjects")
+  getAllProjects(
+    @Query() querry: GetProjectQuerry,
+    @Param("workspaceId", ParseIntPipe) workspaceId: number
+  ) {
+    return this.projectService.findAll(querry, workspaceId);
+  }
+
+  @SetMetadata("roles", ["Owner", "Manager"])
+  @SetMetadata("projectRoles", ["Owner", "Manager", "Member"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Get project by id" })
-  @ApiResponse({ status: 200, type: ReadProjectDto })
-  @Get("/:id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.projectService.findOne(id);
+  @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({ name: "workspaceId", type: Number })
+  @Get("/:projectId")
+  findOne(@Param("projectId", ParseIntPipe) projectId: number) {
+    return this.projectService.findOne(projectId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Update project" })
-  @ApiResponse({ status: 200, type: ReadProjectDto })
-  @Put("/:id")
+  @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({ name: "workspaceId", type: Number })
+  @Put("/:projectId")
   update(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("projectId", ParseIntPipe) projectId: number,
     @Body() updateProjectDto: UpdateProjectDto
   ) {
-    return this.projectService.update(id, updateProjectDto);
+    return this.projectService.update(projectId, updateProjectDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Delete project" })
-  @ApiResponse({ status: 200, type: ReadProjectDto })
-  @Delete("/:id")
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.projectService.remove(id);
+  @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({ name: "workspaceId", type: Number })
+  @Delete("/:projectId")
+  remove(@Param("projectId", ParseIntPipe) projectId: number) {
+    return this.projectService.remove(projectId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Add member to project" })
-  @ApiResponse({ status: 200, type: ReadProjectDto })
-  @Post("/:id/addMember")
+  @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({ name: "workspaceId", type: Number })
+  @Post("/:projectId/addMember")
   addMember(
-    @Param("id", ParseIntPipe) id: number,
-    @Body("memberId", ParseIntPipe) memberId: number
+    @Param("projectId", ParseIntPipe) projectId: number,
+    @Body() data: ValidationUserIdDto
   ) {
-    return this.projectService.addMember(id, memberId);
+    return this.projectService.addMember(projectId, data.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner", "Manager"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
   @ApiOperation({ summary: "Remove member from project" })
-  @ApiResponse({ status: 200, type: ReadProjectDto })
-  @Post("/:id/removeMember")
+  @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({ name: "workspaceId", type: Number })
+  @Post("/:projectId/removeMember")
   removeMember(
-    @Param("id", ParseIntPipe) id: number,
-    @Body("memberId", ParseIntPipe) memberId: number
+    @Param("projectId", ParseIntPipe) projectId: number,
+    @Body() data: ValidationUserIdDto
   ) {
-    return this.projectService.removeMember(id, memberId);
+    return this.projectService.removeMember(projectId, data.userId);
+  }
+
+  @SetMetadata("roles", ["Owner"])
+  @SetMetadata("projectRoles", ["Owner"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
+  @ApiOperation({ summary: "Change member role" })
+  @ApiResponse({ status: 200, type: ProjectDto })
+  @ApiParam({ name: "workspaceId", type: Number })
+  @Patch("/:projectId/changeProjectRole")
+  async changeProjectRole(
+    @Param("projectId", ParseIntPipe) projectId: number,
+    @Body() updateRole: UpdateRoleDto
+  ) {
+    return await this.projectService.changeProjectMemberRole(
+      projectId,
+      updateRole.memberId,
+      updateRole.role
+    );
+  }
+
+  @SetMetadata("roles", ["Owner", "Manager", "Member"])
+  @SetMetadata("projectRoles", ["Owner", "Manager", "Member"])
+  @UseGuards(WorkspaceOrProjectRoleGuard)
+  @ApiOperation({ summary: "Get user role in project" })
+  @ApiResponse({ status: 200, type: GetRoleDto })
+  @ApiParam({ name: "workspaceId", type: Number })
+  @Get("/:projectId/getRole")
+  async getRole(
+    @Param("projectId", ParseIntPipe) projectId: number,
+    @Req() req: ExtendedRequest
+  ) {
+    return await this.projectService.getRole(projectId, req.userInfo.id);
   }
 }

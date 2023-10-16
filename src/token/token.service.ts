@@ -1,20 +1,45 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { userDTO } from "src/user/dto/user-dto";
+import { UserDto } from "src/user/dto/user-dto";
 import { UserService } from "src/user/user.service";
 
 @Injectable()
 export class TokenService {
   constructor(
+    @Inject(forwardRef(() => UserService))
     private userService: UserService,
     private jwtService: JwtService
   ) {}
 
-  generateTokens(payload: userDTO) {
+  validateRecoveryToken(token: string): Promise<string> {
+    try {
+      const { email } = this.jwtService.verify(token, {
+        secret: process.env.JWT_RECOVERY_PASS_SECRET,
+      });
+      return email;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  validateChangeMailToken(token: string): { email: string; accountId: number } {
+    try {
+      const { email, accountId } = this.jwtService.verify(token, {
+        secret: process.env.JWT_CHANGE_MAIL_SECRET,
+      });
+      return { email, accountId };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  generateTokens(payload: UserDto) {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
       secret: process.env.JWT_ACCESS_SECRET,
@@ -29,15 +54,31 @@ export class TokenService {
     };
   }
 
-  async saveToken(id: number, refreshtoken: string): Promise<userDTO> {
-    return this.userService.update(id, { refreshtoken }); // записывает пользователю RT
+  generateRecoveryPasswordToken(payload: { email: string }) {
+    const token = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_RECOVERY_PASS_EXPIRES_IN || "15m",
+      secret: process.env.JWT_RECOVERY_PASS_SECRET,
+    });
+    return token;
   }
 
-  async removeToken(refreshToken: string): Promise<userDTO> {
+  generateChangeMailToken(payload: { email: string; accountId: number }) {
+    const token = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_CHANGE_MAIL_EXPIRES_IN || "15m",
+      secret: process.env.JWT_CHANGE_MAIL_SECRET,
+    });
+    return token;
+  }
+
+  async saveToken(id: number, refreshtoken: string): Promise<UserDto> {
+    return this.userService.refreshToken(id, refreshtoken); // записывает пользователю RT
+  }
+
+  async removeToken(refreshToken: string): Promise<UserDto> {
     const user = await this.validateRefreshToken(refreshToken);
     if (!user) throw new BadRequestException();
 
-    return await this.userService.update(user.id, { refreshtoken: null });
+    return await this.userService.refreshToken(user.id, null);
   }
 
   validateAccessToken(token: string) {
@@ -54,7 +95,7 @@ export class TokenService {
     }
   }
 
-  validateRefreshToken(token: string): Promise<userDTO> {
+  validateRefreshToken(token: string): Promise<UserDto> {
     if (!token)
       throw new UnauthorizedException({ message: "User unauthorized" });
 
@@ -68,13 +109,11 @@ export class TokenService {
     }
   }
 
-  async findToken(refreshToken: string): Promise<string> {
-    const user = await this.userService.gitFirstByRefreshToken(
-      refreshToken
-    );
-    if (user) {
-      return user.refreshtoken;
-    }
-    return null;
-  }
+  // async findToken(refreshToken: string): Promise<string> {
+  //   const user = await this.userService.gitFirstByRefreshToken(refreshToken);
+  //   if (user) {
+  //     return user.refreshtoken;
+  //   }
+  //   return null;
+  // }
 }

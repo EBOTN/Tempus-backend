@@ -1,56 +1,74 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsBoolean, IsString } from "class-validator";
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsBoolean,
+  IsString,
+  IsOptional,
+} from "class-validator";
+import { HasMimeType, IsFile, MemoryStoredFile } from "nestjs-form-data";
 
-export class WorkSpaceModel {
+export class WorkspaceModel {
   @ApiProperty({
     example: 1,
-    description: "WorkSpace id",
+    description: "Workspace id",
   })
   @IsNotEmpty()
   @IsNumber()
-  @Type(()=>Number)
+  @Type(() => Number)
   readonly id: number;
 
   @ApiProperty({
-    example: "WorkSpace 1",
-    description: "WorkSpace description",
+    example: "Workspace 1",
+    description: "Workspace title",
   })
   @IsNotEmpty()
   @IsString()
   readonly title: string;
 
   @ApiProperty({
-    example: "Description 1",
-    description: "WorkSpace description",
+    example: "http://.../api/image/image1",
+    description: "Workspace cover(url)",
   })
   @IsNotEmpty()
   @IsString()
-  readonly description: string;
+  readonly cover: string;
 
   @ApiProperty({
     example: 1,
-    description: "WorkSpace owner id",
+    description: "Workspace owner id",
   })
   @IsNotEmpty()
   @IsNumber()
-  @Type(()=>Number)
+  @Type(() => Number)
   readonly ownerId: number;
 
-//   @ApiProperty({
-//     example: true,
-//     description: "Whether to hide the project from visible",
-//   })
-//   @IsNotEmpty()
-//   @IsBoolean()
-//   readonly isHidden: boolean;
+  @ApiProperty({
+    type: "string",
+    required: false,
+    format: "binary",
+    description: "Image cover",
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsFile()
+  @HasMimeType(["image/jpeg", "image/png"])
+  readonly coverFile?: MemoryStoredFile;
+  //   @ApiProperty({
+  //     example: true,
+  //     description: "Whether to hide the project from visible",
+  //   })
+  //   @IsNotEmpty()
+  //   @IsBoolean()
+  //   readonly isHidden: boolean;
 
-//   @ApiProperty({
-//     example: 2,
-//     description: "Workspace id",
-//   })
-//   @IsNotEmpty()
-//   @IsNumber()
-//   @Type(()=>Number)
-//   readonly workspaceId: number;
+  //   @ApiProperty({
+  //     example: 2,
+  //     description: "Workspace id",
+  //   })
+  //   @IsNotEmpty()
+  //   @IsNumber()
+  //   @Type(()=>Number)
+  //   readonly workspaceId: number;
 }

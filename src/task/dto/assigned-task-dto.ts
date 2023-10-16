@@ -1,5 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { MemberDto } from "src/shared/member-dto";
 import { TimeLineDto } from "src/time-line/dto/time-line-dto";
+import { UserDto } from "src/user/dto/user-dto";
 
 export class AssignedTaskDto {
   @ApiProperty({ example: "1", description: "Assigned task id" })
@@ -8,8 +10,8 @@ export class AssignedTaskDto {
   @ApiProperty({ example: "1", description: "Task id" })
   readonly taskId: number;
 
-  @ApiProperty({ example: "1", description: "Worker id" })
-  readonly workerId: number;
+  @ApiProperty({ example: "1", description: "Member id" })
+  readonly memberId: number;
 
   @ApiProperty({ example: false, description: "Task started?" })
   readonly isActive: boolean;
@@ -25,4 +27,10 @@ export class AssignedTaskDto {
     description: "Time lines",
   })
   readonly TimeLines: TimeLineDto[];
+
+  @ApiProperty({
+    type: UserDto,
+    description: "Member info"
+  })
+  readonly member: UserDto;
 }

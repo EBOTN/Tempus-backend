@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AssignedTaskDto } from "src/task/dto/assigned-task-dto";
 import { TimeLineDto } from "./dto/time-line-dto";
+import { MemberProgressDto } from "src/task/dto/member-progress-dto";
 
 @Injectable()
 export class TimeLineService {
@@ -10,17 +11,19 @@ export class TimeLineService {
 
   async saveTimeLines(
     timelines: TimeLineDto[],
-    assTaskId: number,
+    taskId: number,
+    userId: number,
     activeTimeLineId: number,
     newWorkTime: number
-  ): Promise<AssignedTaskDto> {
+  ): Promise<MemberProgressDto> {
     const updatedTimeLine = timelines[0];
-
     timelines.shift();
-
-    return await this.prisma.assignedTask.update({
+    const data = await this.prisma.assignedTask.update({
       where: {
-        id: assTaskId,
+        taskid: {
+          taskId,
+          memberId: userId,
+        },
       },
       data: {
         isActive: false,
@@ -39,20 +42,42 @@ export class TimeLineService {
           },
         },
       },
-      include: {
-        TimeLines: true,
+      select: {
+        isActive: true,
+        workTime: true,
+        isComplete: true,
+        TimeLines: {
+          orderBy: { startTime: "desc" },
+          take: 1,
+        },
       },
     });
+    if (!data) throw new BadRequestException("PROGRESS NOT FOUND");
+    const returnedData = {
+      isRunning: false,
+      trackedTime: 0,
+      lastTimeLineStartTime: null,
+      isComplete: data.isComplete,
+    };
+    if (data.TimeLines.length !== 0) {
+      const start = new Date(data.TimeLines[0].startTime);
+      returnedData.isRunning = data.isActive;
+      returnedData.trackedTime = data.workTime;
+      returnedData.lastTimeLineStartTime = data.isActive ? start : null;
+    }
+    return returnedData;
   }
 
   async getAllTimeLinesByWorkerBetweenDates(
-    workerId: number,
+    userId: number,
     startDate: Date,
     endDate: Date
   ): Promise<AssignedTaskDto[]> {
-    return await this.prisma.assignedTask.findMany({
+    const data = await this.prisma.assignedTask.findMany({
       where: {
-        workerId: workerId,
+        member: {
+          memberId: userId,
+        },
         TimeLines: {
           some: {
             startTime: { gte: startDate },
@@ -62,42 +87,82 @@ export class TimeLineService {
       },
       include: {
         TimeLines: true,
+        member: {
+          select: {
+            member: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+          },
+        },
       },
     });
+
+    const returnedData = data.map((obj) => {
+      const member = { ...obj.member.member };
+      const returnedData = { ...obj, member };
+      return returnedData;
+    });
+    return returnedData;
   }
 
   async startTimeLine(
-    assTaskId: number,
+    taskId: number,
     userId: number
-  ): Promise<AssignedTaskDto> {
+  ): Promise<MemberProgressDto> {
     const date = new Date();
     date.setMilliseconds(0);
     const activeTask = await this.prisma.assignedTask.findFirst({
       where: {
         OR: [
           {
-            workerId: userId,
+            member: {
+              member: {
+                id: userId,
+              },
+            },
             isActive: true,
           },
           {
-            id: assTaskId,
+            taskId,
+            member: {
+              member: {
+                id: userId,
+              },
+            },
           },
         ],
       },
+      include: {
+        member: true,
+      },
     });
+    if (!activeTask) throw new BadRequestException("Record not found");
+    const { member } = activeTask;
 
-    if (!activeTask) throw new BadRequestException("Task not found");
-    if (activeTask.isActive && activeTask.id === assTaskId)
+    if (activeTask.isActive && activeTask.taskId === taskId)
       throw new BadRequestException("Task already started");
-    if (activeTask.isComplete && activeTask.id === assTaskId)
+
+    if (activeTask.isComplete && activeTask.taskId === taskId)
       throw new BadRequestException("Task already closed");
-    if (activeTask.isActive) await this.endTimeLine(activeTask.id);
+
+    if (activeTask.isActive)
+      throw new BadRequestException("You have a running task");
+
     if (await this.checkWeekWorkHours(userId))
       throw new BadRequestException("You already work 40 hours");
     try {
-      return await this.prisma.assignedTask.update({
+      const data = await this.prisma.assignedTask.update({
         where: {
-          id: assTaskId,
+          taskid: {
+            taskId,
+            memberId: member.id,
+          },
         },
         data: {
           isActive: true,
@@ -107,11 +172,32 @@ export class TimeLineService {
             },
           },
         },
-        include: {
-          TimeLines: true,
+        select: {
+          isActive: true,
+          workTime: true,
+          isComplete: true,
+          TimeLines: {
+            orderBy: { startTime: "desc" },
+            take: 1,
+          },
         },
       });
+      if (!data) throw new BadRequestException("PROGRESS NOT FOUND");
+      const returnedData = {
+        isRunning: false,
+        trackedTime: 0,
+        lastTimeLineStartTime: null,
+        isComplete: data.isComplete,
+      };
+      if (data.TimeLines.length !== 0) {
+        const start = new Date(data.TimeLines[0].startTime);
+        returnedData.isRunning = data.isActive;
+        returnedData.trackedTime = data.workTime;
+        returnedData.lastTimeLineStartTime = data.isActive ? start : null;
+      }
+      return returnedData;
     } catch (e) {
+      console.log(e);
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
           throw new BadRequestException("Task not exists");
@@ -119,33 +205,52 @@ export class TimeLineService {
     }
   }
 
-  async endTimeLine(assTaskId: number): Promise<AssignedTaskDto> {
+  async endTimeLine(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
     const date = new Date();
     date.setMilliseconds(0);
 
-    const activeTimeLine = await this.prisma.timeLines.findFirst({
+    const activeTask = await this.prisma.assignedTask.findFirst({
       where: {
-        taskId: assTaskId,
-        startTime: { not: null },
-        endTime: null,
+        taskId,
+        member: {
+          memberId: userId,
+        },
+        TimeLines: {
+          some: {
+            startTime: { not: null },
+            endTime: null,
+          },
+        },
       },
       include: {
-        AssignedTask: true,
+        member: true,
+        TimeLines: {
+          where: {
+            startTime: { not: null },
+            endTime: null,
+          },
+          take: 1,
+        },
       },
     });
 
-    if (!activeTimeLine) throw new BadRequestException("Task not started");
-    if (activeTimeLine.AssignedTask.isComplete)
+    if (!activeTask) throw new BadRequestException("Task not started");
+    const activeTimeLine = activeTask.TimeLines[0];
+
+    if (activeTask.isComplete)
       throw new BadRequestException("Task already closed");
 
     const timeLineWorkTime =
       date.getTime() - activeTimeLine.startTime.getTime(); // Time line work time
-
+    console.log("asssssssssss", timeLineWorkTime);
     let newWorkTime: number;
 
     // if user work > 60s then track time
     if (timeLineWorkTime > 60000) {
-      newWorkTime = timeLineWorkTime + activeTimeLine.AssignedTask.workTime;
+      newWorkTime = (timeLineWorkTime + activeTask.workTime * 1000) / 1000;
     } else {
       throw new BadRequestException("Time less than a minute is not tracked.");
     } // else time not track
@@ -156,15 +261,19 @@ export class TimeLineService {
       // if time line divided, then save all timelines
       return await this.saveTimeLines(
         timelines,
-        assTaskId,
+        taskId,
+        activeTask.memberId,
         activeTimeLine.id,
         newWorkTime
       );
 
     try {
-      return await this.prisma.assignedTask.update({
+      const data = await this.prisma.assignedTask.update({
         where: {
-          id: assTaskId,
+          taskid: {
+            taskId,
+            memberId: activeTask.member.id,
+          },
         },
         data: {
           isActive: false,
@@ -180,10 +289,30 @@ export class TimeLineService {
             },
           },
         },
-        include: {
-          TimeLines: true,
+        select: {
+          isActive: true,
+          workTime: true,
+          isComplete: true,
+          TimeLines: {
+            orderBy: { startTime: "desc" },
+            take: 1,
+          },
         },
       });
+      if (!data) throw new BadRequestException("PROGRESS NOT FOUND");
+      const returnedData = {
+        isRunning: false,
+        trackedTime: 0,
+        lastTimeLineStartTime: null,
+        isComplete: data.isComplete,
+      };
+      if (data.TimeLines.length !== 0) {
+        const start = new Date(data.TimeLines[0].startTime);
+        returnedData.isRunning = data.isActive;
+        returnedData.trackedTime = data.workTime;
+        returnedData.lastTimeLineStartTime = data.isActive ? start : null;
+      }
+      return returnedData;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -236,7 +365,7 @@ export class TimeLineService {
     return timeLines;
   }
 
-  async checkWeekWorkHours(workerId: number): Promise<boolean> {
+  async checkWeekWorkHours(userId: number): Promise<boolean> {
     const date = new Date();
     const startWeekOfDate = new Date(date);
     const endWeekOfDate = new Date(date);
@@ -251,7 +380,7 @@ export class TimeLineService {
     }
 
     const tasks = await this.getAllTimeLinesByWorkerBetweenDates(
-      workerId,
+      userId,
       startWeekOfDate,
       endWeekOfDate
     );

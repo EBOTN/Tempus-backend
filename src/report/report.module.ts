@@ -1,11 +1,10 @@
-import { Module } from "@nestjs/common";
-import { TimeLineModule } from "src/time-line/time-line.module";
-import { ReportService } from "./report.service";
+import { Module } from '@nestjs/common';
+import { ReportService } from './report.service';
+import { ReportController } from './report.controller';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
-  controllers: [],
-  providers: [ReportService],
-  imports: [TimeLineModule],
-  exports: [ReportService, TimeLineModule],
+  controllers: [ReportController],
+  providers: [ReportService, PrismaService]
 })
 export class ReportModule {}

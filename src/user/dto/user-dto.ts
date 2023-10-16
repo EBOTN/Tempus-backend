@@ -1,15 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { OmitType } from "@nestjs/swagger";
+import { UserModel } from "./user-model.dto";
 
-export class userDTO {
-  @ApiProperty({ example: "1", description: "Unique identificator" })
-  readonly id: number;
-
-  @ApiProperty({ example: "test@test.com", description: "Email" })
-  readonly email: string;
-
-  @ApiProperty({ example: "Mike", description: "User firstname" })
-  readonly firstName: string;
-
-  @ApiProperty({ example: "Vazovsky", description: "User lastname" })
-  readonly lastName: string;
-}
+export class UserDto extends OmitType(UserModel, ["password", "avatarFile"]) {}

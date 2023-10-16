@@ -4,17 +4,16 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
+import { ExtendedRequest } from "src/shared/extended-request";
 import { TokenService } from "src/token/token.service";
-import { UserService } from "src/user/user.service";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   constructor(
-    private tokenService: TokenService,
-    private userService: UserService
+    private tokenService: TokenService
   ) {}
 
-  async use(req, res: Response, next: NextFunction) {
+  async use(req: ExtendedRequest, res: Response, next: NextFunction) {
     try {
       const { accessToken } = req.cookies;
       if (!accessToken) {
@@ -27,19 +26,10 @@ export class AuthMiddleware implements NestMiddleware {
       if (!tokenUser) {
         throw new UnauthorizedException("User have invalid AT");
       }
-      const user = await this.userService.getFirstByFilter({
-        id: tokenUser.id,
-      });
 
-      if (user) {
-        req.userInfo = { userId: user.id };
+      req.userInfo = { id: tokenUser.id };
 
-        next();
-      } else {
-        res.clearCookie("refreshToken");
-        res.clearCookie("accessToken");
-        throw new UnauthorizedException("User not auth");
-      }
+      next();
     } catch (e) {
       throw new UnauthorizedException("User not auth");
     }

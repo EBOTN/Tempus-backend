@@ -3,10 +3,11 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TimeLineService } from "src/time-line/time-line.service";
 import { CreateTaskDto } from "./dto/create-task-dto";
-import { ReadTaskQuery } from "./dto/read-task-query";
-import { SelectAssignedTask } from "./dto/select-assigned-task-dto";
+import { GetTaskQuery } from "./dto/get-task-query";
 import { UpdateTaskDto } from "./dto/update-task-dto";
-import { UpdateTaskParam } from "./dto/update-task-param";
+import { TaskDto } from "./dto/task-dto";
+import { SelectorTaskDto } from "./dto/selector-task-dto";
+import { MemberProgressDto } from "./dto/member-progress-dto";
 
 @Injectable()
 export class TaskService {
@@ -15,146 +16,184 @@ export class TaskService {
     private timeLineService: TimeLineService
   ) {}
 
-  async getAssignedTasksByUserId(query: ReadTaskQuery) {
-    try {
-      const data = await this.prisma.assignedTask.findMany({
-        where: {
-          workerId: query.userId,
-          task: {
-            title: {
-              contains: query.title || "",
-              mode: "insensitive",
+  async getMemberTasksByProject(
+    userId: number,
+    projectId: number
+  ): Promise<TaskDto[]> {
+    const data = await this.prisma.task.findMany({
+      where: {
+        projectId,
+        workers: {
+          some: {
+            member: {
+              memberId: userId,
             },
           },
         },
-        select: {
-          task: {
-            select: {
-              title: true,
-              description: true,
-              creatorId: true,
-            },
-          },
-          ...new SelectAssignedTask(),
-          TimeLines: true,
-        },
-        orderBy: {
-          id: "asc",
-        },
-      });
+      },
+      select: SelectorTaskDto,
+    });
 
-      return data.map((item) => {
-        const date = new Date();
-        if (item.isActive)
-          item.workTime +=
-            date.getTime() -
-            item.TimeLines[item.TimeLines.length - 1].startTime.getTime();
-        const _ = { ...item.task };
-        delete item.task;
-        return { ..._, ...item };
-      });
-    } catch (e) {
-      console.log(e);
-      throw new BadRequestException(e);
-    }
+    const returnedData = data.map((obj) => {
+      const members = obj.workers.map((worker) => ({
+        member: { ...worker.member.member, role: worker.member.role },
+        isComplete: worker.isComplete,
+        workTime: worker.workTime,
+      }));
+      delete obj["workers"];
+      return { ...obj, members };
+    });
+
+    return returnedData;
   }
 
-  async getFirst(taskId: number) {
-    return await this.prisma.task.findFirst({
+  async getMemberProgress(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
+    const data = await this.prisma.assignedTask.findFirst({
+      where: {
+        taskId,
+        member: {
+          member: {
+            id: userId,
+          },
+        },
+      },
+      select: {
+        isActive: true,
+        workTime: true,
+        isComplete: true,
+        TimeLines: {
+          orderBy: { startTime: "desc" },
+          take: 1,
+        },
+      },
+    });
+    if (!data) throw new BadRequestException("PROGRESS NOT FOUND");
+    const returnedData = {
+      isRunning: false,
+      trackedTime: 0,
+      lastTimeLineStartTime: null,
+      isComplete: data.isComplete,
+    };
+    if (data.TimeLines.length !== 0) {
+      const start = new Date(data.TimeLines[0].startTime);
+      returnedData.isRunning = data.isActive;
+      returnedData.trackedTime = data.workTime;
+      returnedData.lastTimeLineStartTime = data.isActive ? start : null;
+    }
+    return returnedData;
+  }
+
+  async getById(taskId: number): Promise<TaskDto> {
+    const data = await this.prisma.task.findFirst({
       where: {
         id: taskId,
       },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        creatorId: true,
-        workers: {
-          select: new SelectAssignedTask(),
-        },
-      },
+      select: SelectorTaskDto,
     });
+
+    const members = data.workers.map((worker) => ({
+      member: { ...worker.member.member, role: worker.member.role },
+      isComplete: worker.isComplete,
+      workTime: worker.workTime,
+    }));
+    delete data["workers"];
+
+    return { ...data, members };
   }
 
-  async getCreatedTasksByUserId(query: ReadTaskQuery) {
-    const { title, userId } = query;
-    try {
-      return await this.prisma.task.findMany({
-        where: {
-          title: {
-            contains: title || "",
-            mode: "insensitive",
-          },
-          creatorId: userId,
-        },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          creatorId: true,
-          workers: {
-            select: { ...new SelectAssignedTask(), TimeLines: true },
-          },
-        },
-        orderBy: {
-          id: "asc",
-        },
-      });
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
-  }
-
-  async getAll() {
-    return await this.prisma.task.findMany({
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        creatorId: true,
+  async getByFilter(
+    query: GetTaskQuery,
+    projectId: number,
+    userId: number
+  ): Promise<TaskDto[]> {
+    const filter: {
+      workers?: {
+        some: { member: { memberId: number } };
+      };
+      NOT?: {
         workers: {
-          select: { ...new SelectAssignedTask(), TimeLines: true },
-        },
-      },
-      orderBy: {
-        id: "asc",
-      },
-    });
-  }
-
-  async createTaskForCreator(data: CreateTaskDto) {
-    try {
-      return await this.prisma.task.create({
-        data: {
-          title: data.title,
-          description: data.description,
-          creatorId: data.creatorId,
-          workers: {
-            create: {
-              workerId: data.creatorId,
+          some: { member: { memberId: number } };
+        };
+      };
+      isComplete?: boolean;
+    } = {};
+    if (query.assignedFilter !== null)
+      switch (query.assignedFilter) {
+        case "assigned":
+          filter.workers = {
+            some: {
+              member: {
+                memberId: userId,
+              },
             },
-          },
-        },
-      });
-    } catch (e) {
-      throw new BadRequestException("Hohoho");
-    }
+          };
+          break;
+
+        case "unassigned":
+          filter.NOT = {
+            workers: {
+              some: {
+                member: {
+                  memberId: userId,
+                },
+              },
+            },
+          };
+        case "all":
+          break;
+      }
+
+    if (query?.completedFilter === "completed") filter.isComplete = true;
+    if (query?.completedFilter === "uncompleted") filter.isComplete = false;
+
+    const data = await this.prisma.task.findMany({
+      where: {
+        projectId,
+        title: { contains: query.title || "", mode: "insensitive" },
+        ...filter,
+      },
+      select: SelectorTaskDto,
+      skip: query.offset || undefined,
+      take: query.limit || undefined,
+    });
+
+    const returnedData = data.map((obj) => {
+      const members = obj.workers.map((worker) => ({
+        member: { ...worker.member.member, role: worker.member.role },
+        isComplete: worker.isComplete,
+        workTime: worker.workTime,
+      }));
+      delete obj["workers"];
+      return { ...obj, members };
+    });
+
+    return returnedData;
   }
 
-  async create(data: CreateTaskDto) {
+  async create(
+    data: CreateTaskDto,
+    senderId: number,
+    projectId: number
+  ): Promise<TaskDto> {
     try {
-      return await this.prisma.task.create({
+      const rawData = await this.prisma.task.create({
         data: {
-          title: data.title,
-          description: data.description,
-          creatorId: data.creatorId,
+          ...data,
+          creatorId: senderId,
+          projectId,
         },
-        include: {
-          workers: {
-            include: { TimeLines: true },
-          },
-        },
+        select: SelectorTaskDto,
       });
+      const members = rawData.workers.map((obj) => ({
+        member: { ...obj.member.member, role: obj.member.role },
+        isComplete: obj.isComplete,
+        workTime: obj.workTime,
+      }));
+      delete rawData["workers"];
+      return { ...rawData, members };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -167,18 +206,19 @@ export class TaskService {
     }
   }
 
-  async remove(param: UpdateTaskParam) {
+  async remove(id: number): Promise<TaskDto> {
     try {
-      await this.prisma.task.delete({
-        where: param,
-        include: {
-          workers: {
-            include: { TimeLines: true },
-          },
-        },
+      const data = await this.prisma.task.delete({
+        where: { id },
+        select: SelectorTaskDto,
       });
-
-      return await this.getFirst(param.id);
+      const members = data.workers.map((worker) => ({
+        member: { ...worker.member.member, role: worker.member.role },
+        isComplete: worker.isComplete,
+        workTime: worker.workTime,
+      }));
+      delete data["workers"];
+      return { ...data, members };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025")
@@ -187,15 +227,22 @@ export class TaskService {
     }
   }
 
-  async update(param: UpdateTaskParam, data: UpdateTaskDto) {
+  async update(id: number, data: UpdateTaskDto): Promise<TaskDto> {
     try {
-      return await this.prisma.task.update({
-        where: param,
+      const rawData = await this.prisma.task.update({
+        where: { id },
         data: data,
-        include: {
-          workers: true,
-        },
+        select: SelectorTaskDto,
       });
+
+      const members = rawData.workers.map((worker) => ({
+        member: { ...worker.member.member, role: worker.member.role },
+        isComplete: worker.isComplete,
+        workTime: worker.workTime,
+      }));
+      delete rawData["workers"];
+
+      return { ...rawData, members };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -205,19 +252,46 @@ export class TaskService {
     }
   }
 
-  async removeUserFromTask(taskId: number, userId: number) {
+  async removeUserFromTask(taskId: number, userId: number): Promise<TaskDto> {
     try {
-      await this.prisma.assignedTask.delete({
+      const task = await this.prisma.task.findFirst({
         where: {
-          taskid: {
-            workerId: userId,
-            taskId: taskId,
+          id: taskId,
+          workers: {
+            some: {
+              member: {
+                memberId: userId,
+              },
+            },
           },
         },
         include: {
-          TimeLines: true,
+          workers: true,
         },
       });
+      if (!task) throw new BadRequestException("Task not found");
+
+      const taskMemberProgress = task.workers[0];
+      const rawData = await this.prisma.task.update({
+        where: {
+          id: taskId,
+        },
+        data: {
+          workers: {
+            delete: {
+              id: taskMemberProgress.id,
+            },
+          },
+        },
+        select: SelectorTaskDto,
+      });
+      const members = rawData.workers.map((obj) => ({
+        member: { ...obj.member.member, role: obj.member.role },
+        isComplete: obj.isComplete,
+        workTime: obj.workTime,
+      }));
+      delete rawData["workers"];
+      return { ...rawData, members };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -227,17 +301,45 @@ export class TaskService {
     }
   }
 
-  async assignUserToTask(taskId: number, userId: number) {
+  async assignUserToTask(taskId: number, userId: number): Promise<TaskDto> {
     try {
-      return await this.prisma.assignedTask.create({
-        data: {
-          taskId: taskId,
-          workerId: userId,
+      const { project } = await this.prisma.task.findFirst({
+        where: {
+          id: taskId,
         },
-        include: {
-          TimeLines: true,
+        select: {
+          project: true,
         },
       });
+
+      if (!project) throw new BadRequestException("Project not found");
+      const rawData = await this.prisma.task.update({
+        where: {
+          id: taskId,
+        },
+        data: {
+          workers: {
+            create: {
+              member: {
+                connect: {
+                  projectId_memberId: {
+                    memberId: userId,
+                    projectId: project.id,
+                  },
+                },
+              },
+            },
+          },
+        },
+        select: SelectorTaskDto,
+      });
+      const members = rawData.workers.map((obj) => ({
+        member: { ...obj.member.member, role: obj.member.role },
+        isComplete: obj.isComplete,
+        workTime: obj.workTime,
+      }));
+      delete rawData["workers"];
+      return { ...rawData, members };
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         if (e.code === "P2025") throw new BadRequestException("Incorrect task");
@@ -249,46 +351,197 @@ export class TaskService {
     }
   }
 
-  async completeTask(assTaskId: number) {
-    const completedTask = await this.prisma.assignedTask.findFirst({
+  async unCompleteWork(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
+    const data = await this.prisma.assignedTask.findFirst({
       where: {
-        id: assTaskId,
+        taskId,
+        member: {
+          memberId: userId,
+        },
       },
       include: {
         TimeLines: {
-          where: { startTime: { not: null }, endTime: null, taskId: assTaskId },
+          where: {
+            startTime: { not: null },
+            endTime: null,
+            taskId: taskId,
+          },
         },
       },
     });
 
-    if (!completedTask) throw new BadRequestException("Task not found");
-    if (completedTask.isComplete)
-      throw new BadRequestException("Task already complete");
-    if (completedTask.TimeLines.length > 0)
-      await this.timeLineService.endTimeLine(assTaskId);
+    if (!data) throw new BadRequestException("You are not assign to task");
+
+    if (!data.isComplete) throw new BadRequestException("Task not complete");
 
     try {
-      return await this.prisma.assignedTask.update({
+      const updatedRecord = await this.prisma.assignedTask.update({
         where: {
-          id: assTaskId,
+          id: data.id,
         },
         data: {
-          isActive: false,
-          isComplete: true,
+          isComplete: false,
         },
-        include: {
-          TimeLines: true,
-          // task: {
-          //   include: {
-          //     workers: {
-          //       include: {
-          //         TimeLines: true,
-          //       },
-          //     },
-          //   },
-          // },
+        select: {
+          isActive: true,
+          workTime: true,
+          isComplete: true,
+          TimeLines: {
+            orderBy: { startTime: "desc" },
+            take: 1,
+          },
         },
       });
-    } catch (e) {}
+
+      const returnedData = {
+        isRunning: updatedRecord.isActive,
+        trackedTime: updatedRecord.workTime,
+        lastTimeLineStartTime: null,
+        isComplete: updatedRecord.isComplete,
+      };
+
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025")
+          throw new BadRequestException("Record not found");
+      }
+    }
+  }
+
+  async completeWork(
+    taskId: number,
+    userId: number
+  ): Promise<MemberProgressDto> {
+    const data = await this.prisma.assignedTask.findFirst({
+      where: {
+        taskId,
+        member: {
+          memberId: userId,
+        },
+        isComplete: false,
+      },
+      include: {
+        TimeLines: {
+          where: {
+            startTime: { not: null },
+            endTime: null,
+          },
+        },
+      },
+    });
+
+    if (!data) throw new BadRequestException("You are not assign to task");
+
+    if (data.isComplete) throw new BadRequestException("Task already complete");
+
+    if (data.TimeLines.length > 0)
+      await this.timeLineService.endTimeLine(taskId, userId);
+
+    try {
+      const updatedRecord = await this.prisma.assignedTask.update({
+        where: {
+          id: data.id,
+        },
+        data: {
+          isComplete: true,
+        },
+        select: {
+          isActive: true,
+          workTime: true,
+          isComplete: true,
+          TimeLines: {
+            orderBy: { startTime: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      const returnedData = {
+        isRunning: updatedRecord.isActive,
+        trackedTime: updatedRecord.workTime,
+        lastTimeLineStartTime: null,
+        isComplete: updatedRecord.isComplete,
+      };
+
+      return returnedData;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025")
+          throw new BadRequestException("Record not found");
+      }
+    }
+  }
+
+  async completeTask(taskId: number): Promise<TaskDto> {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+      },
+      include: {
+        workers: true,
+      },
+    });
+    if (!task) throw new BadRequestException("Task not found");
+
+    task.workers.map((worker) => {
+      if (!worker.isComplete)
+        throw new BadRequestException(
+          "To complete a task, all employees must mark it as completed."
+        );
+    });
+
+    const rawData = await this.prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        isComplete: true,
+      },
+      select: SelectorTaskDto,
+    });
+    const members = rawData.workers.map((obj) => ({
+      member: { ...obj.member.member, role: obj.member.role },
+      isComplete: obj.isComplete,
+      workTime: obj.workTime,
+    }));
+    delete rawData["workers"];
+
+    return { ...rawData, members };
+  }
+
+  async unCompleteTask(taskId: number): Promise<TaskDto> {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+      },
+      include: {
+        workers: true,
+      },
+    });
+    if (!task) throw new BadRequestException("Task not found");
+
+    if (!task.isComplete) throw new BadRequestException("Task not completed");
+
+    const rawData = await this.prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        isComplete: false,
+      },
+      select: SelectorTaskDto,
+    });
+    const members = rawData.workers.map((obj) => ({
+      member: { ...obj.member.member, role: obj.member.role },
+      isComplete: obj.isComplete,
+      workTime: obj.workTime,
+    }));
+    delete rawData["workers"];
+
+    return { ...rawData, members };
   }
 }

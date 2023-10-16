@@ -1,109 +1,127 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { CreateReportDto } from "./dto/create-report.dto";
+import { UpdateReportDto } from "./dto/update-report.dto";
+import { ReportDto } from "./dto/report.dto";
 import { PrismaService } from "src/prisma/prisma.service";
-import { FullTimeLineDto } from "src/time-line/dto/full-time-line-dto";
-import { TimeLineService } from "src/time-line/time-line.service";
-import { DayReportDto, ReportDto } from "./dto/report-dto";
+import { ConfigUserWithoutPassword } from "src/user/user.selecter.wpassword";
+import { ReportRowDto } from "./dto/report-row.dto";
+import { UserDto } from "src/user/dto/user-dto";
 
 @Injectable()
 export class ReportService {
-  constructor(
-    private timeLineService: TimeLineService,
-    private prismaService: PrismaService
-  ) {}
-
-  async getReportForWorker(
-    startTimeLine: Date,
-    endTimeLine: Date,
-    workerId: number
-  ): Promise<ReportDto[]> {
-    const dividedTimeLines = this.timeLineService.divTimeLine(
-      startTimeLine,
-      endTimeLine
-    ) || [{ startTime: startTimeLine, endTime: endTimeLine }];
-    const returnedData: ReportDto[] = [];
-    for (let i = 0; i < dividedTimeLines.length; i++) {
-      const month = dividedTimeLines[i].startTime.getMonth() + 1;
-      const day = dividedTimeLines[i].startTime.getDate();
-      const year = dividedTimeLines[i].startTime.getFullYear();
-      returnedData.push({
-        date: `${day}.${month}.${year}`,
-        data: [],
-        workTime: 0,
-      });
-    }
-    const tasks = await this.prismaService.task.findMany({
-      // Задачи, которые выполнялись в указанный промежуток
+  constructor(private prisma: PrismaService) {}
+  async generateReport(createReportDto: CreateReportDto): Promise<ReportDto> {
+    const userInfo = await this.prisma.user.findFirst({
       where: {
+        id: createReportDto.userId,
+      },
+      select: new ConfigUserWithoutPassword(),
+    });
+    createReportDto.dateFrom.setUTCHours(0, 0, 0, 0);
+    createReportDto.dateTo.setUTCHours(0, 0, 0, 0);
+    if (createReportDto.dateFrom.getTime() === createReportDto.dateTo.getTime())
+      createReportDto.dateTo.setUTCHours(23, 59, 59, 999);
+
+    const rawTasks = await this.prisma.task.findMany({
+      where: {
+        id: createReportDto?.taskId,
         workers: {
           some: {
-            workerId: workerId,
-            TimeLines: {
-              some: {
-                startTime: { gte: startTimeLine },
-                endTime: { lte: endTimeLine },
-              },
+            member: {
+              memberId: createReportDto.userId,
             },
           },
         },
+        project: {
+          id: createReportDto?.projectId,
+          workspaceId: createReportDto?.workspaceId,
+        },
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        isComplete: true,
+        description: true,
+        creator: { select: new ConfigUserWithoutPassword() },
         workers: {
-          include: { TimeLines: true },
-          where: {
-            workerId: workerId,
+          select: {
+            id: true,
+            taskId: true,
+            memberId: true,
+            isActive: true,
+            isComplete: true,
+            workTime: true,
             TimeLines: {
-              some: {
-                startTime: { gte: startTimeLine },
-                endTime: { lte: endTimeLine },
+              select: {
+                startTime: true,
+                endTime: true,
+              },
+              where: {
+                startTime: { gte: createReportDto.dateFrom },
+                endTime: { lte: createReportDto.dateTo },
+                NOT: { endTime: null },
               },
             },
+            member: true,
+          },
+        },
+        project: {
+          select: {
+            title: true,
           },
         },
       },
+    }); // задачи, в которых он принял участие + прогрессы в них
+    if (!rawTasks)
+      throw new BadRequestException(
+        "The report could not be received. Check the data."
+      );
+    const rows: ReportRowDto[] = [];
+    rawTasks.map((rawTask) => {
+      const projectTitle = rawTask.project.title;
+      delete rawTask["project"];
+      const { workers, ...task } = rawTask;
+      const member: UserDto = userInfo;
+      rawTask.workers.map((rawMemberInfo) => {
+        rawMemberInfo.TimeLines.map((timeLine) => {
+          const trackedTime = Math.round(
+            (timeLine.endTime.getTime() - timeLine.startTime.getTime()) / 1000
+          );
+          const day = new Date(timeLine.startTime);
+          day.setUTCHours(0, 0, 0, 0);
+          const row: ReportRowDto = {
+            task,
+            member,
+            projectTitle,
+            trackedTime,
+            timeLine,
+            day,
+          };
+          rows.push(row);
+        });
+      });
     });
+    let totalTime = 0;
+    rows.map((row) => {
+      totalTime += row.trackedTime;
+    });
+    const returnedData: ReportDto = { totalTime, rows };
+    return returnedData;
+  }
 
-    for (let i = 0; i < dividedTimeLines.length; i++) {
-      const currentDay = dividedTimeLines[i]; // день из заданного промежутка
-      const tasksInCurrentDay = tasks.filter((obj) =>
-        obj.workers.filter(
-          (worker) =>
-            worker.TimeLines.filter(
-              (timeLine) =>
-                timeLine.startTime > currentDay.startTime &&
-                timeLine.endTime < currentDay.endTime
-            ).length > 0 //фильтруем таски так, чтобы у неё был хоть один таймлайн в currentDay
-        )
-      ); // фильтруем таски, которые выполнялись в currentDay
-      let taskWorkTime: number = 0;
-      // проходим по таскам, которые отслеживались в currentDay
-      for (let j = 0; j < tasksInCurrentDay.length; j++) {
-        const currentTask = tasksInCurrentDay[j];
-        tasksInCurrentDay[j].workers[0].TimeLines = tasksInCurrentDay[
-          j
-        ].workers[0].TimeLines.filter(
-          (obj) =>
-            obj.startTime > currentDay.startTime &&
-            obj.endTime < currentDay.endTime
-        ); // убираем таймлайны, не вписывающиеся в currentDay
+  findAll() {
+    return `This action returns all report`;
+  }
 
-        const extendedTimeLine: FullTimeLineDto[] = tasksInCurrentDay[
-          j
-        ].workers[0].TimeLines.map((item) => {
-          const workTime = item.endTime.getTime() - item.startTime.getTime();
-          taskWorkTime += workTime;
-          return { ...item, workTime };
-        }); // добавляем в таймлайн его длительность
+  findOne(id: number) {
+    return `This action returns a #${id} report`;
+  }
 
-        const returnedItem: DayReportDto = {
-          title: currentTask.title,
-          description: currentTask.description,
-          timeLines: extendedTimeLine,
-          workTime: taskWorkTime,
-        };
+  update(id: number, updateReportDto: UpdateReportDto) {
+    return `This action updates a #${id} report`;
+  }
 
-        returnedData[i].data.push(returnedItem);
-      }
-    }
-    return;
+  remove(id: number) {
+    return `This action removes a #${id} report`;
   }
 }
